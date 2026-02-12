@@ -9,7 +9,7 @@
     <form method="GET" class="mb-4 flex flex-col sm:flex-row gap-2">
         <input
             name="q"
-            value="{{ request('q') }}"
+            value="{{ old('q', request('q')) }}"
             class="input sm:w-64"
             placeholder="Cari nama / NIK">
         <button class="btn-primary w-fit">
@@ -29,55 +29,61 @@
                     <th class="px-4 py-3 text-left">Aksi</th>
                 </tr>
             </thead>
+
             <tbody class="divide-y">
                 @forelse($siswa as $i => $s)
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-4 py-3">
-                        {{ $i + $siswa->firstItem() }}
-                    </td>
-                    <td class="px-4 py-3 font-medium">
-                        {{ $s->nama }}
-                    </td>
-                    <td class="px-4 py-3">
-                        {{ optional($s->registration)->nomor_registrasi ?? '-' }}
-                    </td>
-                    <td class="px-4 py-3">
-                        @php
-                            $status = optional($s->registration)->status;
-                        @endphp
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3">
+                            {{ $siswa->firstItem() + $i }}
+                        </td>
 
-                        @if($status === 'diterima')
-                            <span class="badge-success">Diterima</span>
-                        @elseif($status === 'ditolak')
-                            <span class="badge-danger">Ditolak</span>
-                        @elseif($status)
-                            <span class="badge-warning">{{ ucfirst($status) }}</span>
-                        @else
-                            <span class="badge-warning">Belum diproses</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-3">
-                        <a
-                            href="{{ route('pendaftar.show',$s) }}"
-                            class="text-primary font-medium hover:underline">
-                            Detail
-                        </a>
-                    </td>
-                </tr>
+                        <td class="px-4 py-3 font-medium">
+                            {{ $s->nama }}
+                        </td>
+
+                        <td class="px-4 py-3">
+                            {{ $s->registration->nomor_registrasi ?? '-' }}
+                        </td>
+
+                        <td class="px-4 py-3">
+                            @php
+                                $status = $s->registration->status ?? null;
+                            @endphp
+
+                            @if($status === 'diterima')
+                                <span class="badge-success">Diterima</span>
+                            @elseif($status === 'ditolak')
+                                <span class="badge-danger">Ditolak</span>
+                            @elseif($status)
+                                <span class="badge-warning">{{ ucfirst($status) }}</span>
+                            @else
+                                <span class="badge-warning">Belum diproses</span>
+                            @endif
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <a
+                                href="{{ route('pendaftar.show', $s->id) }}"
+                                class="text-primary font-medium hover:underline">
+                                Detail
+                            </a>
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="5" class="px-4 py-6 text-center text-slate-500">
-                        Data pendaftar belum tersedia
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+                            Data pendaftar belum tersedia
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
+
         </table>
     </div>
 
     {{-- Pagination --}}
     <div class="mt-4">
-        {{ $siswa->links() }}
+        {{ $siswa->withQueryString()->links() }}
     </div>
 
 </div>

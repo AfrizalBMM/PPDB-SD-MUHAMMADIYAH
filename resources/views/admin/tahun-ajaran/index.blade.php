@@ -22,7 +22,7 @@
                 <input
                     type="text"
                     name="nama"
-                    placeholder=""
+                    placeholder="2025/2026"
                     class="input w-48"
                     required>
                 <p class="text-xs text-slate-500 mt-1">
@@ -30,18 +30,18 @@
                 </p>
             </div>
 
-            {{-- WAJIB: default tidak aktif --}}
+            {{-- Default tidak aktif --}}
             <input type="hidden" name="aktif" value="0">
 
-            <div class="flex items-center gap-2 mt-1">
+            <div class="flex items-center gap-2">
                 <input
                     type="checkbox"
                     name="aktif"
                     id="aktif"
                     value="1"
-                    class="rounded border-slate-300">
+                    class="rounded border-slate-300 focus:ring-primary">
                 <label for="aktif" class="text-sm text-slate-700">
-                    Aktifkan
+                    Aktifkan sekarang
                 </label>
             </div>
 
@@ -60,71 +60,73 @@
         </h2>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
-                <thead class="bg-slate-100 text-slate-700">
+            <table class="table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left">Nama</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
+                        <th>Nama</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+
+                <tbody>
                     @forelse($data as $item)
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="px-4 py-3 font-medium">
+                        <tr>
+                            <td class="font-medium">
                                 {{ $item->nama }}
                             </td>
-                            <td class="px-4 py-3 text-center">
+
+                            <td class="text-center">
                                 @if($item->aktif)
                                     <span class="badge-success">Aktif</span>
                                 @else
                                     <span class="badge-warning">Tidak Aktif</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-center space-x-2">
 
-                                {{-- AKTIFKAN --}}
-                                @if(!$item->aktif)
+                            <td class="text-center">
+                                <div class="flex justify-center gap-3">
+
+                                    {{-- Aktifkan --}}
+                                    @if(!$item->aktif)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('tahun-ajaran.aktifkan',$item) }}">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                class="text-xs text-blue-700 hover:underline">
+                                                Aktifkan
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Hapus --}}
                                     <form
                                         method="POST"
-                                        action="{{ route('tahun-ajaran.aktifkan',$item) }}"
-                                        class="inline">
+                                        action="{{ route('tahun-ajaran.destroy',$item) }}"
+                                        onsubmit="return confirm('Yakin ingin menghapus tahun ajaran ini?')">
                                         @csrf
+                                        @method('DELETE')
                                         <button
                                             type="submit"
-                                            class="text-xs text-blue-700 hover:underline">
-                                            Aktifkan
+                                            class="text-xs text-red-600 hover:underline">
+                                            Hapus
                                         </button>
                                     </form>
-                                @endif
 
-                                {{-- HAPUS --}}
-                                <form
-                                    method="POST"
-                                    action="{{ route('tahun-ajaran.destroy',$item) }}"
-                                    class="inline"
-                                    onsubmit="return confirm('Yakin ingin menghapus tahun ajaran ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button
-                                        type="submit"
-                                        class="text-xs text-red-600 hover:underline">
-                                        Hapus
-                                    </button>
-                                </form>
-
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td
-                                colspan="3"
-                                class="px-4 py-6 text-center text-slate-500">
+                            <td colspan="3" class="text-center py-6 text-slate-500">
                                 Data tahun ajaran belum tersedia
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>

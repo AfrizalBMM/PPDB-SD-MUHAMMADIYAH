@@ -11,62 +11,45 @@
             Tambah PAUD / TK
         </h2>
 
-        <form
-            method="POST"
-            action="{{ route('paud-tk.store') }}"
-            class="grid md:grid-cols-6 gap-4">
+        <form method="POST" action="{{ route('paud-tk.store') }}" class="grid md:grid-cols-6 gap-4">
             @csrf
 
             <div>
                 <label class="label">NPSN</label>
-                <input
-                    type="text"
-                    name="npsn"
-                    class="input"
-                    placeholder="NPSN">
+                <input type="text" name="npsn" class="input" placeholder="NPSN" value="{{ old('npsn') }}">
+                @error('npsn') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="md:col-span-2">
                 <label class="label">Nama PAUD / TK</label>
-                <input
-                    type="text"
-                    name="nama"
-                    class="input"
-                    placeholder="Nama PAUD / TK"
-                    required>
+                <input type="text" name="nama" class="input" placeholder="Nama PAUD / TK" value="{{ old('nama') }}" required>
+                @error('nama') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="label">Jenis</label>
                 <select name="jenis" class="input" required>
                     <option value="">Pilih</option>
-                    <option value="PAUD">PAUD</option>
-                    <option value="TK">TK</option>
+                    <option value="PAUD" {{ old('jenis')=='PAUD'?'selected':'' }}>PAUD</option>
+                    <option value="TK" {{ old('jenis')=='TK'?'selected':'' }}>TK</option>
                 </select>
+                @error('jenis') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="label">Kelurahan</label>
-                <input
-                    type="text"
-                    name="kelurahan"
-                    class="input"
-                    placeholder="Kelurahan">
+                <input type="text" name="kelurahan" class="input" placeholder="Kelurahan" value="{{ old('kelurahan') }}">
+                @error('kelurahan') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="label">Kecamatan</label>
-                <input
-                    type="text"
-                    name="kecamatan"
-                    class="input"
-                    placeholder="Kecamatan">
+                <input type="text" name="kecamatan" class="input" placeholder="Kecamatan" value="{{ old('kecamatan') }}">
+                @error('kecamatan') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="md:col-span-6">
-                <button class="btn-primary">
-                    Simpan
-                </button>
+                <button class="btn-primary">Simpan</button>
             </div>
         </form>
     </div>
@@ -88,18 +71,16 @@
                         <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y">
                     @forelse($data as $item)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-4 py-3 font-medium">
-                                {{ $item->nama }}
-                            </td>
+                            <td class="px-4 py-3 font-medium">{{ $item->nama }}</td>
+                            <td class="px-4 py-3">{{ $item->jenis }}</td>
                             <td class="px-4 py-3">
-                                {{ $item->jenis }}
+                                {{ $item->kelurahan ?? '-' }} / {{ $item->kecamatan ?? '-' }}
                             </td>
-                            <td class="px-4 py-3">
-                                {{ $item->kelurahan }} / {{ $item->kecamatan }}
-                            </td>
+
                             <td class="px-4 py-3 text-center">
                                 @if($item->aktif)
                                     <span class="badge-success">Aktif</span>
@@ -107,43 +88,38 @@
                                     <span class="badge-danger">Nonaktif</span>
                                 @endif
                             </td>
+
                             <td class="px-4 py-3 text-center">
                                 <div class="flex justify-center gap-3">
-                                    <form
-                                        method="POST"
-                                        action="{{ route('paud-tk.toggle',$item) }}">
+
+                                    <form method="POST" action="{{ route('paud-tk.toggle', $item->id) }}">
                                         @csrf
-                                        <button
-                                            type="submit"
-                                            class="text-xs text-blue-700 hover:underline">
+                                        <button type="submit" class="text-xs text-blue-700 hover:underline">
                                             Toggle
                                         </button>
                                     </form>
 
-                                    <form
-                                        method="POST"
-                                        action="{{ route('paud-tk.destroy',$item) }}">
+                                    <form method="POST" action="{{ route('paud-tk.destroy', $item->id) }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button
-                                            type="submit"
-                                            class="text-xs text-red-600 hover:underline">
+                                        <button type="submit" class="text-xs text-red-600 hover:underline"
+                                            onclick="return confirm('Hapus data ini?')">
                                             Hapus
                                         </button>
                                     </form>
+
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td
-                                colspan="5"
-                                class="px-4 py-6 text-center text-slate-500">
+                            <td colspan="5" class="px-4 py-6 text-center text-slate-500">
                                 Data PAUD / TK belum tersedia
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>

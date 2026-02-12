@@ -66,8 +66,15 @@ Route::prefix('admin')
             Route::resource('biaya', BiayaController::class)
                 ->only(['index','store','destroy']);
 
+            // Route Biaya toggle
+            Route::post('/biaya/{biaya}/toggle', [BiayaController::class, 'toggle'])
+                ->name('biaya.toggle');
+
             Route::resource('voucher', VoucherController::class)
                 ->except(['show','edit','update']);
+
+            Route::post('/voucher/{voucher}/toggle', [VoucherController::class, 'toggle'])
+                ->name('voucher.toggle');
 
             Route::resource('paud-tk', PaudTkController::class)
                 ->except(['show','edit','update']);

@@ -11,29 +11,29 @@
     </h2>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-sm border-collapse">
-            <thead class="bg-slate-100 text-slate-700">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 text-left">Siswa</th>
-                    <th class="px-4 py-3 text-center">No Reg</th>
-                    <th class="px-4 py-3 text-left">Jenis Biaya</th>
-                    <th class="px-4 py-3 text-right">Nominal</th>
-                    <th class="px-4 py-3 text-right">Dibayar</th>
-                    <th class="px-4 py-3 text-right">Kekurangan</th>
-                    <th class="px-4 py-3 text-center">Status</th>
-                    <th class="px-4 py-3 text-center">Aksi</th>
+                    <th>Siswa</th>
+                    <th class="text-center">No Reg</th>
+                    <th>Jenis Biaya</th>
+                    <th class="text-right">Nominal</th>
+                    <th class="text-right">Dibayar</th>
+                    <th class="text-right">Kekurangan</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
             </thead>
 
-            <tbody class="divide-y">
+            <tbody>
                 @forelse($tagihan as $t)
                     @php
                         $dibayar = $t->pembayaran->sum('nominal_bayar');
-                        $sisa = $t->total - $dibayar;
+                        $sisa = ($t->total ?? 0) - $dibayar;
                     @endphp
 
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-4 py-3">
+                    <tr>
+                        <td>
                             <div class="font-medium">
                                 {{ optional($t->siswa)->nama ?? '-' }}
                             </div>
@@ -45,27 +45,27 @@
                             @endif
                         </td>
 
-                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <td class="text-center whitespace-nowrap">
                             {{ optional(optional($t->siswa)->registration)->nomor_registrasi ?? '-' }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td>
                             {{ optional($t->biaya)->nama ?? '-' }}
                         </td>
 
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <td class="text-right whitespace-nowrap">
                             Rp {{ number_format($t->total ?? 0,0,',','.') }}
                         </td>
 
-                        <td class="px-4 py-3 text-right whitespace-nowrap text-green-700">
+                        <td class="text-right whitespace-nowrap text-green-700">
                             Rp {{ number_format($dibayar,0,',','.') }}
                         </td>
 
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <td class="text-right whitespace-nowrap">
                             Rp {{ number_format($sisa,0,',','.') }}
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td class="text-center">
                             @if($sisa <= 0)
                                 <span class="badge-success">Lunas</span>
                             @else
@@ -73,7 +73,7 @@
                             @endif
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td class="text-center">
                             @if($sisa > 0)
                                 <button
                                     onclick="openBayar(
@@ -92,7 +92,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-6 text-center text-slate-500">
+                        <td colspan="8" class="text-center py-6 text-slate-500">
                             Data tagihan belum tersedia
                         </td>
                     </tr>

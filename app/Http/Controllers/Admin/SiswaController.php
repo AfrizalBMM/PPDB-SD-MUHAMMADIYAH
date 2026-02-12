@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 
 class SiswaController extends Controller
@@ -10,9 +10,11 @@ class SiswaController extends Controller
     public function kelas1()
     {
         $siswa = Siswa::with('registration')
-            ->where('status','diterima')
+            ->whereHas('registration', function ($q) {
+                $q->where('status', 'diterima');
+            })
             ->orderBy('nama')
-            ->get();
+            ->paginate(20);
 
         return view('admin.siswa.kelas1', compact('siswa'));
     }

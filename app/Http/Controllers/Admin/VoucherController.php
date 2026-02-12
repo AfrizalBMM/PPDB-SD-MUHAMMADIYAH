@@ -28,7 +28,7 @@ class VoucherController extends Controller
 
         $kode = strtoupper(Str::slug($request->nama)).'-'.$request->diskon_nominal;
 
-        Voucher::create([
+        $voucher = Voucher::create([
             'kode' => $kode,
             'nama' => $request->nama,
             'jenis_biaya' => $request->jenis_biaya,

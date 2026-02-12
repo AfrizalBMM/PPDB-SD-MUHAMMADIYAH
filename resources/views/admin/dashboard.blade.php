@@ -1,88 +1,85 @@
 @extends('layouts.admin')
 
+@section('page-title','Dashboard PPDB')
+
 @section('content')
 <div class="space-y-6">
 
-    {{-- STAT CARD --}}
+    {{-- STATISTICS --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
 
-        <div class="card">
-            <p class="text-sm text-slate-500">
-                Total Pendaftar
-            </p>
-            <h2 class="text-2xl font-bold">
+        <x-card>
+            <p class="text-sm text-slate-500">Total Pendaftar</p>
+            <h2 class="text-2xl font-bold text-primary">
                 {{ $totalPendaftar }}
             </h2>
-        </div>
+        </x-card>
 
-        <div class="card">
-            <p class="text-sm text-slate-500">
-                Diterima
-            </p>
-            <h2 class="text-2xl font-bold">
+        <x-card>
+            <p class="text-sm text-slate-500">Diterima</p>
+            <h2 class="text-2xl font-bold text-success">
                 {{ $totalDiterima }}
             </h2>
-        </div>
+        </x-card>
 
-        <div class="card">
-            <p class="text-sm text-slate-500">
-                Daftar Hari Ini
-            </p>
+        <x-card>
+            <p class="text-sm text-slate-500">Daftar Hari Ini</p>
             <h2 class="text-2xl font-bold">
                 {{ $pendaftarHariIni }}
             </h2>
-        </div>
+        </x-card>
 
-        <div class="card">
-            <p class="text-sm text-slate-500">
-                Pembayaran Hari Ini
-            </p>
-            <h2 class="text-3xl font-bold">
+        <x-card>
+            <p class="text-sm text-slate-500">Pembayaran Hari Ini</p>
+            <h2 class="text-2xl font-bold text-accent">
                 Rp {{ number_format($pembayaranHariIni ?? 0,0,',','.') }}
             </h2>
-        </div>
+        </x-card>
 
     </div>
 
-    {{-- PENDAFTAR TERBARU --}}
-    <div class="card">
-        <h3 class="font-semibold text-slate-800 mb-4">
-            Pendaftar Terbaru
-        </h3>
+    {{-- TABLE PENDAFTAR TERBARU --}}
+    <x-card>
+
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-slate-800">
+                Pendaftar Terbaru
+            </h3>
+
+            <a href="{{ route('admin.pendaftar.index') }}" class="text-sm text-primary hover:underline">
+                Lihat Semua →
+            </a>
+        </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
-                <thead class="bg-slate-100 text-slate-700">
+            <table class="table-base">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left">Nama</th>
-                        <th class="px-4 py-3 text-left">No Registrasi</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
+                        <th>Nama</th>
+                        <th>No Registrasi</th>
+                        <th>Tanggal</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+
+                <tbody>
                     @forelse($pendaftarTerbaru as $p)
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-4 py-3 font-medium">
-                            {{ $p->nama }}
-                        </td>
-                        <td class="px-4 py-3">
-                            {{ optional($p->registration)->nomor_registrasi ?? '-' }}
-                        </td>
-                        <td class="px-4 py-3">
-                            {{ $p->created_at->format('d-m-Y') }}
-                        </td>
+                    <tr>
+                        <td class="font-medium">{{ $p->nama }}</td>
+                        <td>{{ optional($p->registration)->nomor_registrasi ?? '-' }}</td>
+                        <td>{{ $p->created_at->format('d M Y') }}</td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="px-4 py-6 text-center text-slate-500">
-                            Belum ada pendaftar
+                        <td colspan="3" class="text-center text-slate-500 py-6">
+                            sayangnya Belum ada pendaftar
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+
+    </x-card>
 
 </div>
 @endsection

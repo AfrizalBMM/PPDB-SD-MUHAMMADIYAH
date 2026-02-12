@@ -36,6 +36,7 @@
 
     {{-- RINGKASAN --}}
     <div class="card">
+
         <h2 class="font-semibold text-slate-800 mb-4">
             Total Pendapatan:
             <span class="text-green-700">
@@ -44,34 +45,38 @@
         </h2>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
-                <thead class="bg-slate-100 text-slate-700">
+            <table class="table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">Jenis</th>
-                        <th class="px-4 py-3 text-right">Nominal</th>
-                        <th class="px-4 py-3 text-left">Admin</th>
+                        <th>Tanggal</th>
+                        <th>Jenis</th>
+                        <th class="text-right">Nominal</th>
+                        <th>Admin</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+
+                <tbody>
                     @forelse($pembayaran as $p)
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-4 py-3 whitespace-nowrap">
+                    <tr>
+                        <td class="whitespace-nowrap">
                             {{ \Carbon\Carbon::parse($p->tanggal_bayar)->format('d-m-Y') }}
                         </td>
-                        <td class="px-4 py-3">
+
+                        <td>
                             {{ ucfirst(optional(optional($p->tagihan)->biaya)->jenis_biaya ?? '-') }}
                         </td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap font-medium">
+
+                        <td class="text-right whitespace-nowrap font-medium">
                             Rp {{ number_format($p->nominal_bayar ?? 0,0,',','.') }}
                         </td>
-                        <td class="px-4 py-3">
+
+                        <td>
                             {{ optional($p->admin)->name ?? '-' }}
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-6 text-center text-slate-500">
+                        <td colspan="4" class="text-center py-6 text-slate-500">
                             Tidak ada data pembayaran
                         </td>
                     </tr>
@@ -79,6 +84,7 @@
                 </tbody>
             </table>
         </div>
+
     </div>
 
 </div>

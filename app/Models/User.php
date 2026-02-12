@@ -3,9 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    protected $fillable = ['name','email','password','role'];
-    protected $hidden = ['password'];
+    use HasRoles;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role', 
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 }

@@ -1,98 +1,91 @@
 {{-- HEADER --}}
-<div class="p-5 font-bold text-lg border-b border-white/10">
-    PPDB ADMIN
-    <div class="text-xs font-normal opacity-80 mt-1">
+<div class="px-5 py-4 border-b border-white/10">
+    <div class="text-lg font-bold tracking-wide">
+        PPDB ADMIN
+    </div>
+    <div class="text-xs text-white/70 mt-1">
         {{ auth()->user()->role }}
     </div>
 </div>
 
-{{-- NAV --}}
-<nav class="p-4 space-y-1 text-sm">
+{{-- MENU --}}
+<nav class="px-3 py-4 space-y-1 text-sm">
 
-    {{-- DASHBOARD --}}
-    <a
-        href="{{ route('dashboard') }}"
-        class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-        Dashboard
+    {{-- MAIN --}}
+    <p class="px-3 mb-2 text-xs uppercase tracking-wider text-white/50">
+        Menu Utama
+    </p>
+
+    <a href="{{ route('dashboard') }}"
+       class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+        📊 Dashboard
     </a>
 
-    {{-- SUPERADMIN + ADMIN --}}
     @role('superadmin|admin')
-        <a
-            href="{{ route('pendaftar.index') }}"
-            class="sidebar-link {{ request()->routeIs('pendaftar.*') ? 'active' : '' }}">
-            Pendaftar
+        <a href="{{ route('pendaftar.index') }}"
+           class="sidebar-link {{ request()->routeIs('pendaftar.*') ? 'active' : '' }}">
+            📝 Pendaftar
         </a>
 
-        <a
-            href="{{ route('siswa.kelas1') }}"
-            class="sidebar-link {{ request()->routeIs('siswa.*') ? 'active' : '' }}">
-            Siswa
+        <a href="{{ route('siswa.kelas1') }}"
+           class="sidebar-link {{ request()->routeIs('siswa.*') ? 'active' : '' }}">
+            🎓 Siswa
         </a>
     @endrole
 
-    {{-- SUPERADMIN + KEUANGAN --}}
     @role('superadmin|keuangan')
-        <a
-            href="{{ route('keuangan.index') }}"
-            class="sidebar-link {{ request()->routeIs('keuangan.*') ? 'active' : '' }}">
-            Keuangan
+        <a href="{{ route('keuangan.index') }}"
+           class="sidebar-link {{ request()->routeIs('keuangan.*') ? 'active' : '' }}">
+            💰 Keuangan
         </a>
     @endrole
 
-    {{-- SUPERADMIN ONLY --}}
+    {{-- MASTER --}}
     @role('superadmin')
-        <hr class="border-white/10 my-3">
-
-        <p class="px-4 mb-2 text-xs uppercase tracking-wider text-white/60">
+        <p class="px-3 mt-4 mb-2 text-xs uppercase tracking-wider text-white/50">
             Master Data
         </p>
 
-        <a
-            href="{{ route('tahun-ajaran.index') }}"
-            class="sidebar-link {{ request()->routeIs('tahun-ajaran.*') ? 'active' : '' }}">
-            Tahun Ajaran
+        <a href="{{ route('tahun-ajaran.index') }}"
+           class="sidebar-link {{ request()->routeIs('tahun-ajaran.*') ? 'active' : '' }}">
+            📅 Tahun Ajaran
         </a>
 
-        <a
-            href="{{ route('biaya.index') }}"
-            class="sidebar-link {{ request()->routeIs('biaya.*') ? 'active' : '' }}">
-            Biaya
+        <a href="{{ route('biaya.index') }}"
+           class="sidebar-link {{ request()->routeIs('biaya.*') ? 'active' : '' }}">
+            💳 Biaya
         </a>
 
-        <a
-            href="{{ route('voucher.index') }}"
-            class="sidebar-link {{ request()->routeIs('voucher.*') ? 'active' : '' }}">
-            Voucher
+        <a href="{{ route('voucher.index') }}"
+           class="sidebar-link {{ request()->routeIs('voucher.*') ? 'active' : '' }}">
+            🎟 Voucher
         </a>
 
-        <a
-            href="{{ route('paud-tk.index') }}"
-            class="sidebar-link {{ request()->routeIs('paud-tk.*') ? 'active' : '' }}">
-            PAUD / TK
+        <a href="{{ route('paud-tk.index') }}"
+           class="sidebar-link {{ request()->routeIs('paud-tk.*') ? 'active' : '' }}">
+            🏫 PAUD / TK
         </a>
 
-        <a
-            href="{{ route('users.index') }}"
-            class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-            Akun User
+        <a href="{{ route('users.index') }}"
+           class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+            👤 Akun User
         </a>
 
-        <a
-            href="{{ route('log.aktivitas') }}"
-            class="sidebar-link {{ request()->routeIs('log.aktivitas') ? 'active' : '' }}">
-            Log Aktivitas
+        <a href="{{ route('log.aktivitas') }}"
+           class="sidebar-link {{ request()->routeIs('log.aktivitas') ? 'active' : '' }}">
+            🧾 Log Aktivitas
         </a>
     @endrole
 
-    {{-- LOGOUT --}}
-    <form method="POST" action="{{ route('logout') }}" class="pt-4">
+</nav>
+
+{{-- FOOTER --}}
+<div class="absolute bottom-0 left-0 w-full border-t border-white/10 p-3">
+    <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button
-            type="submit"
-            class="w-full text-left sidebar-link text-red-200 hover:text-red-100">
-            Logout
+        <button type="submit"
+                class="sidebar-link text-red-300 hover:text-red-100 w-full text-left">
+            🚪 Logout
         </button>
     </form>
-
-</nav>
+</div>
