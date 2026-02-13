@@ -68,6 +68,16 @@ function openDeleteModal(action){
     modal.classList.add('flex');
 }
 
+function openConfirmModal(){
+    document.getElementById('confirmModal').classList.remove('hidden');
+    document.getElementById('confirmModal').classList.add('flex');
+}
+
+function closeConfirmModal(){
+    document.getElementById('confirmModal').classList.add('hidden');
+}
+
+
 function closeDeleteModal(){
     document.getElementById('deleteModal').classList.add('hidden');
 }

@@ -18,4 +18,9 @@ class DataPendukung extends Model
         'hobi',
         'cita_cita'
     ];
+
+    public function paudTk()
+    {
+        return $this->belongsTo(\App\Models\PaudTk::class, 'paud_tk_id');
+    }
 }

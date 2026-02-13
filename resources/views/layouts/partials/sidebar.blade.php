@@ -53,7 +53,7 @@
 
         <a href="{{ route('biaya.index') }}"
            class="sidebar-link {{ request()->routeIs('biaya.*') ? 'active' : '' }}">
-            💳 Biaya
+            💳 Set Biaya
         </a>
 
         <a href="{{ route('voucher.index') }}"
@@ -81,11 +81,36 @@
 
 {{-- FOOTER --}}
 <div class="absolute bottom-0 left-0 w-full border-t border-white/10 p-3">
-    <form method="POST" action="{{ route('logout') }}">
+    <form id="logoutForm" method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit"
-                class="sidebar-link text-red-300 hover:text-red-100 w-full text-left">
+        <button 
+            type="button"
+            onclick="openModal('logoutModal')"
+            class="sidebar-link text-red-300 hover:text-red-100 w-full text-left">
             🚪 Logout
         </button>
     </form>
 </div>
+
+
+{{-- MODAL LOGOUT --}}
+<x-modal id="logoutModal" title="Konfirmasi Logout">
+    <p>Apakah Anda yakin ingin keluar dari sistem?</p>
+
+    <div class="flex justify-end gap-2 mt-4">
+        <button 
+            type="button"
+            onclick="closeModal('logoutModal')" 
+            class="btn-secondary">
+            Batal
+        </button>
+
+        <button 
+            type="button"
+            onclick="document.getElementById('logoutForm').submit()" 
+            class="btn-danger">
+            Ya, Logout
+        </button>
+    </div>
+</x-modal>
+

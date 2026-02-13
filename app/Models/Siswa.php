@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Siswa extends Model
 {
     protected $table = 'siswa';
+
     protected $fillable = [
-        'registration_id','nama','jenis_kelamin',
-        'nik','no_kk','tempat_lahir',
-        'tanggal_lahir','akta_no','hasil_tes'
+        'registration_id', 'nama', 'jenis_kelamin',
+        'nik', 'no_kk', 'tempat_lahir',
+        'tanggal_lahir', 'akta_no', 'hasil_tes'
     ];
 
     public function ayah()
@@ -38,10 +39,18 @@ class Siswa extends Model
         return $this->belongsTo(Registration::class);
     }
 
+    public function alamat()
+    {
+        return $this->hasOne(\App\Models\AlamatSiswa::class);
+    }
+
+    public function dataPendukung()
+    {
+        return $this->hasOne(\App\Models\DataPendukung::class);
+    }
+
     public function semuaTagihanLunas(): bool
     {
         return $this->tagihan()->where('status','!=','lunas')->count() === 0;
     }
-
-
 }

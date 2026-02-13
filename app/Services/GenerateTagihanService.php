@@ -62,11 +62,12 @@ class GenerateTagihanService
             TagihanSiswa::create([
                 'siswa_id'     => $siswa->id,
                 'biaya_id'     => $biaya->id,
+                'nominal'      => $biaya->nominal,
                 'total'        => max(0, $biaya->nominal - $diskon),
                 'diskon'       => $diskon,
                 'voucher_id'   => $voucher?->id,
                 'kode_voucher' => $voucher?->kode,
-                'status'       => 'belum lunas',
+                'status'       => 'belum_lunas',
             ]);
         }
 

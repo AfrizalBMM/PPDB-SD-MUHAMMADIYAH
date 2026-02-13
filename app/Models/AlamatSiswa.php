@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class AlamatSiswa extends Model
 {
+    use HasFactory;
+
+    protected $table = 'alamat_siswa';
+
     protected $fillable = [
         'siswa_id',
         'alamat',
@@ -19,4 +23,3 @@ class AlamatSiswa extends Model
         'kode_pos',
     ];
 }
-

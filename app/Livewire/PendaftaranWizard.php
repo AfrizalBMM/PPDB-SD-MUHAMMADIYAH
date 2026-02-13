@@ -23,6 +23,9 @@ use App\Services\GenerateTagihanService;
 
 class PendaftaranWizard extends Component
 {
+    // STEP MODAL
+    public $errorsTriggered = false;
+    public $showConfirm = false;
 
     // STEP A – UMUM
     public $tanggal_daftar;
@@ -139,12 +142,81 @@ class PendaftaranWizard extends Component
         }
     }
 
+    public function prepareSubmit()
+    {
+        $this->resetErrorBag();
+        $this->errorsTriggered = false;
+
+        if ($this->tinggal_bersama !== 'wali') {
+            $this->hp_wali = null;
+            $this->wali_nama = null;
+            $this->wali_hubungan = null;
+        }
+
+        try {
+            $this->validate(); // validasi default semua rules
+            $this->showConfirm = true; // munculkan modal konfirmasi
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->errorsTriggered = true; // munculkan modal error
+            dd('prepareSubmit ERROR', $e->errors());
+        }
+    }
+
+    public function submitForm()
+    {
+        $this->showConfirm = false; // tutup modal konfirmasi
+
+        // panggil simpan, ambil ID siswa untuk redirect
+        $siswaId = $this->simpan();
+
+        if ($siswaId) {
+            return redirect()->route('pendaftaran.sukses', $siswaId);
+        }
+    }
+
+
     public function simpan()
     {
-        $this->validate();
+        $this->resetErrorBag();
+        $this->errorsTriggered = false;
 
-        DB::transaction(function () {
+        // 1. Buat rules validasi lengkap
+        $rules = [
+            'tanggal_daftar' => 'required|date',
+            'nama_siswa' => 'required|string',
+            'jenis_kelamin' => 'required|string',
+            'nik' => 'required|string|size:16',
+            'no_kk' => 'required|string|size:16',
+            'tempat_lahir' => 'required|string',
+            'tanggal_lahir' => 'required|date',
+            'alamat' => 'required|string',
+            'provinsi' => 'required|string',
+            'kabupaten' => 'required|string',
+            'kecamatan' => 'required|string',
+            'kelurahan' => 'required|string',
+            'transportasi' => 'required|string',
+            'hasil_tes' => 'required|string',
+        ];
 
+        // validasi Wali jika tinggal dengan wali
+        if ($this->tinggal_bersama === 'wali') {
+            $rules['wali_nama'] = 'required|string';
+            $rules['wali_hubungan'] = 'required|string';
+            $rules['hp_wali'] = 'required|string|digits_between:10,14';
+        } else {
+            $rules['hp_wali'] = 'nullable|string|digits_between:10,14';
+        }
+
+        try {
+            $validatedData = $this->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->errorsTriggered = true;
+            return null; // stop jika ada error
+        }
+
+        $siswa = null; // inisialisasi sebelum transaction
+
+        DB::transaction(function () use (&$siswa) {
             $reg = Registration::create([
                 'nomor_registrasi' => 'REG-'.date('Y').'-'.Str::upper(Str::random(6)),
                 'tanggal_daftar' => $this->tanggal_daftar,
@@ -233,22 +305,16 @@ class PendaftaranWizard extends Component
                 'cita_cita' => $this->cita_cita,
             ]);
 
-            GenerateTagihanService::generate(
-                $siswa,
-                $this->voucher_id
-            );
+            GenerateTagihanService::generate($siswa, $this->voucher_id);
 
             logAktivitas(
                 'Pendaftaran Siswa',
-                'Pendaftaran siswa '.$siswa->nama.
-                ' ('.$reg->nomor_registrasi.')'
+                'Pendaftaran siswa '.$siswa->nama.' ('.$reg->nomor_registrasi.')'
             );
-
-            return $siswa;
-
         });
 
-        return redirect()->route('pendaftaran.sukses', $siswa->id);
+        // return ID siswa untuk redirect
+        return $siswa ? $siswa->id : null;
     }
 
     protected function messages()
@@ -383,7 +449,9 @@ class PendaftaranWizard extends Component
             // WALI
             'wali_nama'         => 'required_if:tinggal_bersama,wali',
             'wali_hubungan'     => 'required_if:tinggal_bersama,wali',
-            'hp_wali'           => 'required_if:tinggal_bersama,wali|digits_between:10,14',
+            'hp_wali' => $this->tinggal_bersama === 'wali'
+            ? 'required|digits_between:10,14'
+            : 'nullable|digits_between:10,14',
 
             // DATA PENDUKUNG
             'tinggi'            => 'nullable|integer|max:999',

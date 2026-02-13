@@ -11,7 +11,7 @@
             Tambah User
         </h3>
 
-        <form method="POST" action="{{ route('users.store') }}" class="space-y-3">
+        <form id="createUserForm" method="POST" action="{{ route('users.store') }}" class="space-y-3">
             @csrf
 
             <div>
@@ -46,9 +46,13 @@
                 </select>
             </div>
 
-            <button class="btn-primary w-fit">
+            <button 
+                type="button"
+                onclick="openModal('confirmUserModal')"
+                class="btn-primary w-fit">
                 Simpan
             </button>
+            
         </form>
     </div>
 
@@ -93,4 +97,27 @@
     </div>
 
 </div>
+
+{{-- MODAL KONFIRMASI --}}
+<x-modal id="confirmUserModal" title="Konfirmasi Simpan">
+    <p>Yakin ingin menambahkan user baru?</p>
+
+    <div class="flex justify-end gap-2 mt-4">
+        <button 
+            type="button"
+            onclick="closeModal('confirmUserModal')" 
+            class="btn-secondary">
+            Batal
+        </button>
+
+        <button 
+            type="button"
+            onclick="document.getElementById('createUserForm').submit()" 
+            class="btn-primary">
+            Ya, Simpan
+        </button>
+    </div>
+</x-modal>
+
+
 @endsection

@@ -46,38 +46,45 @@
                 Pendaftar Terbaru
             </h3>
 
-            <a href="{{ route('admin.pendaftar.index') }}" class="text-sm text-primary hover:underline">
+            <a href="{{ route('pendaftar.index') }}" class="text-sm text-primary hover:underline">
                 Lihat Semua →
             </a>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="table-base">
-                <thead>
-                    <tr>
-                        <th>Nama</th>
-                        <th>No Registrasi</th>
-                        <th>Tanggal</th>
-                    </tr>
-                </thead>
+    <table class="table-base w-full">
+        <thead class="bg-slate-100 text-left text-sm font-semibold text-slate-700">
+            <tr>
+                <th class="px-4 py-2">Nama</th>
+                <th class="px-4 py-2">No Registrasi</th>
+                <th class="px-4 py-2">Tanggal</th>
+            </tr>
+        </thead>
 
-                <tbody>
-                    @forelse($pendaftarTerbaru as $p)
-                    <tr>
-                        <td class="font-medium">{{ $p->nama }}</td>
-                        <td>{{ optional($p->registration)->nomor_registrasi ?? '-' }}</td>
-                        <td>{{ $p->created_at->format('d M Y') }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center text-slate-500 py-6">
-                            sayangnya Belum ada pendaftar
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <tbody class="divide-y">
+            @forelse($pendaftarTerbaru as $p)
+            <tr class="hover:bg-slate-50 transition">
+                <td class="px-4 py-2 font-medium">
+                    {{ $p->nama }}
+                </td>
+                <td class="px-4 py-2">
+                    {{ optional($p->registration)->nomor_registrasi ?? '-' }}
+                </td>
+                <td class="px-4 py-2">
+                    {{ $p->created_at->format('d M Y') }}
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="3" class="text-center text-slate-500 py-6">
+                    Belum ada pendaftar
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
 
     </x-card>
 
