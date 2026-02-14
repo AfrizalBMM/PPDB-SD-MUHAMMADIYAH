@@ -1,12 +1,16 @@
 {{-- HEADER --}}
-<div class="px-5 py-4 border-b border-white/10">
-    <div class="text-lg font-bold tracking-wide">
-        PPDB ADMIN
-    </div>
-    <div class="text-xs text-white/70 mt-1">
-        {{ auth()->user()->role }}
+<div class="px-5 py-4 border-b border-white/10 flex items-center space-x-3">
+    <img src="{{ asset('images/logo.png') }}" alt="Logo PPDB" class="h-10 w-10 object-contain">
+    <div class="flex flex-col">
+        <div class="text-lg font-bold tracking-wide">
+            PPDB ADMIN
+        </div>
+        <div class="text-xs text-white/70 mt-1">
+            Slogannyaa...
+        </div>
     </div>
 </div>
+
 
 {{-- MENU --}}
 <nav class="px-3 py-4 space-y-1 text-sm">

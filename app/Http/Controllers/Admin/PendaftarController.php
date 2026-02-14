@@ -10,11 +10,14 @@ class PendaftarController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Siswa::with('registration');
+        $query = Siswa::with([
+            'registration',
+            'tagihan.biaya'  
+        ]);
 
         if ($request->q) {
             $query->where('nama','like','%'.$request->q.'%')
-                  ->orWhere('nik','like','%'.$request->q.'%');
+                ->orWhere('nik','like','%'.$request->q.'%');
         }
 
         return view('admin.pendaftar.index', [
@@ -26,9 +29,11 @@ class PendaftarController extends Controller
     {
         $siswa->load([
             'registration.tahunAjaran',
-            'ibu','ayah','wali','dataPendukung'
+            'ibu','ayah','wali','dataPendukung',
+            'tagihan.biaya'     
         ]);
 
         return view('admin.pendaftar.show', compact('siswa'));
     }
+
 }

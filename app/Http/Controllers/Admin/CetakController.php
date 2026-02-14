@@ -25,7 +25,7 @@ class CetakController extends Controller
 
         logAktivitas(
             'Cetak Formulir',
-            'Cetak formulir pendaftaran '.$siswa->nama.
+            'Cetak formulir pendaftaran #'.$siswa->id.' '.$siswa->nama.
             ' ('.$siswa->registration->nomor_registrasi.')'
         );
 
@@ -61,8 +61,9 @@ class CetakController extends Controller
 
         logAktivitas(
             'Cetak Nota',
-            'Cetak nota pembayaran ID '.$pembayaran->id.
-            ' siswa '.$pembayaran->tagihan->siswa->nama
+            'Cetak nota pembayaran #'.$pembayaran->id.
+            ' untuk siswa '.$pembayaran->tagihan->siswa->nama.
+            ' oleh admin '.$request->nama_admin
         );
 
         return $pdf->stream(

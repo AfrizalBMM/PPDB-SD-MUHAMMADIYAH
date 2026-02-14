@@ -10,8 +10,12 @@ class TahunAjaranController extends Controller
 {
     public function index()
     {
+        $data = TahunAjaran::orderByDesc('aktif') 
+                            ->orderByDesc('id') 
+                            ->get();
+
         return view('admin.tahun-ajaran.index', [
-            'data' => TahunAjaran::orderByDesc('id')->get()
+            'data' => $data
         ]);
     }
 
@@ -33,7 +37,13 @@ class TahunAjaranController extends Controller
             'aktif' => $request->aktif ?? false
         ]);
 
-        return back();
+        logAktivitas(
+            'Tahun Ajaran',
+            'Menambahkan tahun ajaran #'.$tahun->id.' "'.$tahun->nama.'"'.
+            ($tahun->aktif ? ' (aktif)' : '')
+        );
+
+        return back()->with('success', 'Tahun ajaran berhasil di tambahkan.');
     }
 
     public function aktifkan(TahunAjaran $tahunAjaran)
@@ -41,18 +51,29 @@ class TahunAjaranController extends Controller
         TahunAjaran::where('aktif',true)->update(['aktif'=>false]);
         $tahunAjaran->update(['aktif'=>true]);
 
+        logAktivitas(
+            'Tahun Ajaran',
+            'Mengaktifkan tahun ajaran #'.$tahunAjaran->id.' "'.$tahunAjaran->nama.'"'
+        );
+
         return back();
     }
 
     public function destroy(TahunAjaran $tahunAjaran)
     {
         if ($tahunAjaran->aktif) {
-            return back()->withErrors(
-                'Tahun ajaran aktif tidak boleh dihapus.'
-            );
+            return back()->with('error', 'Tahun ajaran aktif tidak boleh dihapus.');
         }
 
+        $nama = $tahunAjaran->nama;
+        $id = $tahunAjaran->id;
+
         $tahunAjaran->delete();
+
+        logAktivitas(
+            'Tahun Ajaran',
+            'Menghapus tahun ajaran #'.$id.' "'.$nama.'"'
+        );
 
         return back()->with('success', 'Tahun ajaran berhasil dihapus.');
     }

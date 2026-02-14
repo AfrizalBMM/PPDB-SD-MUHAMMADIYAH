@@ -70,14 +70,23 @@ Route::prefix('admin')
             Route::post('/biaya/{biaya}/toggle', [BiayaController::class, 'toggle'])
                 ->name('biaya.toggle');
 
+            Route::delete('/voucher/destroy-all', [VoucherController::class, 'destroyAll'])
+                ->name('voucher.destroyAll');
+
             Route::resource('voucher', VoucherController::class)
                 ->except(['show','edit','update']);
 
             Route::post('/voucher/{voucher}/toggle', [VoucherController::class, 'toggle'])
                 ->name('voucher.toggle');
 
+            Route::delete('/paud-tk/destroy-all', [PaudTkController::class, 'destroyAll'])
+                ->name('paud-tk.destroyAll');
+
             Route::resource('paud-tk', PaudTkController::class)
                 ->except(['show','edit','update']);
+
+            Route::post('/paud-tk/import', [PaudTkController::class,'import'])->name('paud-tk.import');
+            Route::get('/paud-tk/template', [PaudTkController::class,'template'])->name('paud-tk.template');
 
             Route::post('/paud-tk/{paudTk}/toggle',
             [PaudTkController::class, 'toggle'])
@@ -90,6 +99,9 @@ Route::prefix('admin')
             Route::get('/log-aktivitas',
                 [LogAktivitasController::class,'index'])
                 ->name('log.aktivitas');
+            
+            Route::delete('/log-aktivitas/destroy-all', [LogAktivitasController::class, 'destroyAll'])
+                ->name('logs.destroyAll');
 
             Route::resource('users', UserController::class)
                 ->only(['index','store']);

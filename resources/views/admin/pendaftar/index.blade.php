@@ -23,6 +23,7 @@
             <thead class="bg-slate-100 text-slate-700">
                 <tr>
                     <th class="px-4 py-3 text-left">No</th>
+                    <th class="px-4 py-3 text-left">ID</th>
                     <th class="px-4 py-3 text-left">Nama</th>
                     <th class="px-4 py-3 text-left">No Registrasi</th>
                     <th class="px-4 py-3 text-left">Status</th>
@@ -35,6 +36,10 @@
                     <tr class="hover:bg-slate-50 transition">
                         <td class="px-4 py-3">
                             {{ $siswa->firstItem() + $i }}
+                        </td>
+
+                        <td class="px-4 py-3 font-medium">
+                            {{ $s->id }}
                         </td>
 
                         <td class="px-4 py-3 font-medium">

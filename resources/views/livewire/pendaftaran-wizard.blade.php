@@ -776,9 +776,27 @@
     {{-- Tombol Submit Pendaftaran --}}
     <button 
         wire:click="prepareSubmit" 
-        class="btn-primary px-10 py-3 text-base">
-        Simpan Pendaftaran
+        wire:loading.attr="disabled"
+        class="btn-primary px-10 py-3 text-base flex items-center gap-2">
+
+        {{-- Normal --}}
+        <span wire:loading.remove wire:target="prepareSubmit">
+            Simpan Pendaftaran
+        </span>
+
+        {{-- Loading --}}
+        <span wire:loading wire:target="prepareSubmit" class="flex items-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10"
+                    stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Menyimpan...
+        </span>
+
     </button>
+
 
     {{-- Modal Konfirmasi --}}
     <div x-data="{ open: @entangle('showConfirm') }" x-show="open" x-transition

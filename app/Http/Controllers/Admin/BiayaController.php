@@ -34,8 +34,10 @@ class BiayaController extends Controller
             'nominal' => 'required|numeric|min:0',
         ]);
 
-        Biaya::create([
-            'tahun_ajaran_id' => TahunAjaran::where('aktif', true)->value('id'),
+        $tahunId = TahunAjaran::where('aktif', true)->value('id');
+
+        $biaya = Biaya::create([
+            'tahun_ajaran_id' => $tahunId,
             'jenis_biaya' => $request->jenis_biaya,
             'kategori' => $request->kategori,
             'jenis_kelamin' => $request->jenis_kelamin,
@@ -44,24 +46,56 @@ class BiayaController extends Controller
             'aktif' => true,
         ]);
 
+        // --- Log aktivitas ---
         logAktivitas(
             'Kelola Biaya',
-            'Menambahkan biaya '.$request->nama_biaya.
-            ' ('.$request->kategori.')'
+            'Menambahkan biaya #'.$biaya->id.' "'.$biaya->nama_biaya.'" ('.$biaya->kategori.')'
         );
 
         return back()->with('success','Biaya berhasil ditambahkan');
     }
 
-    public function toggle(Biaya $biaya)
-    {
-        $biaya->update(['aktif' => !$biaya->aktif]);
-        return back();
-    }
-
     public function destroy(Biaya $biaya)
     {
+        $nama = $biaya->nama_biaya;
+        $kategori = $biaya->kategori;
+        $id = $biaya->id;
+
         $biaya->delete();
+
+        // --- Log aktivitas ---
+        logAktivitas(
+            'Kelola Biaya',
+            'Menghapus biaya #'.$id.' "'.$nama.'" ('.$kategori.')'
+        );
+
         return back()->with('success','Biaya dihapus');
+    }
+
+    public function update(Request $request, Biaya $biaya)
+    {
+        $request->validate([
+            'jenis_biaya' => 'required',
+            'kategori' => 'required',
+            'jenis_kelamin' => 'required',
+            'nama_biaya' => 'required',
+            'nominal' => 'required|numeric|min:0',
+        ]);
+
+        $biaya->update([
+            'jenis_biaya' => $request->jenis_biaya,
+            'kategori' => $request->kategori,
+            'jenis_kelamin' => $request->jenis_kelamin,
+            'nama_biaya' => $request->nama_biaya,
+            'nominal' => $request->nominal,
+        ]);
+
+        // --- Log aktivitas ---
+        logAktivitas(
+            'Kelola Biaya',
+            'Mengubah biaya #'.$biaya->id.' menjadi "'.$biaya->nama_biaya.'" ('.$biaya->kategori.')'
+        );
+
+        return back()->with('success','Biaya berhasil diperbarui');
     }
 }

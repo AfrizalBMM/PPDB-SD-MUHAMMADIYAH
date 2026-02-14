@@ -41,7 +41,8 @@ class VoucherController extends Controller
 
         logAktivitas(
             'Kelola Voucher',
-            'Menambahkan voucher '.$voucher->kode
+            'Menambahkan voucher #'.$voucher->id.' '.$voucher->kode.
+            ' ('.$voucher->nama.', jenis biaya: '.$voucher->jenis_biaya.')'
         );
 
         return back()->with('success','Voucher berhasil dibuat');
@@ -50,12 +51,40 @@ class VoucherController extends Controller
     public function toggle(Voucher $voucher)
     {
         $voucher->update(['aktif' => !$voucher->aktif]);
+        logAktivitas(
+            'Kelola Voucher',
+            ($voucher->aktif ? 'Mengaktifkan' : 'Menonaktifkan').
+            ' voucher #'.$voucher->id.' '.$voucher->kode
+        );
         return back();
     }
 
     public function destroy(Voucher $voucher)
     {
+        $kode = $voucher->kode;
+        $id = $voucher->id;
+
         $voucher->delete();
+
+        logAktivitas(
+            'Kelola Voucher',
+            'Menghapus voucher #'.$id.' '.$kode
+        );
         return back()->with('success','Voucher dihapus');
     }
+
+    public function destroyAll()
+    {
+        $count = Voucher::count();
+        Voucher::truncate();
+
+        logAktivitas(
+            'Kelola Voucher',
+            "Menghapus semua voucher ($count data)"
+        );
+
+        return back()->with('success', 'Semua voucher berhasil dihapus');
+    }
+
+
 }

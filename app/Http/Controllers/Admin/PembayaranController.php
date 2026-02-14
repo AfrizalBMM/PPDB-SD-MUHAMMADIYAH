@@ -34,9 +34,10 @@ class PembayaranController extends Controller
 
         logAktivitas(
             'Pembayaran',
-            'Pembayaran '.$tagihan->biaya->nama.
-            ' siswa '.$tagihan->siswa->nama.
-            ' sebesar Rp '.number_format($request->nominal_bayar)
+            'Pembayaran #'.$pembayaran->id.' '.
+            $tagihan->biaya->nama.' untuk siswa '.$tagihan->siswa->nama.
+            ' sebesar Rp '.number_format($request->nominal_bayar).
+            ' oleh admin '.auth()->user()->name
         );
 
         // update status tagihan

@@ -26,12 +26,14 @@ Route::get('/pendaftaran/sukses/{siswa}', function (Siswa $siswa) {
         'ibu',
         'ayah',
         'wali',
-        'dataPendukung',
         'alamat',
+        'dataPendukung.paudTk',
+        'tagihan.biaya',
     ]);
 
     return view('pendaftaran.sukses', compact('siswa'));
 })->name('pendaftaran.sukses');
+
 
 // cetak formulir pendaftaran (public access setelah daftar)
 Route::get('/cetak/formulir/{siswa}', [CetakController::class, 'formulir'])

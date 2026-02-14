@@ -31,8 +31,11 @@ class UserController extends Controller
             'password'=>Hash::make('password')
         ]);
 
-        logAktivitas('Tambah User','Menambah '.$user->email);
+        logAktivitas(
+            'User',
+            'Menambahkan user #'.$user->id.' '.$user->name.' ('.$user->email.') dengan role '.$user->role
+        );
 
-        return back()->with('success','User dibuat (password: password)');
+        return back()->with('success','User berhasil dibuat');
     }
 }

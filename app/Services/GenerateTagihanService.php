@@ -14,6 +14,10 @@ class GenerateTagihanService
     {
         $voucher = null;
 
+        if ($siswa->tagihan()->exists()) {
+            return;
+        }
+
         // ================= AMBIL & VALIDASI VOUCHER =================
         if ($voucherId) {
             $voucher = Voucher::where('id', $voucherId)
@@ -59,16 +63,21 @@ class GenerateTagihanService
             }
 
             // ================= SIMPAN TAGIHAN =================
-            TagihanSiswa::create([
-                'siswa_id'     => $siswa->id,
-                'biaya_id'     => $biaya->id,
-                'nominal'      => $biaya->nominal,
-                'total'        => max(0, $biaya->nominal - $diskon),
-                'diskon'       => $diskon,
-                'voucher_id'   => $voucher?->id,
-                'kode_voucher' => $voucher?->kode,
-                'status'       => 'belum_lunas',
-            ]);
+            TagihanSiswa::firstOrCreate(
+                [
+                    'siswa_id' => $siswa->id,
+                    'biaya_id' => $biaya->id
+                ],
+                [
+                    'nominal'      => $biaya->nominal,
+                    'total'        => max(0, $biaya->nominal - $diskon),
+                    'diskon'       => $diskon,
+                    'voucher_id'   => $voucher?->id,
+                    'kode_voucher' => $voucher?->kode,
+                    'status'       => 'belum_lunas',
+                ]
+            );
+
         }
 
         // ================= UPDATE VOUCHER (SEKALI SAJA) =================
