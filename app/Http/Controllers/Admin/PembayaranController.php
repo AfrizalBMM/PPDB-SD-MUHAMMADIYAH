@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
 
@@ -12,38 +13,41 @@ class PembayaranController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'tagihan_id' => 'required',
-            'nominal_bayar' => 'required|numeric|min:1',
+            'tagihan_siswa_id' => 'required|exists:tagihan_siswa,id',
+            'nominal_bayar'    => 'required|integer|min:1',
         ]);
 
-        $tagihan = TagihanSiswa::with('pembayaran')->findOrFail($request->tagihan_id);
+        DB::transaction(function () use ($request, &$pembayaran) {
 
-        $dibayar = $tagihan->pembayaran->sum('nominal_bayar');
-        $sisa = $tagihan->total - $dibayar;
+            $tagihan = TagihanSiswa::with('pembayaran')
+                ->lockForUpdate()
+                ->findOrFail($request->tagihan_siswa_id);
 
-        if ($request->nominal_bayar > $sisa) {
-            return back()->withErrors('Nominal melebihi sisa tagihan');
-        }
+            // gunakan accessor model
+            $sisa = $tagihan->sisa;
 
-        $pembayaran = Pembayaran::create([
-            'tagihan_id' => $tagihan->id,
-            'nominal_bayar' => $request->nominal_bayar,
-            'tanggal_bayar' => now(),
-            'admin_id' => auth()->id(),
-        ]);
+            if ($request->nominal_bayar > $sisa) {
+                throw new \Exception('Nominal melebihi sisa tagihan.');
+            }
 
-        logAktivitas(
-            'Pembayaran',
-            'Pembayaran #'.$pembayaran->id.' '.
-            $tagihan->biaya->nama.' untuk siswa '.$tagihan->siswa->nama.
-            ' sebesar Rp '.number_format($request->nominal_bayar).
-            ' oleh admin '.auth()->user()->name
-        );
+            $pembayaran = Pembayaran::create([
+                'tagihan_siswa_id' => $tagihan->id,
+                'nominal_bayar'    => $request->nominal_bayar,
+                'tanggal_bayar'    => now(),
+                'admin_id'         => auth()->id(),
+            ]);
 
-        // update status tagihan
-        if (($dibayar + $request->nominal_bayar) >= $tagihan->total) {
-            $tagihan->update(['status' => 'lunas']);
-        }
+            // update status via helper model
+            $tagihan->refreshStatus();
+
+            logAktivitas(
+                'Pembayaran',
+                'Pembayaran #'.$pembayaran->id.' '.
+                $tagihan->biaya->nama_biaya.' untuk siswa '.$tagihan->siswa->nama.
+                ' sebesar Rp '.number_format($request->nominal_bayar).
+                ' oleh admin '.auth()->user()->name
+            );
+        });
 
         return redirect()
             ->route('pembayaran.nota', $pembayaran->id)

@@ -41,12 +41,14 @@
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex justify-center gap-3">
                                         @if(!$item->aktif)
-                                            <form method="POST" action="{{ route('tahun-ajaran.aktifkan',$item) }}">
-                                                @csrf
-                                                <button type="submit" class="text-xs text-blue-700 hover:underline">
-                                                    Aktifkan
-                                                </button>
-                                            </form>
+                                        <form method="POST" action="{{ route('tahun-ajaran.aktifkan',$item) }}">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <button type="submit" class="text-xs text-blue-700 hover:underline">
+                                                Aktifkan
+                                            </button>
+                                        </form>
                                         @endif
 
                                         <form method="POST" action="{{ route('tahun-ajaran.destroy',$item) }}" onsubmit="return confirm('Yakin ingin menghapus tahun ajaran ini?')">

@@ -17,6 +17,10 @@ class Ayah extends Model
         'pekerjaan',
         'pekerjaan_lainnya',
         'penghasilan',
-        'no_hp',
     ];
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class);
+    }
 }

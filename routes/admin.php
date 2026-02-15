@@ -59,7 +59,7 @@ Route::prefix('admin')
             Route::resource('tahun-ajaran', TahunAjaranController::class)
                 ->only(['index','store']);
 
-            Route::post('/tahun-ajaran/{tahunAjaran}/aktifkan',
+            Route::patch('/tahun-ajaran/{tahunAjaran}/aktifkan',
                 [TahunAjaranController::class, 'aktifkan'])
                 ->name('tahun-ajaran.aktifkan');
 
@@ -67,8 +67,9 @@ Route::prefix('admin')
                 ->only(['index','store','destroy']);
 
             // Route Biaya toggle
-            Route::post('/biaya/{biaya}/toggle', [BiayaController::class, 'toggle'])
-                ->name('biaya.toggle');
+            Route::patch('/admin/biaya/{biaya}/toggle',
+                [BiayaController::class, 'toggle']
+            )->name('biaya.toggle');
 
             Route::delete('/voucher/destroy-all', [VoucherController::class, 'destroyAll'])
                 ->name('voucher.destroyAll');
@@ -76,7 +77,7 @@ Route::prefix('admin')
             Route::resource('voucher', VoucherController::class)
                 ->except(['show','edit','update']);
 
-            Route::post('/voucher/{voucher}/toggle', [VoucherController::class, 'toggle'])
+            Route::patch('/voucher/{voucher}/toggle', [VoucherController::class, 'toggle'])
                 ->name('voucher.toggle');
 
             Route::delete('/paud-tk/destroy-all', [PaudTkController::class, 'destroyAll'])

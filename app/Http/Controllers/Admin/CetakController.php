@@ -17,10 +17,13 @@ class CetakController extends Controller
     {
         $siswa->load([
             'registration.tahunAjaran',
+            'alamatSiswa',
             'ibu',
             'ayah',
             'wali',
             'dataPendukung',
+            'tagihan.biaya',
+            'tagihan.voucher',
         ]);
 
         logAktivitas(
@@ -30,7 +33,7 @@ class CetakController extends Controller
         );
 
         $pdf = Pdf::loadView('cetak.formulir', compact('siswa'))
-            ->setPaper([0, 0, 595.28, 935.43], 'portrait'); // F4 REAL
+            ->setPaper([0, 0, 595.28, 935.43], 'portrait');
 
         return $pdf->stream(
             'Formulir-'.$siswa->registration->nomor_registrasi.'.pdf'
@@ -42,32 +45,34 @@ class CetakController extends Controller
      * NAMA ADMIN DIINPUT SAAT CETAK
      */
     public function nota(Request $request, Pembayaran $pembayaran)
-    {
-        $request->validate([
-            'nama_admin' => 'required'
-        ]);
+{
+    $request->validate([
+        'nama_admin' => 'required|string|max:100'
+    ]);
 
-        $pembayaran->load([
-            'tagihan.siswa.registration',
-            'tagihan.biaya',
-        ]);
+    $pembayaran->load([
+        'tagihan.siswa.registration.tahunAjaran',
+        'tagihan.siswa.alamatSiswa',
+        'tagihan.biaya',
+        'tagihan.voucher',
+    ]);
 
-        $namaAdmin = $request->nama_admin;
+    $namaAdmin = $request->nama_admin;
 
-        $pdf = Pdf::loadView(
-            'cetak.nota-2x-a4',
-            compact('pembayaran','namaAdmin')
-        )->setPaper('a4', 'portrait');
+    logAktivitas(
+        'Cetak Nota',
+        'Cetak nota pembayaran #'.$pembayaran->id.
+        ' untuk siswa '.$pembayaran->tagihan->siswa->nama.
+        ' oleh admin '.$namaAdmin
+    );
 
-        logAktivitas(
-            'Cetak Nota',
-            'Cetak nota pembayaran #'.$pembayaran->id.
-            ' untuk siswa '.$pembayaran->tagihan->siswa->nama.
-            ' oleh admin '.$request->nama_admin
-        );
+    $pdf = Pdf::loadView(
+        'cetak.nota-2x-a4',
+        compact('pembayaran','namaAdmin')
+    )->setPaper('a4', 'portrait');
 
-        return $pdf->stream(
-            'Kwitansi-'.$pembayaran->id.'.pdf'
-        );
-    }
+    return $pdf->stream(
+        'Kwitansi-'.$pembayaran->id.'.pdf'
+    );
+}
 }

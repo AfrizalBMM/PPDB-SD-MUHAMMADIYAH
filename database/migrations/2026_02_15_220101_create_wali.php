@@ -11,14 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('registrations', function (Blueprint $table) {
+        Schema::create('wali', function (Blueprint $table) {
             $table->id();
-            $table->string('nomor_registrasi')->unique();
-            $table->date('tanggal_daftar');
-            $table->unsignedBigInteger('tahun_ajaran_id');
-            $table->enum('status',['pending','diterima'])->default('pending');
-            $table->unsignedBigInteger('input_by')->nullable();
+
+            $table->unsignedBigInteger('siswa_id')->unique();
+
+            $table->string('nama');
+            $table->string('hubungan');
+            $table->string('no_hp',14);
+
             $table->timestamps();
+
+            $table->foreign('siswa_id')
+                ->references('id')
+                ->on('siswa')
+                ->cascadeOnDelete();
         });
     }
 
@@ -27,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('registration');
+        Schema::dropIfExists('wali');
     }
 };

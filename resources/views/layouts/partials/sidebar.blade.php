@@ -3,10 +3,10 @@
     <img src="{{ asset('images/logo.png') }}" alt="Logo PPDB" class="h-10 w-10 object-contain">
     <div class="flex flex-col">
         <div class="text-lg font-bold tracking-wide">
-            PPDB ADMIN
+            PPDB SDM
         </div>
         <div class="text-xs text-white/70 mt-1">
-            Slogannyaa...
+            Islami, Mandiri, Berprestasi
         </div>
     </div>
 </div>

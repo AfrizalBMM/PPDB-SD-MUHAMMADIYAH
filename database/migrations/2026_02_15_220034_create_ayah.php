@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('ayah', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('siswa_id')->unique();
 
             $table->string('nama')->nullable();
@@ -22,13 +23,13 @@ return new class extends Migration
             $table->string('pekerjaan')->nullable();
             $table->string('pekerjaan_lainnya')->nullable();
             $table->string('penghasilan')->nullable();
-            $table->string('no_hp',14)->nullable();
 
             $table->timestamps();
 
             $table->foreign('siswa_id')
-                ->references('id')->on('siswa')
-                ->onDelete('cascade');
+                ->references('id')
+                ->on('siswa')
+                ->cascadeOnDelete();
         });
     }
 

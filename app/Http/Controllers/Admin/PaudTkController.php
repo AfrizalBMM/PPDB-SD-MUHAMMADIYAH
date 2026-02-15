@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\PaudTk;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\PaudTkImport;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PaudTkController extends Controller
@@ -14,17 +13,17 @@ class PaudTkController extends Controller
     public function index()
     {
         return view('admin.paud-tk.index', [
-            'data' => PaudTk::orderBy('nama')->get()
+            'data' => PaudTk::orderBy('nama')->paginate(30)
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama'  => 'required|string|max:255',
             'jenis' => 'required|in:PAUD,TK',
-            'npsn' => 'nullable|string|max:20',
-            'telp' => 'nullable|string|max:20',
+            'npsn'  => 'nullable|string|max:20',
+            'telp'  => 'nullable|string|max:20',
         ]);
 
         $data = $request->only([
@@ -32,36 +31,42 @@ class PaudTkController extends Controller
             'kelurahan','kecamatan','telp','akreditasi'
         ]);
 
-        $data['aktif'] = $request->has('aktif');
+        $data['aktif'] = $request->boolean('aktif');
 
-        PaudTk::create($data);
+        $paud = PaudTk::create($data);
 
         logAktivitas(
             'Kelola PAUD/TK',
-            'Menambahkan PAUD/TK baru: "'.$data['nama'].'" ('.$data['jenis'].')'
+            'Menambahkan PAUD/TK baru: "'.$paud->nama.'" ('.$paud->jenis.')'
         );
 
-        // Tambahkan session sukses
         return back()->with('success', 'Data PAUD/TK berhasil disimpan!');
     }
 
-
     public function toggle(PaudTk $paudTk)
     {
-        $paudTk->aktif = !$paudTk->aktif;
-        $paudTk->save();
+        $paudTk->update([
+            'aktif' => !$paudTk->aktif
+        ]);
+
         logAktivitas(
             'Kelola PAUD/TK',
             ($paudTk->aktif ? 'Mengaktifkan' : 'Menonaktifkan').
             ' PAUD/TK #'.$paudTk->id.' "'.$paudTk->nama.'"'
         );
+
         return back();
     }
 
     public function destroy(PaudTk $paudTk)
     {
+        // ❗ Jangan hapus jika sudah dipakai siswa
+        if ($paudTk->dataPendukung()->exists()) {
+            return back()->with('error','PAUD/TK sudah digunakan oleh siswa dan tidak dapat dihapus.');
+        }
+
         $nama = $paudTk->nama;
-        $id = $paudTk->id;
+        $id   = $paudTk->id;
 
         $paudTk->delete();
 
@@ -69,6 +74,7 @@ class PaudTkController extends Controller
             'Kelola PAUD/TK',
             'Menghapus PAUD/TK #'.$id.' "'.$nama.'"'
         );
+
         return back();
     }
 
@@ -78,37 +84,33 @@ class PaudTkController extends Controller
             'file' => 'required|mimes:xlsx,xls'
         ]);
 
-        // Baca file Excel
-        $rows = Excel::toArray(new PaudTkImport, $request->file('file'))[0];
+        $rows = Excel::toArray([], $request->file('file'))[0] ?? [];
 
         $countNew = 0;
         $countUpdated = 0;
 
-        foreach($rows as $row){
-            if(empty($row['nama'])) continue;
+        foreach ($rows as $row) {
 
-            // Merge berdasarkan nama + kelurahan + kecamatan
+            if (empty($row['nama'])) continue;
+
             $paud = PaudTk::firstOrNew([
-                'nama' => $row['nama'],
-                'kelurahan' => $row['kelurahan'] ?? null,
-                'kecamatan' => $row['kecamatan'] ?? null
+                'nama'       => $row['nama'],
+                'kelurahan'  => $row['kelurahan'] ?? null,
+                'kecamatan'  => $row['kecamatan'] ?? null
             ]);
 
-            // Update atau set field lain
-            $paud->npsn = $row['npsn'] ?? $paud->npsn;
-            $paud->jenis = $row['jenis'] ?? $paud->jenis;
-            $paud->alamat = $row['alamat'] ?? $paud->alamat;
-            $paud->telp = $row['telp'] ?? $paud->telp;
-            $paud->akreditasi = $row['akreditasi'] ?? $paud->akreditasi;
-            $paud->aktif = $row['aktif'] ?? $paud->aktif;
+            $isNew = !$paud->exists;
 
-            if($paud->exists){
-                $countUpdated++;
-            } else {
-                $countNew++;
-            }
+            $paud->npsn       = $row['npsn'] ?? $paud->npsn;
+            $paud->jenis      = $row['jenis'] ?? $paud->jenis;
+            $paud->alamat     = $row['alamat'] ?? $paud->alamat;
+            $paud->telp       = $row['telp'] ?? $paud->telp;
+            $paud->akreditasi = $row['akreditasi'] ?? $paud->akreditasi;
+            $paud->aktif      = isset($row['aktif']) ? (bool)$row['aktif'] : $paud->aktif;
 
             $paud->save();
+
+            $isNew ? $countNew++ : $countUpdated++;
         }
 
         logAktivitas(
@@ -117,23 +119,35 @@ class PaudTkController extends Controller
             "$countNew data baru, $countUpdated data diperbarui"
         );
 
-        return back()->with('success', "Import selesai! $countNew data baru, $countUpdated data diperbarui.");
+        return back()->with(
+            'success',
+            "Import selesai! $countNew data baru, $countUpdated data diperbarui."
+        );
     }
 
     public function template(): BinaryFileResponse
     {
         $file = storage_path('app/template_paud_tk.xlsx');
+
+        if (!file_exists($file)) {
+            abort(404, 'Template tidak ditemukan.');
+        }
+
         return response()->download($file, 'template-paud-tk.xlsx');
     }
 
     public function destroyAll()
     {
-        PaudTk::truncate(); // Hapus semua data
+        // ❗ Hanya hapus yang belum pernah dipakai
+        $count = PaudTk::doesntHave('dataPendukung')->count();
+
+        PaudTk::doesntHave('dataPendukung')->delete();
+
         logAktivitas(
             'Kelola PAUD/TK',
-            'Menghapus semua data PAUD/TK'
+            "Menghapus $count data PAUD/TK yang belum digunakan"
         );
-        return redirect()->back()->with('success', 'Semua data PAUD / TK berhasil dihapus!');
-    }
 
+        return back()->with('success','Data yang belum digunakan berhasil dihapus.');
+    }
 }

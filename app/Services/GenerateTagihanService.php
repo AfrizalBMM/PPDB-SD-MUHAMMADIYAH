@@ -6,83 +6,102 @@ use App\Models\Siswa;
 use App\Models\Biaya;
 use App\Models\Voucher;
 use App\Models\TagihanSiswa;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class GenerateTagihanService
 {
     public static function generate(Siswa $siswa, ?int $voucherId = null): void
     {
-        $voucher = null;
-
+        // Jika sudah punya tagihan → stop
         if ($siswa->tagihan()->exists()) {
             return;
         }
 
-        // ================= AMBIL & VALIDASI VOUCHER =================
-        if ($voucherId) {
-            $voucher = Voucher::where('id', $voucherId)
-                ->where('aktif', true)
-                ->first();
+        DB::transaction(function () use ($siswa, $voucherId) {
 
-            // cek expired
-            if ($voucher && $voucher->expired_at && Carbon::parse($voucher->expired_at)->isPast()) {
-                $voucher = null;
-            }
-        }
+            $voucher = null;
+            $voucherDipakai = false;
 
-        // ================= AMBIL BIAYA =================
-        $biayaList = Biaya::where('tahun_ajaran_id', $siswa->registration->tahun_ajaran_id)
-            ->where('aktif', true)
-            ->where(function ($q) use ($siswa) {
-                $q->where('jenis_kelamin', $siswa->jenis_kelamin)
-                  ->orWhere('jenis_kelamin', 'semua');
-            })
-            ->get();
+            /*
+            |--------------------------------------------------------------------------
+            | AMBIL & LOCK VOUCHER (ANTI RACE CONDITION)
+            |--------------------------------------------------------------------------
+            */
 
-        $voucherDipakai = false;
+            if ($voucherId) {
+                $voucher = Voucher::where('id', $voucherId)
+                    ->where('aktif', true)
+                    ->lockForUpdate()
+                    ->first();
 
-        foreach ($biayaList as $biaya) {
+                if ($voucher) {
+                    $masihBerlaku =
+                        $voucher->digunakan < $voucher->maks_penggunaan &&
+                        now()->between($voucher->tanggal_mulai, $voucher->tanggal_selesai);
 
-            $diskon = 0;
-
-            // ================= HITUNG DISKON =================
-            if (
-                $voucher &&
-                !$voucherDipakai &&
-                $voucher->jenis_biaya === $biaya->jenis_biaya
-            ) {
-                if ($voucher->tipe === 'nominal') {
-                    $diskon = min($voucher->nilai, $biaya->nominal);
+                    if (!$masihBerlaku) {
+                        $voucher = null;
+                    }
                 }
-
-                if ($voucher->tipe === 'persen') {
-                    $diskon = floor($biaya->nominal * ($voucher->nilai / 100));
-                }
-
-                $voucherDipakai = true;
             }
 
-            // ================= SIMPAN TAGIHAN =================
-            TagihanSiswa::firstOrCreate(
-                [
-                    'siswa_id' => $siswa->id,
-                    'biaya_id' => $biaya->id
-                ],
-                [
+            /*
+            |--------------------------------------------------------------------------
+            | AMBIL BIAYA SESUAI TAHUN & JK
+            |--------------------------------------------------------------------------
+            */
+
+            $biayaList = Biaya::aktif()
+                ->untukTahun($siswa->registration->tahun_ajaran_id)
+                ->untukJenisKelamin($siswa->jenis_kelamin)
+                ->get();
+
+            foreach ($biayaList as $biaya) {
+
+                $diskon = 0;
+
+                /*
+                |--------------------------------------------------------------------------
+                | HITUNG DISKON (HANYA SEKALI)
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $voucher &&
+                    !$voucherDipakai &&
+                    $voucher->jenis_biaya === $biaya->jenis_biaya
+                ) {
+                    $diskon = min($voucher->diskon_nominal, $biaya->nominal);
+                    $voucherDipakai = true;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SIMPAN TAGIHAN
+                |--------------------------------------------------------------------------
+                */
+
+                TagihanSiswa::create([
+                    'siswa_id'     => $siswa->id,
+                    'biaya_id'     => $biaya->id,
                     'nominal'      => $biaya->nominal,
-                    'total'        => max(0, $biaya->nominal - $diskon),
                     'diskon'       => $diskon,
-                    'voucher_id'   => $voucher?->id,
-                    'kode_voucher' => $voucher?->kode,
+                    'total'        => max(0, $biaya->nominal - $diskon),
+                    'voucher_id'   => $voucherDipakai ? $voucher?->id : null,
+                    'kode_voucher' => $voucherDipakai ? $voucher?->kode : null,
                     'status'       => 'belum_lunas',
-                ]
-            );
+                ]);
+            }
 
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE KUOTA VOUCHER
+            |--------------------------------------------------------------------------
+            */
 
-        // ================= UPDATE VOUCHER (SEKALI SAJA) =================
-        if ($voucher && $voucherDipakai) {
-            $voucher->increment('digunakan');
-        }
+            if ($voucher && $voucherDipakai) {
+                $voucher->increment('digunakan');
+            }
+        });
     }
 }

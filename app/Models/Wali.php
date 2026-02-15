@@ -11,9 +11,13 @@ class Wali extends Model
     protected $fillable = [
         'siswa_id',
         'nama',
-        'nik',
         'hubungan',
         'no_hp',
         'alamat',
     ];
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class);
+    }
 }

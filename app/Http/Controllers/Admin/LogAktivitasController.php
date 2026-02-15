@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LogAktivitas;
@@ -9,28 +10,35 @@ class LogAktivitasController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\LogAktivitas::query();
+        $query = LogAktivitas::with('user');
 
-        // SEARCH KEYWORD (user, aksi, keterangan)
-        if ($request->search) {
+        // ================= SEARCH =================
+        if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function($q) use ($search) {
                 $q->where('aksi', 'like', "%{$search}%")
-                ->orWhere('keterangan', 'like', "%{$search}%")
-                ->orWhereHas('user', function($u) use ($search) {
-                    $u->where('name', 'like', "%{$search}%");
-                });
+                  ->orWhere('keterangan', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
-        // FILTER ROLE
-        if ($request->role) {
+        // ================= FILTER ROLE =================
+        if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
 
-        $logs = $query->latest()->paginate(50);
+        // ================= FILTER TANGGAL =================
+        if ($request->filled('tanggal')) {
+            $query->whereDate('created_at', $request->tanggal);
+        }
 
-        // Jika request AJAX (dari live search), kembalikan partial table saja
+        $logs = $query
+            ->orderByDesc('created_at')
+            ->paginate(50);
+
         if ($request->ajax()) {
             return view('admin.log.logs-table', compact('logs'))->render();
         }
@@ -40,9 +48,22 @@ class LogAktivitasController extends Controller
 
     public function destroyAll()
     {
-        \App\Models\LogAktivitas::truncate(); // hapus semua log
-        return redirect()->route('log.aktivitas')->with('success', 'Semua log berhasil dihapus!');
-    }
-        
+        // ❗ Hanya boleh admin tertentu (opsional)
+        if (!auth()->user()->role === 'superadmin') {
+            abort(403);
+        }
 
+        $count = LogAktivitas::count();
+
+        LogAktivitas::truncate();
+
+        logAktivitas(
+            'Kelola Log',
+            "Menghapus semua log aktivitas ($count data)"
+        );
+
+        return redirect()
+            ->route('log.aktivitas')
+            ->with('success', 'Semua log berhasil dihapus!');
+    }
 }

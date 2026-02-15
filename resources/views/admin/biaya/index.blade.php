@@ -63,6 +63,7 @@
                         <th class="px-4 py-2">Status</th>
                         <th class="px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Jenis</th>
+                        <th class="px-4 py-2">Kategori</th>
                         <th class="px-4 py-2">JK</th>
                         <th class="px-4 py-2">Nominal</th>
                         <th class="px-4 py-2">Aksi</th>
@@ -80,12 +81,20 @@
                         </td>
                         <td class="px-4 py-2 font-medium">{{ $b->nama_biaya }}</td>
                         <td class="px-4 py-2">{{ ucfirst($b->jenis_biaya) }}</td>
+                        <td class="px-4 py-2">{{ ucfirst($b->kategori) }}</td>
                         <td class="px-4 py-2">{{ ucfirst($b->jenis_kelamin) }}</td>
                         <td class="px-4 py-2 font-semibold text-slate-800">
                             Rp {{ number_format($b->nominal,0,',','.') }}
                         </td>
                         <td class="px-4 py-2 flex gap-2">
                             {{-- Hapus --}}
+                            <form method="POST" action="{{ route('biaya.toggle',$b) }}">
+                                @csrf
+                                @method('PATCH')
+                                <button class="text-xs px-2 py-1 bg-yellow-500 text-white rounded">
+                                    {{ $b->aktif ? 'Nonaktifkan' : 'Aktifkan' }}
+                                </button>
+                            </form>
                             <x-button type="button" onclick="openDeleteModal('{{ route('biaya.destroy',$b) }}')" class="bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Hapus</x-button>
                         </td>
                     </tr>

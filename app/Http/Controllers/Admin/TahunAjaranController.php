@@ -32,16 +32,17 @@ class TahunAjaranController extends Controller
             TahunAjaran::where('aktif',true)->update(['aktif'=>false]);
         }
 
-        TahunAjaran::create([
+        $tahun = TahunAjaran::create([
             'nama' => $request->nama,
             'aktif' => $request->aktif ?? false
         ]);
 
         logAktivitas(
             'Tahun Ajaran',
-            'Menambahkan tahun ajaran #'.$tahun->id.' "'.$tahun->nama.'"'.
+            'Menambahkan tahun ajaran #'.$tahun->id.' "'.$tahun->nama.'"' .
             ($tahun->aktif ? ' (aktif)' : '')
         );
+
 
         return back()->with('success', 'Tahun ajaran berhasil di tambahkan.');
     }
@@ -56,7 +57,7 @@ class TahunAjaranController extends Controller
             'Mengaktifkan tahun ajaran #'.$tahunAjaran->id.' "'.$tahunAjaran->nama.'"'
         );
 
-        return back();
+        return back()->with('success', 'Tahun ajaran berhasil di ganti.');
     }
 
     public function destroy(TahunAjaran $tahunAjaran)

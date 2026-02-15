@@ -9,30 +9,33 @@ class Siswa extends Model
     protected $table = 'siswa';
 
     protected $fillable = [
-        'registration_id', 'nama', 'jenis_kelamin',
-        'nik', 'no_kk', 'tempat_lahir',
-        'tanggal_lahir', 'akta_no', 'hasil_tes'
+        'registration_id',
+        'nama',
+        'jenis_kelamin',
+        'nik',
+        'no_kk',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'akta_no',
+
+        'agama',
+        'kewarganegaraan',
+        'berkebutuhan_khusus',
+        'tinggal_bersama',
+        'transportasi',
+
+        'no_kks',
+        'kps',
+        'kip',
+
+        'hasil_tes',
     ];
 
-    public function ayah()
-    {
-        return $this->hasOne(\App\Models\Ayah::class);
-    }
+    protected $casts = [
+        'tanggal_lahir' => 'date',
+    ];
 
-    public function ibu()
-    {
-        return $this->hasOne(\App\Models\Ibu::class);
-    }
-
-    public function wali()
-    {
-        return $this->hasOne(\App\Models\Wali::class);
-    }
-
-    public function tagihan()
-    {
-        return $this->hasMany(\App\Models\TagihanSiswa::class);
-    }
+    // ================= RELATIONS =================
 
     public function registration()
     {
@@ -41,16 +44,31 @@ class Siswa extends Model
 
     public function alamat()
     {
-        return $this->hasOne(\App\Models\AlamatSiswa::class);
+        return $this->hasOne(AlamatSiswa::class);
+    }
+
+    public function ibu()
+    {
+        return $this->hasOne(Ibu::class);
+    }
+
+    public function ayah()
+    {
+        return $this->hasOne(Ayah::class);
+    }
+
+    public function wali()
+    {
+        return $this->hasOne(Wali::class);
     }
 
     public function dataPendukung()
     {
-        return $this->hasOne(\App\Models\DataPendukung::class);
+        return $this->hasOne(DataPendukung::class);
     }
 
-    public function semuaTagihanLunas(): bool
+    public function tagihan()
     {
-        return $this->tagihan()->where('status','!=','lunas')->count() === 0;
+        return $this->hasMany(TagihanSiswa::class);
     }
 }

@@ -1,37 +1,37 @@
-<div class="max-w-6xl mx-auto px-6 pb-10">
+    <div class="max-w-6xl mx-auto px-6 pb-10">
 
-@if ($errorsTriggered && $errors->any())
-<div
-    x-data="{ open: @entangle('errorsTriggered') }"
-    x-show="open"
-    x-transition
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
->
-    <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-        <h2 class="text-lg font-semibold text-red-600 mb-3">Data Pendaftaran Belum Lengkap</h2>
+    @if ($errorsTriggered && $errors->any())
+    <div
+        x-data="{ open: @entangle('errorsTriggered') }"
+        x-show="open"
+        x-transition
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
+        <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
+            <h2 class="text-lg font-semibold text-red-600 mb-3">Data Pendaftaran Belum Lengkap</h2>
 
-        <p class="text-sm text-slate-600 mb-4">
-            Silakan periksa kembali form pendaftaran. Beberapa data wajib belum diisi dengan benar.
-        </p>
+            <p class="text-sm text-slate-600 mb-4">
+                Silakan periksa kembali form pendaftaran. Beberapa data wajib belum diisi dengan benar.
+            </p>
 
-        <ul class="list-disc list-inside text-sm text-red-600 space-y-1 mb-5">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+            <ul class="list-disc list-inside text-sm text-red-600 space-y-1 mb-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
 
-        <div class="text-right">
-            <button
-                type="button"
-                @click="open = false; $wire.errorsTriggered = false"
-                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-            >
-                OK
-            </button>
+            <div class="text-right">
+                <button
+                    type="button"
+                    @click="open = false; $wire.errorsTriggered = false"
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+                >
+                    OK
+                </button>
+            </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 
 
 <form wire:submit.prevent="simpan" class="space-y-8">
@@ -154,15 +154,19 @@
             {{-- NIK --}}
             <div>
                 <label class="label">NIK <span class="text-red-500">*</span></label>
-                <input wire:model.defer="nik"
+                <input wire:model.debounce.500ms="nik"
                     type="text"
                     inputmode="numeric"
                     maxlength="16"
                     placeholder="16 digit"
                     class="input @error('nik') border-red-500 @enderror">
-                @error('nik')
+                    @error('nik')
                     <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                    @enderror
+
+                    @if($nikTersedia)
+                    <p class="text-green-600 text-xs mt-1">NIK tersedia</p>
+                    @endif
             </div>
 
             {{-- NO KK --}}
@@ -486,7 +490,7 @@
             {{-- Pekerjaan Ibu --}}
             <div>
                 <label class="label">Pekerjaan Ibu</label>
-                <select wire:model.defer="ibu_pekerjaan"
+                <select wire:model.live="ibu_pekerjaan"
                         class="input @error('ibu_pekerjaan') border-red-500 @enderror">
                     <option value="">Pilih</option>
                     <option>Tidak Bekerja</option>
@@ -600,7 +604,7 @@
             {{-- Pekerjaan Ayah --}}
             <div>
                 <label class="label">Pekerjaan Ayah</label>
-                <select wire:model.defer="ayah_pekerjaan"
+                <select wire:model.live="ayah_pekerjaan"
                         class="input @error('ayah_pekerjaan') border-red-500 @enderror">
                     <option value="">Pilih</option>
                     <option>Tidak Bekerja</option>
@@ -798,29 +802,69 @@
     </button>
 
 
-    {{-- Modal Konfirmasi --}}
-    <div x-data="{ open: @entangle('showConfirm') }" x-show="open" x-transition
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    {{-- Modal Konfirmasi Pendaftaran --}}
+    <div 
+        x-data="{ open: @entangle('showConfirm') }" 
+        x-show="open" 
+        x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+        <div 
+            x-transition
+            x-show="open"
+            class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4"
+        >
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Konfirmasi Pendaftaran</h3>
+            <p class="text-sm text-slate-600 mb-6">
+                Apakah Anda yakin ingin mengirimkan pendaftaran ini?
+            </p>
 
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div class="flex justify-end gap-3">
+                <button 
+                    @click="open = false" 
+                    class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition"
+                >
+                    Batal
+                </button>
 
-        <h3 class="text-lg font-semibold mb-4">Konfirmasi Pendaftaran</h3>
-        <p class="mb-6">Apakah Anda yakin ingin mengirimkan pendaftaran ini?</p>
-
-        <div class="flex justify-end space-x-3">
-            <button @click="open = false" class="btn-secondary px-4 py-2">
-                Batal
-            </button>
-
-            <button wire:click="submitForm" wire:loading.attr="disabled" class="btn-primary px-4 py-2">
-                <span wire:loading.remove>Ya, Kirim</span>
-                <span wire:loading>Loading...</span>
-            </button>
+                <button 
+                    wire:click="submitForm" 
+                    wire:loading.attr="disabled"
+                    class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition flex items-center gap-2"
+                >
+                    <span wire:loading.remove>Ya, Kirim</span>
+                    <span wire:loading class="flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        Mengirim...
+                    </span>
+                </button>
+            </div>
         </div>
-
     </div>
-</div>
 
+    <!-- Modal Error -->
+    <div x-data="{ open: @entangle('errorsTriggered') }">
+        <div 
+            x-show="open" 
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+            <div class="bg-white p-6 rounded shadow-lg max-w-md w-full">
+                <h2 class="text-lg font-semibold mb-4 text-red-600">Terjadi Kesalahan</h2>
+                <p class="mb-4 text-sm text-gray-700">
+                    {{ $feedbackMessage }}
+                </p>
+                <button 
+                    @click="open = false; $wire.errorsTriggered = false" 
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
 
     {{-- Script Alpine untuk halaman publik --}}
     <script>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class TagihanSiswa extends Model
 {
@@ -15,7 +16,21 @@ class TagihanSiswa extends Model
         'diskon',
         'total',
         'status',
+        'voucher_id',
+        'kode_voucher',
     ];
+
+    protected $casts = [
+        'nominal' => 'integer',
+        'diskon'  => 'integer',
+        'total'   => 'integer',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
 
     public function siswa()
     {
@@ -29,11 +44,42 @@ class TagihanSiswa extends Model
 
     public function pembayaran()
     {
-        return $this->hasMany(\App\Models\Pembayaran::class);
+        return $this->hasMany(Pembayaran::class);
     }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeBelumLunas(Builder $query)
+    {
+        return $query->where('status', 'belum_lunas');
+    }
+
+    public function scopeLunas(Builder $query)
+    {
+        return $query->where('status', 'lunas');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
 
     public function getTotalDibayarAttribute()
     {
+        if ($this->relationLoaded('pembayaran')) {
+            return $this->pembayaran->sum('nominal_bayar');
+        }
+
         return $this->pembayaran()->sum('nominal_bayar');
     }
 
@@ -42,4 +88,20 @@ class TagihanSiswa extends Model
         return max(0, $this->total - $this->total_dibayar);
     }
 
+    public function getIsLunasAttribute()
+    {
+        return $this->sisa <= 0;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER
+    |--------------------------------------------------------------------------
+    */
+
+    public function refreshStatus()
+    {
+        $this->status = $this->is_lunas ? 'lunas' : 'belum_lunas';
+        $this->save();
+    }
 }

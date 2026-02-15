@@ -15,9 +15,15 @@ class DataPendukung extends Model
         'jarak',
         'jumlah_saudara',
         'paud_tk_id',
+        'alamat_tk',
         'hobi',
-        'cita_cita'
+        'cita_cita',
     ];
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class);
+    }
 
     public function paudTk()
     {

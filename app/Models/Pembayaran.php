@@ -17,7 +17,18 @@ class Pembayaran extends Model
         'admin_id',
     ];
 
-    public function tagihan()
+    protected $casts = [
+        'tanggal_bayar' => 'date',
+        'nominal_bayar' => 'integer',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function tagihanSiswa()
     {
         return $this->belongsTo(TagihanSiswa::class, 'tagihan_siswa_id');
     }

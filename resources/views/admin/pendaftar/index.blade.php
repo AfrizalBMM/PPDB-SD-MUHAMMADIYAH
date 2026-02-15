@@ -23,7 +23,7 @@
             <thead class="bg-slate-100 text-slate-700">
                 <tr>
                     <th class="px-4 py-3 text-left">No</th>
-                    <th class="px-4 py-3 text-left">ID</th>
+                    <th class="px-4 py-3 text-left">Tahun Ajaran</th>
                     <th class="px-4 py-3 text-left">Nama</th>
                     <th class="px-4 py-3 text-left">No Registrasi</th>
                     <th class="px-4 py-3 text-left">Status</th>
@@ -39,7 +39,7 @@
                         </td>
 
                         <td class="px-4 py-3 font-medium">
-                            {{ $s->id }}
+                            {{ $s->registration->tahunAjaran->nama ?? '-' }}
                         </td>
 
                         <td class="px-4 py-3 font-medium">
@@ -51,19 +51,20 @@
                         </td>
 
                         <td class="px-4 py-3">
-                            @php
-                                $status = $s->registration->status ?? null;
-                            @endphp
+                            @switch($s->registration->status ?? 'pending')
 
-                            @if($status === 'diterima')
-                                <span class="badge-success">Diterima</span>
-                            @elseif($status === 'ditolak')
-                                <span class="badge-danger">Ditolak</span>
-                            @elseif($status)
-                                <span class="badge-warning">{{ ucfirst($status) }}</span>
-                            @else
-                                <span class="badge-warning">Belum diproses</span>
-                            @endif
+                                @case('diterima')
+                                    <span class="badge-success">Diterima</span>
+                                @break
+
+                                @case('pending')
+                                    <span class="badge-warning">Pending</span>
+                                @break
+
+                                @default
+                                    <span class="badge-warning">Belum diproses</span>
+
+                            @endswitch
                         </td>
 
                         <td class="px-4 py-3">

@@ -19,4 +19,9 @@ class Ibu extends Model
         'penghasilan',
         'no_hp',
     ];
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class);
+    }
 }

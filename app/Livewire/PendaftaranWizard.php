@@ -26,6 +26,9 @@ class PendaftaranWizard extends Component
     // STEP MODAL
     public $errorsTriggered = false;
     public $showConfirm = false;
+    public $feedbackMessage;
+    public $nikSudahTerdaftar = false;
+    public $nikTersedia = false;
 
     // STEP A – UMUM
     public $tanggal_daftar;
@@ -112,6 +115,29 @@ class PendaftaranWizard extends Component
         }
     }
 
+    public function updatedNik($value)
+    {
+        $this->nikSudahTerdaftar = false;
+        $this->nikTersedia = false;
+
+        if (strlen($value) !== 16) {
+            return;
+        }
+
+        $exists = Siswa::where('nik', $value)
+            ->whereHas('registration', function ($q) {
+                $q->where('tahun_ajaran_id', $this->tahun_ajaran_id);
+            })->exists();
+
+        if ($exists) {
+            $this->nikSudahTerdaftar = true;
+            $this->addError('nik', 'NIK sudah terdaftar pada tahun ajaran ini.');
+        } else {
+            $this->resetErrorBag('nik');
+            $this->nikTersedia = true;
+        }
+    }
+
     public function updatedVoucherId($id)
     {
         $this->voucher_diskon = 0;
@@ -147,6 +173,7 @@ class PendaftaranWizard extends Component
         $this->resetErrorBag();
         $this->errorsTriggered = false;
 
+        // Jika tidak tinggal bersama wali, kosongkan data wali
         if ($this->tinggal_bersama !== 'wali') {
             $this->hp_wali = null;
             $this->wali_nama = null;
@@ -154,11 +181,34 @@ class PendaftaranWizard extends Component
         }
 
         try {
-            $this->validate(); // validasi default semua rules
-            $this->showConfirm = true; // munculkan modal konfirmasi
+            // Validasi form saja, sebelum buka modal konfirmasi
+            $this->validate([
+                'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+                'tanggal_daftar' => 'required|date',
+                'nama_siswa' => 'required|string',
+                'jenis_kelamin' => 'required|string',
+                'nik' => 'required|string|size:16',
+                'no_kk' => 'required|string|size:16',
+                'tempat_lahir' => 'required|string',
+                'tanggal_lahir' => 'required|date',
+                'alamat' => 'required|string',
+                'provinsi' => 'required|string',
+                'kabupaten' => 'required|string',
+                'kecamatan' => 'required|string',
+                'kelurahan' => 'required|string',
+                'transportasi' => 'required|string',
+                'hasil_tes' => 'required|string',
+                // Validasi wali jika tinggal bersama
+                'wali_nama' => $this->tinggal_bersama === 'wali' ? 'required|string' : 'nullable',
+                'wali_hubungan' => $this->tinggal_bersama === 'wali' ? 'required|string' : 'nullable',
+                'hp_wali' => $this->tinggal_bersama === 'wali' ? 'required|digits_between:10,14' : 'nullable|digits_between:10,14',
+            ]);
+
+            $this->showConfirm = true;
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->errorsTriggered = true; // munculkan modal error
-            dd('prepareSubmit ERROR', $e->errors());
+            $this->errorsTriggered = true;
+            throw $e; // tetap lempar supaya error bag terisi di Livewire
         }
     }
 
@@ -166,156 +216,150 @@ class PendaftaranWizard extends Component
     {
         $this->showConfirm = false; // tutup modal konfirmasi
 
-        // panggil simpan, ambil ID siswa untuk redirect
-        $siswaId = $this->simpan();
+        try {
+            $siswaId = $this->simpan(); // simpan data transaksi murni
 
-        if ($siswaId) {
-            return redirect()->route('pendaftaran.sukses', $siswaId);
+            // Jika berhasil, redirect ke halaman sukses
+            return $this->redirect(route('pendaftaran.sukses', ['siswa' => $siswaId]));
+
+        } catch (\Exception $e) {
+            // Jika error (misal duplicate NIK di DB), tampilkan modal error
+            $this->errorsTriggered = true;
+            $this->feedbackMessage = $e->getMessage();
         }
     }
 
-
     public function simpan()
     {
-        $this->resetErrorBag();
-        $this->errorsTriggered = false;
-
-        // 1. Buat rules validasi lengkap
-        $rules = [
-            'tanggal_daftar' => 'required|date',
-            'nama_siswa' => 'required|string',
-            'jenis_kelamin' => 'required|string',
-            'nik' => 'required|string|size:16',
-            'no_kk' => 'required|string|size:16',
-            'tempat_lahir' => 'required|string',
-            'tanggal_lahir' => 'required|date',
-            'alamat' => 'required|string',
-            'provinsi' => 'required|string',
-            'kabupaten' => 'required|string',
-            'kecamatan' => 'required|string',
-            'kelurahan' => 'required|string',
-            'transportasi' => 'required|string',
-            'hasil_tes' => 'required|string',
-        ];
-
-        // validasi Wali jika tinggal dengan wali
-        if ($this->tinggal_bersama === 'wali') {
-            $rules['wali_nama'] = 'required|string';
-            $rules['wali_hubungan'] = 'required|string';
-            $rules['hp_wali'] = 'required|string|digits_between:10,14';
-        } else {
-            $rules['hp_wali'] = 'nullable|string|digits_between:10,14';
-        }
-
-        try {
-            $validatedData = $this->validate($rules);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->errorsTriggered = true;
-            return null; // stop jika ada error
-        }
-
-        $siswa = null; // inisialisasi sebelum transaction
+        $siswa = null;
 
         DB::transaction(function () use (&$siswa) {
+
+            // ================= CEK DUPLIKASI =================
+            $existingSiswa = Siswa::where('nik', $this->nik)
+                ->whereHas('registration', function ($q) {
+                    $q->where('tahun_ajaran_id', $this->tahun_ajaran_id);
+                })->first();
+
+            if ($existingSiswa) {
+                $siswa = $existingSiswa;
+                return;
+            }
+
+            // ================= BUAT REGISTRATION =================
             $reg = Registration::create([
                 'nomor_registrasi' => 'REG-'.date('Y').'-'.Str::upper(Str::random(6)),
-                'tanggal_daftar' => $this->tanggal_daftar,
-                'tahun_ajaran_id' => $this->tahun_ajaran_id,
-                'status' => 'pending',
-                'input_by' => auth()->check() ? auth()->id() : null
+                'tanggal_daftar'   => $this->tanggal_daftar,
+                'tahun_ajaran_id'  => $this->tahun_ajaran_id,
+                'voucher_id'       => $this->voucher_id, // ✅ ditambahkan
+                'status'           => 'pending',
+                'input_by'         => auth()->id(),
             ]);
 
+            // ================= BUAT SISWA =================
             $siswa = Siswa::create([
-                'registration_id' => $reg->id,
-                'nama' => $this->nama_siswa,
-                'jenis_kelamin' => $this->jenis_kelamin,
-                'nik' => $this->nik,
-                'no_kk' => $this->no_kk,
-                'tempat_lahir' => $this->tempat_lahir,
-                'tanggal_lahir' => $this->tanggal_lahir,
-                'akta_no' => $this->akta_no,
-                'agama' => $this->agama,
-                'kewarganegaraan' => $this->kewarganegaraan,
-                'berkebutuhan_khusus' => $this->berkebutuhan_khusus,
-                'tinggal_bersama' => $this->tinggal_bersama,
-                'hp_wali' => $this->hp_wali,
-                'transportasi' => $this->transportasi,
-                'no_kks' => $this->no_kks,
-                'kps' => $this->kps,
-                'kip' => $this->kip,
-                'hasil_tes' => $this->hasil_tes,
+                'registration_id'      => $reg->id,
+                'nama'                 => $this->nama_siswa,
+                'jenis_kelamin'        => $this->jenis_kelamin,
+                'nik'                  => $this->nik,
+                'no_kk'                => $this->no_kk,
+                'tempat_lahir'         => $this->tempat_lahir,
+                'tanggal_lahir'        => $this->tanggal_lahir,
+                'akta_no'              => $this->akta_no,
+
+                // Field tambahan sesuai DB final
+                'agama'                => $this->agama,
+                'kewarganegaraan'      => $this->kewarganegaraan,
+                'berkebutuhan_khusus'  => $this->berkebutuhan_khusus,
+                'tinggal_bersama'      => $this->tinggal_bersama,
+                'transportasi'         => $this->transportasi,
+                'no_kks'               => $this->no_kks,
+                'kps'                  => $this->kps,
+                'kip'                  => $this->kip,
+
+                'hasil_tes'            => $this->hasil_tes,
             ]);
 
+            // ================= ALAMAT =================
             AlamatSiswa::create([
-                'siswa_id' => $siswa->id,
-                'alamat' => $this->alamat,
-                'provinsi' => $this->provinsi,
+                'siswa_id'  => $siswa->id,
+                'alamat'    => $this->alamat,
+                'provinsi'  => $this->provinsi,
                 'kabupaten' => $this->kabupaten,
                 'kecamatan' => $this->kecamatan,
                 'kelurahan' => $this->kelurahan,
-                'rt' => $this->rt ? (int) $this->rt : null,
-                'rw' => $this->rw ? (int) $this->rw : null,
-                'kode_pos' => $this->kode_pos,
+                'rt'        => $this->rt ? (int)$this->rt : null,
+                'rw'        => $this->rw ? (int)$this->rw : null,
+                'kode_pos'  => $this->kode_pos,
             ]);
 
-            Ibu::create([
-                'siswa_id' => $siswa->id,
-                'nama' => $this->ibu_nama,
-                'nik' => $this->ibu_nik,
-                'tahun_lahir' => $this->ibu_tahun_lahir,
-                'pendidikan' => $this->ibu_pendidikan,
-                'pekerjaan' => $this->ibu_pekerjaan,
-                'pekerjaan_lainnya' => $this->ibu_pekerjaan_lainnya,
-                'penghasilan' => $this->ibu_penghasilan,
-                'no_hp' => $this->ibu_hp,
-            ]);
-
+            // ================= IBU =================
+            if ($this->ibu_nama || $this->ibu_hp) {
+                Ibu::create([
+                    'siswa_id'           => $siswa->id,
+                    'nama'               => $this->ibu_nama,
+                    'nik'                => $this->ibu_nik,
+                    'tahun_lahir'        => $this->ibu_tahun_lahir,
+                    'pendidikan'         => $this->ibu_pendidikan,
+                    'pekerjaan'          => $this->ibu_pekerjaan,
+                    'pekerjaan_lainnya'  => $this->ibu_pekerjaan_lainnya,
+                    'penghasilan'        => $this->ibu_penghasilan,
+                    'no_hp'              => $this->ibu_hp,
+                ]);
+            }
+            // ================= AYAH (optional) =================
             if ($this->ayah_nama) {
                 Ayah::create([
-                    'siswa_id' => $siswa->id,
-                    'nama' => $this->ayah_nama,
-                    'nik' => $this->ayah_nik,
-                    'tahun_lahir' => $this->ayah_tahun_lahir,
-                    'pendidikan' => $this->ayah_pendidikan,
-                    'pekerjaan' => $this->ayah_pekerjaan,
-                    'pekerjaan_lainnya' => $this->ayah_pekerjaan_lainnya,
-                    'penghasilan' => $this->ayah_penghasilan,
-                    'no_hp' => $this->ayah_hp,
+                    'siswa_id'           => $siswa->id,
+                    'nama'               => $this->ayah_nama,
+                    'nik'                => $this->ayah_nik,
+                    'tahun_lahir'        => $this->ayah_tahun_lahir,
+                    'pendidikan'         => $this->ayah_pendidikan,
+                    'pekerjaan'          => $this->ayah_pekerjaan,
+                    'pekerjaan_lainnya'  => $this->ayah_pekerjaan_lainnya,
+                    'penghasilan'        => $this->ayah_penghasilan,
+                    // ❌ no_hp sudah dihapus sesuai DB final
                 ]);
             }
 
+            // ================= WALI (conditional) =================
             if ($this->tinggal_bersama === 'wali') {
                 Wali::create([
                     'siswa_id' => $siswa->id,
-                    'nama' => $this->wali_nama,
+                    'nama'     => $this->wali_nama,
                     'hubungan' => $this->wali_hubungan,
-                    'no_hp' => $this->hp_wali,
+                    'no_hp'    => $this->hp_wali,
                 ]);
             }
 
+            // ================= DATA PENDUKUNG =================
             DataPendukung::create([
-                'siswa_id' => $siswa->id,
-                'tinggi' => $this->tinggi ? (int) $this->tinggi : null,
-                'berat' => $this->berat ? (int) $this->berat : null,
-                'jarak' => $this->jarak ? (int) $this->jarak : null,
-                'jumlah_saudara' => $this->jumlah_saudara ? (int) $this->jumlah_saudara : null,
-                'paud_tk_id' => $this->paud_tk_id,
-                'alamat_tk' => $this->alamat_tk,
-                'hobi' => $this->hobi,
-                'cita_cita' => $this->cita_cita,
+                'siswa_id'        => $siswa->id,
+                'tinggi'          => $this->tinggi ? (int)$this->tinggi : null,
+                'berat'           => $this->berat ? (int)$this->berat : null,
+                'jarak'           => $this->jarak ? (int)$this->jarak : null,
+                'jumlah_saudara'  => $this->jumlah_saudara ? (int)$this->jumlah_saudara : null,
+                'paud_tk_id'      => $this->paud_tk_id,
+                'alamat_tk'       => $this->alamat_tk, // ✅ ditambahkan
+                'hobi'            => $this->hobi,
+                'cita_cita'       => $this->cita_cita,
             ]);
 
+            // ================= GENERATE TAGIHAN =================
             GenerateTagihanService::generate($siswa, $this->voucher_id);
 
+            // ================= LOG AKTIVITAS =================
             logAktivitas(
                 'Pendaftaran Siswa',
                 'Pendaftaran siswa '.$siswa->nama.' ('.$reg->nomor_registrasi.')'
             );
+
         });
 
-        // return ID siswa untuk redirect
         return $siswa ? $siswa->id : null;
     }
+
+
 
     protected function messages()
     {
@@ -431,9 +475,17 @@ class PendaftaranWizard extends Component
             'kode_pos'          => 'nullable|digits_between:3,6',
 
             // IBU
-            'ibu_nama'          => 'required|string|max:100',
-            'ibu_nik'           => 'required|digits:16',
-            'ibu_hp'            => 'required|digits_between:10,14',
+            'ibu_nama' => $this->tinggal_bersama === 'wali'
+                ? 'nullable|string|max:100'
+                : 'required|string|max:100',
+
+            'ibu_nik' => $this->tinggal_bersama === 'wali'
+                ? 'nullable|digits:16'
+                : 'nullable|digits:16',
+
+            'ibu_hp' => $this->tinggal_bersama === 'wali'
+                ? 'nullable|digits_between:10,14'
+                : 'required|digits_between:10,14',
             'ibu_tahun_lahir'   => 'nullable|integer|min:1945|max:' . date('Y'),
             'ibu_pendidikan'    => 'nullable|string',
             'ibu_pekerjaan'     => 'nullable|string',

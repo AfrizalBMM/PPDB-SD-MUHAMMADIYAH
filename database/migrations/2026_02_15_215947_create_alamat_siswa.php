@@ -13,16 +13,25 @@ return new class extends Migration
     {
         Schema::create('alamat_siswa', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('siswa_id');
+
+            $table->unsignedBigInteger('siswa_id')->unique();
+
             $table->text('alamat');
-            $table->string('provinsi')->nullable();
-            $table->string('kabupaten')->nullable();
-            $table->string('kecamatan')->nullable();
-            $table->string('kelurahan')->nullable();
-            $table->string('rt')->nullable();
-            $table->string('rw')->nullable();
+            $table->string('provinsi');
+            $table->string('kabupaten');
+            $table->string('kecamatan');
+            $table->string('kelurahan');
+
+            $table->string('rt',4)->nullable();
+            $table->string('rw',4)->nullable();
             $table->string('kode_pos')->nullable();
+
             $table->timestamps();
+
+            $table->foreign('siswa_id')
+                ->references('id')
+                ->on('siswa')
+                ->cascadeOnDelete();
         });
     }
 

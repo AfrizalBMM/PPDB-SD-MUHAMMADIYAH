@@ -165,8 +165,10 @@
                         <div class="flex justify-center gap-3">
                             <form method="POST" action="{{ route('voucher.toggle',$v) }}">
                                 @csrf
+                                @method('PATCH')
+
                                 <button type="submit" class="text-xs text-blue-700 hover:underline">
-                                    Toggle
+                                    {{ $v->aktif ? 'Nonaktifkan' : 'Aktifkan' }}
                                 </button>
                             </form>
 

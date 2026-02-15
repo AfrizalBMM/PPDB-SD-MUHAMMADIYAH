@@ -13,15 +13,31 @@ return new class extends Migration
     {
         Schema::create('data_pendukung', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('siswa_id');
+
+            $table->unsignedBigInteger('siswa_id')->unique();
+
             $table->smallInteger('tinggi')->nullable();
             $table->smallInteger('berat')->nullable();
             $table->smallInteger('jarak')->nullable();
             $table->smallInteger('jumlah_saudara')->nullable();
+
             $table->unsignedBigInteger('paud_tk_id')->nullable();
-            $table->string('hobi')->nullable();
+            $table->text('alamat_tk')->nullable();
+
+            $table->text('hobi')->nullable();
             $table->string('cita_cita')->nullable();
+
             $table->timestamps();
+
+            $table->foreign('siswa_id')
+                ->references('id')
+                ->on('siswa')
+                ->cascadeOnDelete();
+
+            $table->foreign('paud_tk_id')
+                ->references('id')
+                ->on('paud_tk')
+                ->nullOnDelete();
         });
     }
 

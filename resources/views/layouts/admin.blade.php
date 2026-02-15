@@ -160,29 +160,36 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
     function updateClock() {
-        const clock = document.getElementById('live-clock');
-        const now = new Date();
+    const clock = document.getElementById('live-clock');
+    const now = new Date();
 
-        // Array nama bulan
-        const months = [
-            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
+    // Array nama bulan
+    const months = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
 
-        const day = now.getDate();
-        const monthName = months[now.getMonth()];
-        const year = now.getFullYear();
+    // Array nama hari
+    const days = [
+        "Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"
+    ];
 
-        // Format waktu
-        const hours = String(now.getHours()).padStart(2,'0');
-        const minutes = String(now.getMinutes()).padStart(2,'0');
-        const seconds = String(now.getSeconds()).padStart(2,'0');
+    const dayName = days[now.getDay()]; // nama hari
+    const day = now.getDate();
+    const monthName = months[now.getMonth()];
+    const year = now.getFullYear();
 
-        clock.textContent = `${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`;
-    }
+    // Format waktu
+    const hours = String(now.getHours()).padStart(2,'0');
+    const minutes = String(now.getMinutes()).padStart(2,'0');
+    const seconds = String(now.getSeconds()).padStart(2,'0');
 
-    setInterval(updateClock, 1000); // update tiap detik
-    updateClock(); // langsung tampil saat page load
+    clock.textContent = `${dayName}, ${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`;
+}
+
+setInterval(updateClock, 1000); // update tiap detik
+updateClock(); // langsung tampil saat page load
+
 
 </script>
 

@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class AlamatSiswa extends Model
 {
-    use HasFactory;
-
     protected $table = 'alamat_siswa';
 
     protected $fillable = [
@@ -22,4 +20,9 @@ class AlamatSiswa extends Model
         'rw',
         'kode_pos',
     ];
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class);
+    }
 }

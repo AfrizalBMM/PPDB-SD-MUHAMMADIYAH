@@ -11,21 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wali', function (Blueprint $table) {
+        Schema::create('ibu', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('siswa_id')->unique();
 
             $table->string('nama');
-            $table->char('nik',16)->nullable();
-            $table->string('hubungan');
             $table->string('no_hp',14);
-            $table->text('alamat')->nullable();
+
+            $table->char('nik',16)->nullable();
+            $table->year('tahun_lahir')->nullable();
+            $table->string('pendidikan')->nullable();
+            $table->string('pekerjaan')->nullable();
+            $table->string('pekerjaan_lainnya')->nullable();
+            $table->string('penghasilan')->nullable();
 
             $table->timestamps();
 
             $table->foreign('siswa_id')
-                ->references('id')->on('siswa')
-                ->onDelete('cascade');
+                ->references('id')
+                ->on('siswa')
+                ->cascadeOnDelete();
         });
     }
 
@@ -34,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wali');
+        Schema::dropIfExists('ibu');
     }
 };
