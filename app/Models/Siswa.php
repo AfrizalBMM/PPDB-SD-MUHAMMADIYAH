@@ -71,4 +71,10 @@ class Siswa extends Model
     {
         return $this->hasMany(TagihanSiswa::class);
     }
+
+    public function logCetak()
+    {
+        return $this->hasMany(LogCetak::class);
+    }
+
 }

@@ -40,6 +40,35 @@ class CetakController extends Controller
         );
     }
 
+    public function cetakFormulir(Request $request)
+    {
+        $request->validate([
+            'siswa_id' => 'required|exists:siswa,id',
+            'nama_petugas' => 'required|string|max:255'
+        ]);
+
+        $siswa = Siswa::with([
+            'ibu','ayah','alamat','dataPendukung','registration'
+        ])->findOrFail($request->siswa_id);
+
+        // SIMPAN LOG CETAK
+        LogCetak::create([
+            'siswa_id' => $siswa->id,
+            'jenis_dokumen' => 'formulir',
+            'nama_petugas' => $request->nama_petugas
+        ]);
+
+        $pdf = Pdf::loadView('pdf.formulir', [
+            'siswa'   => $siswa,
+            'petugas' => $request->nama_petugas
+        ]);
+
+        // F4 custom size
+        $pdf->setPaper([0, 0, 595, 935], 'portrait');
+
+        return $pdf->stream("FORMULIR-{$siswa->nama}.pdf");
+    }
+
     /**
      * CETAK NOTA PEMBAYARAN (2 PER A4)
      * NAMA ADMIN DIINPUT SAAT CETAK

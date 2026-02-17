@@ -1,17 +1,14 @@
 @extends('layouts.public')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 py-8 grid md:grid-cols-3 gap-6">
-
-    {{-- DATA PENDAFTAR --}}
-    <div class="md:col-span-2 card">
+<div class="max-w-5xl mx-auto px-6 py-8">
+<div class="md:col-span-2 card">
         <h2 class="font-semibold text-lg text-slate-800 mb-4">
-            ✅ Pendaftaran Berhasil
+            ✅ Detail Calon Siswa
         </h2>
 
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-5 text-sm text-green-800">
-            Data calon siswa berhasil disimpan.
-            Silakan lakukan pembayaran biaya pendaftaran.
+        <div class="bg-yellow-50 border border-yellow-200 p-3 text-xs rounded">
+        ⚠️ Data ini bersifat rahasia. Tidak boleh disebarluaskan.
         </div>
 
         {{-- Data Siswa --}}
@@ -242,74 +239,10 @@
             </table>
         </div>
     </div>
+<a href="{{ route('pendaftaran.public') }}" class="btn-primary mt-4 inline-block">
+    Kembali
+</a>
 
-    {{-- PANEL AKSI --}}
-    <div class="card space-y-3">
-
-        {{-- Rincian Biaya Pendaftaran --}}
-        <div class="overflow-x-auto mb-3">
-            <h3 class="font-semibold mb-2">Rincian Biaya Pendaftaran</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="p-3 text-left">Jenis Biaya</th>
-                        <th class="p-3 text-right">Nominal</th>
-                        <th class="p-3 text-right">Diskon</th>
-                        <th class="p-3 text-right">Total</th>
-                        <th class="p-3 text-left">Voucher</th>
-                        <th class="p-3 text-left">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $grandTotal = 0; @endphp
-                    @foreach($siswa->tagihan as $t)
-                        <tr class="{{ $loop->even ? 'bg-slate-50' : '' }}">
-                            <td class="p-3">{{ $t->biaya->nama_biaya ?? '-' }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->nominal,0,',','.') }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->diskon,0,',','.') }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->total,0,',','.') }}</td>
-                            <td class="p-3">{{ $t->kode_voucher ?? '-' }}</td>
-                            <td class="p-3">{{ ucfirst($t->status) }}</td>
-                        </tr>
-                        @php $grandTotal += $t->total; @endphp
-                    @endforeach
-                    <tr class="font-semibold bg-slate-100">
-                        <td class="p-3 text-right" colspan="3">Total Bayar</td>
-                        <td class="p-3 text-right">{{ number_format($grandTotal,0,',','.') }}</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Tombol Aksi --}}
-        {{-- Tombol Aksi --}}
-        <button onclick="openModalPetugas({{ $siswa->id }})"
-                class="btn-primary w-full text-center">
-            🖨️ Cetak Formulir Pendaftaran
-        </button>
-
-        @include('pendaftaran.modal-cetak-formulir')
-
-        <button onclick="document.getElementById('modalNota').classList.remove('hidden')"
-                class="btn-primary w-full bg-green-600 hover:bg-green-700">
-            💰 Input & Cetak Nota Pendaftaran
-        </button>
-
-        <a href="{{ route('pendaftaran.public') }}"
-        class="btn-primary w-full text-center bg-slate-600 hover:bg-slate-700">
-            ➕ Daftarkan Siswa Lain
-        </a>
-
-        {{-- ✅ BUTTON LIST PENDAFTAR --}}
-        <a href="{{ route('pendaftaran.list') }}"
-        class="btn-primary w-full text-center bg-indigo-600 hover:bg-indigo-700">
-            📋 Lihat Daftar Pendaftar
-        </a>
-
-    </div>
 
 </div>
-
-@include('pendaftaran.modal-nota')
 @endsection

@@ -21,4 +21,26 @@ class PendaftaranController extends Controller
 
         return view('pendaftaran.sukses', compact('siswa'));
     }
+
+    public function list()
+    {
+        $siswa = Siswa::latest()->get();
+
+        return view('pendaftaran.list', compact('siswa'));
+    }
+
+    public function show($id)
+    {
+        $siswa = Siswa::with([
+            'registration',
+            'alamat',
+            'ibu',
+            'ayah',
+            'dataPendukung.paudTk',
+            'tagihan.biaya'
+        ])->findOrFail($id);
+
+        return view('pendaftaran.detail', compact('siswa'));
+    }
+
 }

@@ -14,7 +14,7 @@
     {{-- Header --}}
     <div class="text-center mb-6">
         <img
-            src="{{ asset('logo.png') }}"
+            src="{{ asset('images/logo.png') }}"
             alt="Logo SD Muhammadiyah Wonorejo"
             class="h-16 mx-auto mb-3">
         <h1 class="text-xl font-bold text-slate-800">

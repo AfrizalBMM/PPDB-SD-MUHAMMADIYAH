@@ -17,7 +17,7 @@
 
         <div class="flex items-center gap-4">
             <img
-                src="{{ asset('logo.png') }}"
+                src="{{ asset('images/logo.png') }}"
                 alt="Logo SD Muhammadiyah Wonorejo"
                 class="h-12 w-auto">
 
@@ -31,14 +31,26 @@
             </div>
         </div>
 
-        {{-- LOGIN --}}
-        <a
-            href="{{ route('login') }}"
-            class="bg-white text-primary px-4 py-2 rounded-lg
-                   text-sm font-semibold
-                   hover:bg-slate-100 transition">
-            Login
-        </a>
+        <div class="flex items-center gap-3">
+
+            {{-- DAFTAR PENDAFTAR --}}
+            <a
+                href="{{ route('pendaftaran.public') }}"
+                class="bg-secondary text-white px-4 py-2 rounded-lg
+                    text-sm font-semibold hover:bg-blue-700 transition">
+                📋 Daftar Calon Siswa
+            </a>
+
+            {{-- LOGIN --}}
+            <a
+                href="{{ route('login') }}"
+                class="bg-white text-primary px-4 py-2 rounded-lg
+                    text-sm font-semibold hover:bg-slate-100 transition">
+                Login
+            </a>
+
+        </div>
+
 
     </div>
 </header>

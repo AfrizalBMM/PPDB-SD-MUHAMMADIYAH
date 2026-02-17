@@ -9,8 +9,10 @@ return new class extends Migration {
     {
         Schema::create('tagihan_siswa', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('siswa_id');
             $table->unsignedBigInteger('biaya_id');
+            $table->unsignedBigInteger('voucher_id')->nullable(); // ✅ TAMBAHAN
 
             $table->integer('nominal');
             $table->integer('diskon')->default(0);
@@ -20,8 +22,17 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-            $table->foreign('biaya_id')->references('id')->on('biaya')->onDelete('cascade');
+            $table->foreign('siswa_id')
+                  ->references('id')->on('siswa')
+                  ->onDelete('cascade');
+
+            $table->foreign('biaya_id')
+                  ->references('id')->on('biaya')
+                  ->onDelete('cascade');
+
+            $table->foreign('voucher_id') // ✅ TAMBAHAN
+                  ->references('id')->on('vouchers')
+                  ->nullOnDelete();
 
             $table->unique(['siswa_id', 'biaya_id']);
         });

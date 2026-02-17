@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\CetakController;
+use App\Http\Controllers\Public\PendaftaranController;
 use App\Livewire\PendaftaranWizard;
 use App\Models\Siswa;
 
@@ -34,11 +35,18 @@ Route::get('/pendaftaran/sukses/{siswa}', function (Siswa $siswa) {
     return view('pendaftaran.sukses', compact('siswa'));
 })->name('pendaftaran.sukses');
 
+Route::get('/pendaftaran/list', [PendaftaranController::class, 'list'])
+    ->name('pendaftaran.list');
+
+Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
+    ->name('pendaftaran.detail');
 
 // cetak formulir pendaftaran (public access setelah daftar)
 Route::get('/cetak/formulir/{siswa}', [CetakController::class, 'formulir'])
     ->name('cetak.formulir');
-
+    
+Route::post('/cetak/formulir', [CetakController::class, 'cetakFormulir'])
+    ->name('cetak.formulir.post');
 /*
 |--------------------------------------------------------------------------
 | AUTH (LOGIN / LOGOUT)

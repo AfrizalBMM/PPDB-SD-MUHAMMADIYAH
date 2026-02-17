@@ -89,24 +89,29 @@ class PaudTkController extends Controller
         $countNew = 0;
         $countUpdated = 0;
 
-        foreach ($rows as $row) {
+        foreach ($rows as $index => $row) {
 
-            if (empty($row['nama'])) continue;
+            // skip header
+            if ($index == 0) continue;
+
+            if (empty($row[1])) continue; // kolom nama (B)
 
             $paud = PaudTk::firstOrNew([
-                'nama'       => $row['nama'],
-                'kelurahan'  => $row['kelurahan'] ?? null,
-                'kecamatan'  => $row['kecamatan'] ?? null
+                'nama'       => $row[1],
+                'kelurahan'  => $row[4] ?? null,
+                'kecamatan'  => $row[5] ?? null
             ]);
 
             $isNew = !$paud->exists;
 
-            $paud->npsn       = $row['npsn'] ?? $paud->npsn;
-            $paud->jenis      = $row['jenis'] ?? $paud->jenis;
-            $paud->alamat     = $row['alamat'] ?? $paud->alamat;
-            $paud->telp       = $row['telp'] ?? $paud->telp;
-            $paud->akreditasi = $row['akreditasi'] ?? $paud->akreditasi;
-            $paud->aktif      = isset($row['aktif']) ? (bool)$row['aktif'] : $paud->aktif;
+            $paud->npsn       = $row[0] ?? null;
+            $paud->jenis      = $row[2] ?? null;
+            $paud->alamat     = $row[3] ?? null;
+            $paud->kelurahan  = $row[4] ?? null;
+            $paud->kecamatan  = $row[5] ?? null;
+            $paud->telp       = $row[6] ?? null;
+            $paud->akreditasi = $row[7] ?? null;
+            $paud->aktif      = isset($row[8]) ? (bool)$row[8] : true;
 
             $paud->save();
 
@@ -124,6 +129,7 @@ class PaudTkController extends Controller
             "Import selesai! $countNew data baru, $countUpdated data diperbarui."
         );
     }
+
 
     public function template(): BinaryFileResponse
     {
