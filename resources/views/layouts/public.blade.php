@@ -35,7 +35,7 @@
 
             {{-- DAFTAR PENDAFTAR --}}
             <a
-                href="{{ route('pendaftaran.public') }}"
+                href="{{ route('pendaftaran.list') }}"
                 class="bg-secondary text-white px-4 py-2 rounded-lg
                     text-sm font-semibold hover:bg-blue-700 transition">
                 📋 Daftar Calon Siswa

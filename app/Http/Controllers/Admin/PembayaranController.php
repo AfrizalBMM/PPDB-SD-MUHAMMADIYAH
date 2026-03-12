@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
+use Illuminate\Validation\ValidationException;
 
 class PembayaranController extends Controller
 {
@@ -27,14 +28,20 @@ class PembayaranController extends Controller
             $sisa = $tagihan->sisa;
 
             if ($request->nominal_bayar > $sisa) {
-                throw new \Exception('Nominal melebihi sisa tagihan.');
+                throw ValidationException::withMessages([
+                    'nominal_bayar' => 'Nominal melebihi sisa tagihan.'
+                ]);
             }
 
             $pembayaran = Pembayaran::create([
+
                 'tagihan_siswa_id' => $tagihan->id,
                 'nominal_bayar'    => $request->nominal_bayar,
-                'tanggal_bayar'    => now(),
-                'admin_id'         => auth()->id(),
+                'tanggal_bayar'    => $request->tanggal_bayar,
+                'metode'           => $request->metode,
+                'admin_penerima'   => $request->admin_penerima,
+                'keterangan'       => $request->keterangan,
+
             ]);
 
             // update status via helper model
@@ -44,8 +51,7 @@ class PembayaranController extends Controller
                 'Pembayaran',
                 'Pembayaran #'.$pembayaran->id.' '.
                 $tagihan->biaya->nama_biaya.' untuk siswa '.$tagihan->siswa->nama.
-                ' sebesar Rp '.number_format($request->nominal_bayar).
-                ' oleh admin '.auth()->user()->name
+                ' sebesar Rp '.number_format($request->nominal_bayar)
             );
         });
 

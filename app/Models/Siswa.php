@@ -72,6 +72,11 @@ class Siswa extends Model
         return $this->hasMany(TagihanSiswa::class);
     }
 
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class);
+    }
+
     public function logCetak()
     {
         return $this->hasMany(LogCetak::class);

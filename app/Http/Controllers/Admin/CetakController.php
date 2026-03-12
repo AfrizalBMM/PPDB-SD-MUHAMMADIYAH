@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Siswa;
 use App\Models\Pembayaran;
+use App\Models\LogCetak;    
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class CetakController extends Controller
     {
         $siswa->load([
             'registration.tahunAjaran',
-            'alamatSiswa',
+            'alamat',
             'ibu',
             'ayah',
             'wali',
@@ -28,15 +29,15 @@ class CetakController extends Controller
 
         logAktivitas(
             'Cetak Formulir',
-            'Cetak formulir pendaftaran #'.$siswa->id.' '.$siswa->nama.
-            ' ('.$siswa->registration->nomor_registrasi.')'
+            'Cetak formulir pendaftaran #' . $siswa->id . ' ' . $siswa->nama .
+            ' (' . $siswa->registration->nomor_registrasi . ')'
         );
 
         $pdf = Pdf::loadView('cetak.formulir', compact('siswa'))
-            ->setPaper([0, 0, 595.28, 935.43], 'portrait');
+            ->setPaper('f4', 'portrait'); // PALING AMAN
 
         return $pdf->stream(
-            'Formulir-'.$siswa->registration->nomor_registrasi.'.pdf'
+            'Formulir-' . $siswa->registration->nomor_registrasi . '.pdf'
         );
     }
 
@@ -81,7 +82,7 @@ class CetakController extends Controller
 
     $pembayaran->load([
         'tagihan.siswa.registration.tahunAjaran',
-        'tagihan.siswa.alamatSiswa',
+        'tagihan.siswa.alamat',
         'tagihan.biaya',
         'tagihan.voucher',
     ]);

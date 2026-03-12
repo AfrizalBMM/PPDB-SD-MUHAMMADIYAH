@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\LaporanKeuanganController;
 use App\Http\Controllers\Admin\LogAktivitasController;
 use App\Http\Controllers\Admin\CetakController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\PasswordPanitiaController;
 
 Route::prefix('admin')
     ->middleware(['auth'])
@@ -111,6 +112,14 @@ Route::prefix('admin')
                 'tahun-ajaran/{tahunAjaran}',
                 [TahunAjaranController::class, 'destroy']
             )->name('tahun-ajaran.destroy');
+
+            Route::get('/password-panitia',
+            [PasswordPanitiaController::class,'index'])
+            ->name('admin.password.panitia');
+
+            Route::post('/password-panitia/store',
+                [PasswordPanitiaController::class,'store'])
+                ->name('admin.password.panitia.store');
 
         });
     });

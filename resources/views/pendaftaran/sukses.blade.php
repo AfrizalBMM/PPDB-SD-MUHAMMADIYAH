@@ -67,6 +67,22 @@
                         <td class="p-3">{{ $siswa->tinggal_bersama ?? '-' }}</td>
                     </tr>
                     <tr>
+                        <td class="p-3 font-medium">NO KKS</td>
+                        <td class="p-3">{{ $siswa->no_kks ?? '-' }}</td>
+                    </tr>
+                    <tr class="bg-slate-50">
+                        <td class="p-3 font-medium">NO KIP</td>
+                        <td class="p-3">{{ $siswa->kip ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 font-medium">NO KPS</td>
+                        <td class="p-3">{{ $siswa->kps ?? '-' }}</td>
+                    </tr>
+                    <tr class="bg-slate-50">
+                        <td class="p-3 font-medium">Transportasi</td>
+                        <td class="p-3">{{ $siswa->transportasi ?? '-' }}</td>
+                    </tr>
+                    <tr>
                         <td class="p-3 font-medium">Hasil Tes</td>
                         <td class="p-3">
                             <span class="badge-success">{{ $siswa->hasil_tes }}</span>
@@ -218,10 +234,6 @@
                         <td class="p-3 font-medium">Jarak Rumah</td>
                         <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->jarak ?? '-' }} km</td>
                     </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Transportasi</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->transportasi ?? '-' }}</td>
-                    </tr>
                     <tr class="bg-slate-50">
                         <td class="p-3 font-medium">Jumlah Saudara</td>
                         <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->jumlah_saudara ?? '-' }}</td>
@@ -283,29 +295,22 @@
         </div>
 
         {{-- Tombol Aksi --}}
-        {{-- Tombol Aksi --}}
         <button onclick="openModalPetugas({{ $siswa->id }})"
-                class="btn-primary w-full text-center">
-            🖨️ Cetak Formulir Pendaftaran
-        </button>
+    class="btn-primary w-full text-center">
+    🖨️ Cetak Formulir Pendaftaran
+</button>
 
         @include('pendaftaran.modal-cetak-formulir')
 
         <button onclick="document.getElementById('modalNota').classList.remove('hidden')"
-                class="btn-primary w-full bg-green-600 hover:bg-green-700">
+            class="btn-primary w-full bg-green-600 hover:bg-green-700">
             💰 Input & Cetak Nota Pendaftaran
         </button>
 
-        <a href="{{ route('pendaftaran.public') }}"
-        class="btn-primary w-full text-center bg-slate-600 hover:bg-slate-700">
+        <button onclick="window.location='{{ route('pendaftaran.public') }}'"
+            class="btn-primary w-full text-center bg-slate-600 hover:bg-slate-700">
             ➕ Daftarkan Siswa Lain
-        </a>
-
-        {{-- ✅ BUTTON LIST PENDAFTAR --}}
-        <a href="{{ route('pendaftaran.list') }}"
-        class="btn-primary w-full text-center bg-indigo-600 hover:bg-indigo-700">
-            📋 Lihat Daftar Pendaftar
-        </a>
+        </button>
 
     </div>
 

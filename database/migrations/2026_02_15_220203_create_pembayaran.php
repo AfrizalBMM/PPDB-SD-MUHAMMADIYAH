@@ -14,16 +14,13 @@ return new class extends Migration {
             $table->integer('nominal_bayar');
             $table->enum('metode', ['cash','transfer'])->default('cash');
             $table->string('keterangan')->nullable();
-            $table->unsignedBigInteger('admin_id');
+            $table->string('admin_penerima');
             $table->timestamps();
 
             $table->foreign('tagihan_siswa_id')
                 ->references('id')->on('tagihan_siswa')
                 ->onDelete('cascade');
 
-            $table->foreign('admin_id')
-                ->references('id')->on('users')
-                ->onDelete('restrict');
         });
     }
 

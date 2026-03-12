@@ -50,6 +50,11 @@
             Master Data
         </p>
 
+        <a href="{{ route('admin.password.panitia') }}"
+            class="sidebar-link {{ request()->routeIs('admin.password.panitia') ? 'active' : '' }}">
+            🔑 Password Panitia
+        </a>
+
         <a href="{{ route('tahun-ajaran.index') }}"
            class="sidebar-link {{ request()->routeIs('tahun-ajaran.*') ? 'active' : '' }}">
             📅 Tahun Ajaran

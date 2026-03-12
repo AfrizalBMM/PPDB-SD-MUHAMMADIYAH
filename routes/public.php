@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\CetakController;
+use App\Http\Controllers\Admin\PembayaranController;
 use App\Http\Controllers\Public\PendaftaranController;
+use App\Http\Controllers\Public\PasswordPanitiaController;
 use App\Livewire\PendaftaranWizard;
 use App\Models\Siswa;
 
@@ -38,8 +40,19 @@ Route::get('/pendaftaran/sukses/{siswa}', function (Siswa $siswa) {
 Route::get('/pendaftaran/list', [PendaftaranController::class, 'list'])
     ->name('pendaftaran.list');
 
+Route::get('/pendaftaran/{siswa}/biaya', [PendaftaranController::class, 'showBiaya'])
+    ->name('pendaftaran.biaya');
+
 Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
     ->name('pendaftaran.detail');
+
+Route::middleware('akses_pembayaran')->group(function () {
+
+    Route::post('/pembayaran/store',
+        [PembayaranController::class,'store'])
+        ->name('pembayaran.store');
+
+});
 
 // cetak formulir pendaftaran (public access setelah daftar)
 Route::get('/cetak/formulir/{siswa}', [CetakController::class, 'formulir'])
@@ -47,6 +60,11 @@ Route::get('/cetak/formulir/{siswa}', [CetakController::class, 'formulir'])
     
 Route::post('/cetak/formulir', [CetakController::class, 'cetakFormulir'])
     ->name('cetak.formulir.post');
+
+Route::post('/verifikasi-password-panitia',
+    [PasswordPanitiaController::class,'verifikasi'])
+    ->name('verifikasi.password.panitia');
+
 /*
 |--------------------------------------------------------------------------
 | AUTH (LOGIN / LOGOUT)
