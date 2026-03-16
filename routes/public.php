@@ -8,6 +8,7 @@ use App\Http\Controllers\Public\PendaftaranController;
 use App\Http\Controllers\Public\PasswordPanitiaController;
 use App\Livewire\PendaftaranWizard;
 use App\Models\Siswa;
+use App\Http\Controllers\Public\PembayaranController as PublicPembayaranController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,9 +49,9 @@ Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
 
 Route::middleware('akses_pembayaran')->group(function () {
 
-    Route::post('/pembayaran/store',
-        [PembayaranController::class,'store'])
-        ->name('pembayaran.store');
+Route::post('/pembayaran/store',
+    [PublicPembayaranController::class,'store'])
+    ->name('pembayaran.store');
 
 });
 
@@ -64,6 +65,10 @@ Route::post('/cetak/formulir', [CetakController::class, 'cetakFormulir'])
 Route::post('/verifikasi-password-panitia',
     [PasswordPanitiaController::class,'verifikasi'])
     ->name('verifikasi.password.panitia');
+
+Route::get('/pembayaran/{id}/nota',
+    [\App\Http\Controllers\Public\PembayaranController::class,'nota']
+)->name('pembayaran.public.nota');
 
 /*
 |--------------------------------------------------------------------------

@@ -4,6 +4,18 @@
 
 <div class="max-w-5xl mx-auto px-6 py-8">
 
+@if(session('success'))
+<div id="alertSuccess"
+     class="mb-4 p-3 bg-green-100 border border-green-300 text-green-800 rounded">
+    ✅ {{ session('success') }}
+</div>
+
+<script>
+setTimeout(function(){
+    document.getElementById('alertSuccess').style.display='none';
+},3000);
+</script>
+@endif
 <div class="md:col-span-2 card">
 
     <h2 class="font-semibold text-lg text-slate-800 mb-4">
@@ -204,8 +216,6 @@
 
                     </tr>
 
-
-
                     {{-- BREAKDOWN CICILAN --}}
                     @if($tagihan->pembayaran->count())
 
@@ -271,7 +281,8 @@
                                             <td class="py-1 text-center">
 
                                             <a
-                                                href="{{ route('pembayaran.nota', $bayar->id) }}"
+                                                href="{{ route('pembayaran.public.nota',$bayar->id) }}"
+                                                target="_blank"
                                                 class="text-blue-600 hover:underline"
                                             >
                                                 Cetak

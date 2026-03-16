@@ -1,131 +1,334 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
+<meta charset="utf-8">
 
-    <style>
-        @page {
-            size: A4;
-            margin: 12mm;
-        }
+<style>
 
-        body {
-            font-family: "Times New Roman", serif;
-            font-size: 11px;
-            line-height: 1.4;
-        }
+@page{
+    size:210mm 330mm;
+    margin:10mm;
+}
 
-        .nota {
-            height: 48%;
-            border: 1px solid #000;
-            padding: 10px 12px;
-            margin-bottom: 10px;
-        }
+body{
+    font-family: DejaVu Sans, sans-serif;
+    font-size:11px;
+}
 
-        .potong {
-            border-top: 2px dashed #000;
-            margin: 8px 0;
-        }
+.wrapper{
+    width:100%;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+.kwitansi{
+    border:1px solid #222;
+    padding:12px;
+    position:relative;
+    background:rgba(30, 90, 180, 0.05);
+}
 
-        td {
-            padding: 3px 4px;
-            vertical-align: top;
-        }
+.potong{
+    border-top:2px dashed #000;
+    margin:10px 0;
+}
 
-        .judul {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
+.header{
+    border-bottom:2px solid #000;
+    margin-bottom:8px;
+}
 
-        .label {
-            width: 30%;
-        }
+.logo{
+    width:60px;
+}
 
-        .total {
-            font-weight: bold;
-            border-top: 1px solid #000;
-            padding-top: 4px;
-        }
-    </style>
+.sekolah{
+    font-size:16px;
+    font-weight:bold;
+    letter-spacing:1px;
+}
+
+.alamat{
+    font-size:10px;
+}
+
+.judul{
+    text-align:center;
+    font-size:15px;
+    font-weight:bold;
+    margin-top:4px;
+}
+
+.nomor{
+    text-align:right;
+    font-size:10px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+td{
+    padding:3px;
+}
+
+.label{
+    width:160px;
+}
+
+.nominal{
+    font-size:16px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.terbilang{
+    font-style:italic;
+    border:1px dashed #999;
+    padding:4px;
+    background:#f8fafc;
+}
+
+.ttd{
+    margin-top:20px;
+}
+
+.ttd td{
+    text-align:center;
+}
+
+.watermark{
+    position:absolute;
+    top:40%;
+    left:25%;
+    font-size:80px;
+    color:#000;
+    opacity:0.08;
+    transform:rotate(-30deg);
+}
+
+</style>
+
 </head>
+
 <body>
 
-@for($i = 1; $i <= 2; $i++)
+<table class="wrapper">
 
-<div class="nota">
+<tr>
+<td>
 
-    <div class="judul">
-        KWITANSI PEMBAYARAN<br>
-        SD MUHAMMADIYAH WONOREJO
-    </div>
+<div class="kwitansi">
 
-    <table>
-        <tr>
-            <td class="label">No Kwitansi</td>
-            <td>
-                : {{ str_pad($pembayaran->id, 6, '0', STR_PAD_LEFT) }}
-            </td>
-        </tr>
-        <tr>
-            <td>Sudah terima dari</td>
-            <td>
-                : {{ optional(optional($pembayaran->tagihan)->siswa)->nama ?? '-' }}
-            </td>
-        </tr>
-        <tr>
-            <td>No Registrasi</td>
-            <td>
-                : {{ optional(optional(optional($pembayaran->tagihan)->siswa)->registration)->nomor_registrasi ?? '-' }}
-            </td>
-        </tr>
-        <tr>
-            <td>Untuk Pembayaran</td>
-            <td>
-                : {{ strtoupper(optional(optional($pembayaran->tagihan)->biaya)->nama ?? '-') }}
-            </td>
-        </tr>
-        <tr>
-            <td class="total">Jumlah</td>
-            <td class="total">
-                : Rp {{ number_format($pembayaran->nominal_bayar ?? 0,0,',','.') }}
-            </td>
-        </tr>
-        <tr>
-            <td>Terbilang</td>
-            <td>
-                : {{ \Illuminate\Support\Str::title(terbilang($pembayaran->nominal_bayar ?? 0)) }} Rupiah
-            </td>
-        </tr>
-    </table>
+<div class="watermark">LUNAS</div>
 
-    <br>
+<table class="header">
 
-    <table>
-        <tr>
-            <td width="60%"></td>
-            <td align="center">
-                Wonorejo,
-                {{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->translatedFormat('d F Y') }}
-                <br><br><br>
-                {{ optional($pembayaran->admin)->name ?? '-' }}<br>
-                Bendahara
-            </td>
-        </tr>
-    </table>
+<tr>
+
+<td width="70">
+<img src="{{ public_path('images/logo.png') }}" class="logo">
+</td>
+
+<td>
+
+<div class="sekolah">
+SEKOLAH DASAR MUHAMMADIYAH
+</div>
+
+<div class="alamat">
+Jl. Contoh Alamat Sekolah No 123<br>
+Telp: 0812-xxxx-xxxx
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<div class="judul">
+KWITANSI PEMBAYARAN
+</div>
+
+<div class="nomor">
+No Kwitansi : KW-{{ date('Y') }}-{{ str_pad($pembayaran->id,4,'0',STR_PAD_LEFT) }}
+</div>
+
+<br>
+
+<table>
+
+<tr>
+<td class="label">Sudah Terima Dari</td>
+<td>: {{ $pembayaran->tagihan->siswa->nama }}</td>
+</tr>
+
+<tr>
+<td>Uang Sejumlah</td>
+<td>: <span class="nominal">
+Rp {{ number_format($pembayaran->nominal_bayar,0,',','.') }}
+</span></td>
+</tr>
+
+<tr>
+<td></td>
+<td>
+<div class="terbilang">
+{{ $terbilang }}
+</div>
+</td>
+</tr>
+
+<tr>
+<td>Untuk Pembayaran</td>
+<td>: {{ $pembayaran->tagihan->biaya->jenis_biaya }}</td>
+</tr>
+
+<tr>
+<td>Tanggal</td>
+<td>: {{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d M Y') }}</td>
+</tr>
+
+<tr>
+<td>Keterangan</td>
+<td>: {{ $pembayaran->keterangan ?? '-' }}</td>
+</tr>
+
+</table>
+
+<table class="ttd">
+
+<tr>
+<td width="50%">Orang Tua / Wali</td>
+<td width="50%">Petugas</td>
+</tr>
+
+<tr>
+<td style="height:55px"></td>
+<td></td>
+</tr>
+
+<tr>
+<td>(........................)</td>
+<td>( {{ $pembayaran->admin_penerima }} )</td>
+</tr>
+
+</table>
 
 </div>
 
-@if($i === 1)
-<div class="potong"></div>
-@endif
+</td>
+</tr>
 
-@endfor
+<tr>
+<td>
+
+<div class="potong"></div>
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+<div class="kwitansi">
+
+<div class="watermark">LUNAS</div>
+
+<table class="header">
+
+<tr>
+
+<td width="70">
+<img src="{{ public_path('images/logo.png') }}" class="logo">
+</td>
+
+<td>
+
+<div class="sekolah">
+SEKOLAH DASAR MUHAMMADIYAH
+</div>
+
+<div class="alamat">
+Jl. Contoh Alamat Sekolah No 123<br>
+Telp: 0812-xxxx-xxxx
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<div class="judul">
+KWITANSI PEMBAYARAN
+</div>
+
+<div class="nomor">
+No Kwitansi : KW-{{ date('Y') }}-{{ str_pad($pembayaran->id,4,'0',STR_PAD_LEFT) }}
+</div>
+
+<br>
+
+<table>
+
+<tr>
+<td class="label">Sudah Terima Dari</td>
+<td>: {{ $pembayaran->tagihan->siswa->nama }}</td>
+</tr>
+
+<tr>
+<td>Uang Sejumlah</td>
+<td>: <b>Rp {{ number_format($pembayaran->nominal_bayar,0,',','.') }}</b></td>
+</tr>
+
+<tr>
+<td></td>
+<td><i>{{ $terbilang }}</i></td>
+</tr>
+
+<tr>
+<td>Untuk Pembayaran</td>
+<td>: {{ $pembayaran->tagihan->biaya->jenis_biaya }}</td>
+</tr>
+
+<tr>
+<td>Tanggal</td>
+<td>: {{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d M Y') }}</td>
+</tr>
+
+<tr>
+<td>Keterangan</td>
+<td>: {{ $pembayaran->keterangan ?? '-' }}</td>
+</tr>
+
+</table>
+
+<table class="ttd">
+
+<tr>
+<td width="50%">Orang Tua / Wali</td>
+<td width="50%">Petugas</td>
+</tr>
+
+<tr>
+<td style="height:55px"></td>
+<td></td>
+</tr>
+
+<tr>
+<td>(........................)</td>
+<td>( {{ $pembayaran->admin_penerima }} )</td>
+</tr>
+
+</table>
+
+</div>
+
+</td>
+</tr>
+
+</table>
 
 </body>
 </html>
