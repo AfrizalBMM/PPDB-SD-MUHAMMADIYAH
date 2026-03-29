@@ -138,7 +138,7 @@
 
                     <!-- Jenis Biaya -->
                     <td class="px-4 py-3">
-                        {{ ucfirst($v->jenis_biaya) }}
+                        {{ ui_label($v->jenis_biaya) }}
                     </td>
 
                     <!-- Diskon -->

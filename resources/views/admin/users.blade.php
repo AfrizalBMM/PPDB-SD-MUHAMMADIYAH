@@ -79,7 +79,7 @@
                         <td>{{ $u->email }}</td>
                         <td>
                             <x-badge :type="$u->role">
-                                {{ ucfirst($u->role) }}
+                                {{ ui_label($u->role) }}
                             </x-badge>
                         </td>
                     </tr>

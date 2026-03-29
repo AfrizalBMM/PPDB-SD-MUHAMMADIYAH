@@ -27,6 +27,7 @@ class Siswa extends Model
         'no_kks',
         'kps',
         'kip',
+        'layak_pip',
 
         'hasil_tes',
     ];

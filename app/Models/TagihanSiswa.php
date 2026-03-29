@@ -5,6 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @property int $id
+ * @property int $siswa_id
+ * @property int $biaya_id
+ * @property int $nominal
+ * @property int $diskon
+ * @property int $total
+ * @property string $status
+ * @property int|null $voucher_id
+ * @property string|null $kode_voucher
+ * @property int $total_dibayar
+ * @property int $sisa
+ * @property bool $is_lunas
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Pembayaran[] $pembayaran
+ * @method static \Illuminate\Database\Eloquent\Builder|TagihanSiswa belumLunas()
+ * @method static \Illuminate\Database\Eloquent\Builder|TagihanSiswa lunas()
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class TagihanSiswa extends Model
 {
     protected $table = 'tagihan_siswa';

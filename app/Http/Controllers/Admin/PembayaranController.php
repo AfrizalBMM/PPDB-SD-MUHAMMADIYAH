@@ -55,8 +55,6 @@ class PembayaranController extends Controller
             );
         });
 
-        return redirect()
-            ->route('pembayaran.nota', $pembayaran->id)
-            ->with('success','Pembayaran berhasil');
+        return back()->with('success', 'Pembayaran berhasil disimpan');
     }
 }

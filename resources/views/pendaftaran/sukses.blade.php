@@ -1,320 +1,345 @@
 @extends('layouts.public')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 py-8 grid md:grid-cols-3 gap-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid md:grid-cols-2 gap-6 lg:gap-8">
 
     {{-- DATA PENDAFTAR --}}
-    <div class="md:col-span-2 card">
-        <h2 class="font-semibold text-lg text-slate-800 mb-4">
-            ✅ Pendaftaran Berhasil
-        </h2>
+    <div class="space-y-4"
+        x-data="successPager({ hasWali: @js($siswa->tinggal_bersama === 'wali') })"
+        x-init="init()">
+        <div class="card">
+            <h2 class="font-semibold text-xl text-slate-800 mb-4">
+                ✅ Pendaftaran Berhasil
+            </h2>
 
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-5 text-sm text-green-800">
-            Data calon siswa berhasil disimpan.
-            Silakan lakukan pembayaran biaya pendaftaran.
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-sm text-green-800 leading-relaxed">
+                Data calon siswa berhasil disimpan.
+                Silakan lakukan pembayaran biaya pendaftaran.
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+                <p>
+                    Data <span class="font-semibold text-slate-800" x-text="currentIndex + 1"></span>
+                    dari <span class="font-semibold text-slate-800" x-text="steps.length"></span>
+                </p>
+                <div class="flex items-center gap-1">
+                    <template x-for="(step, idx) in steps" :key="step.key">
+                        <button
+                            type="button"
+                            @click="goTo(idx)"
+                            class="h-2.5 w-2.5 rounded-full transition"
+                            :class="idx === currentIndex ? 'bg-blue-600 scale-110' : 'bg-slate-300 hover:bg-slate-400'"
+                            :title="step.title"
+                        ></button>
+                    </template>
+                </div>
+            </div>
         </div>
 
         {{-- Data Siswa --}}
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Siswa</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 w-48 font-medium">Nama Siswa</td>
-                        <td class="p-3">{{ $siswa->nama }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">No Registrasi</td>
-                        <td class="p-3">{{ optional($siswa->registration)->nomor_registrasi ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Jenis Kelamin</td>
-                        <td class="p-3">{{ ucfirst($siswa->jenis_kelamin) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">NIK</td>
-                        <td class="p-3">{{ $siswa->nik ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">No KK</td>
-                        <td class="p-3">{{ $siswa->no_kk ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Tempat / Tgl Lahir</td>
-                        <td class="p-3">
-                            {{ $siswa->tempat_lahir }},
-                            {{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d-m-Y') }}
-                        </td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">No Akta Lahir</td>
-                        <td class="p-3">{{ $siswa->akta_no ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Agama</td>
-                        <td class="p-3">{{ $siswa->agama ?? 'Islam' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Kewarganegaraan</td>
-                        <td class="p-3">{{ $siswa->kewarganegaraan ?? 'Indonesia' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Berkebutuhan Khusus</td>
-                        <td class="p-3">{{ $siswa->berkebutuhan_khusus ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Tinggal Bersama</td>
-                        <td class="p-3">{{ $siswa->tinggal_bersama ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">NO KKS</td>
-                        <td class="p-3">{{ $siswa->no_kks ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">NO KIP</td>
-                        <td class="p-3">{{ $siswa->kip ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">NO KPS</td>
-                        <td class="p-3">{{ $siswa->kps ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Transportasi</td>
-                        <td class="p-3">{{ $siswa->transportasi ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Hasil Tes</td>
-                        <td class="p-3">
-                            <span class="badge-success">{{ $siswa->hasil_tes }}</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div x-show="isCurrent('siswa')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Siswa</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Nama Siswa</p><p>{{ $siswa->nama }}</p></div>
+                    <div><p class="text-slate-500">No Registrasi</p><p>{{ optional($siswa->registration)->nomor_registrasi ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Jenis Kelamin</p><p>{{ ui_label($siswa->jenis_kelamin) }}</p></div>
+                    <div><p class="text-slate-500">NIK</p><p>{{ $siswa->nik ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">No KK</p><p>{{ $siswa->no_kk ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Tempat / Tgl Lahir</p><p>{{ $siswa->tempat_lahir }}, {{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d-m-Y') }}</p></div>
+                    <div><p class="text-slate-500">No Akta Lahir</p><p>{{ $siswa->akta_no ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Agama</p><p>{{ $siswa->agama ?? 'Islam' }}</p></div>
+                    <div><p class="text-slate-500">Kewarganegaraan</p><p>{{ $siswa->kewarganegaraan ?? 'Indonesia' }}</p></div>
+                    <div><p class="text-slate-500">Berkebutuhan Khusus</p><p>{{ $siswa->berkebutuhan_khusus ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Tinggal Bersama</p><p>{{ ui_label($siswa->tinggal_bersama ?? '-') }}</p></div>
+                    <div><p class="text-slate-500">No KKS</p><p>{{ $siswa->no_kks ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Penerima KPS/PKH</p><p>{{ $siswa->kps ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Apakah Punya KIP</p><p>{{ $siswa->kip ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Apakah Peserta Layak Mendapatkan PIP</p><p>{{ $siswa->layak_pip ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Transportasi</p><p>{{ ui_label($siswa->transportasi ?? '-') }}</p></div>
+                    <div><p class="text-slate-500">Hasil Tes</p><p><span class="badge-success">{{ $siswa->hasil_tes }}</span></p></div>
+                </div>
+            </div>
         </div>
 
         {{-- Data Alamat --}}
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Alamat</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Alamat Lengkap</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->alamat ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Provinsi</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->provinsi ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Kabupaten</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->kabupaten ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Kecamatan</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->kecamatan ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Kelurahan</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->kelurahan ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">RT / RW</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->rt ?? '-' }} / {{ optional($siswa->alamat)->rw ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Kode Pos</td>
-                        <td class="p-3">{{ optional($siswa->alamat)->kode_pos ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div x-show="isCurrent('alamat')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Alamat</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Alamat Lengkap</p><p>{{ optional($siswa->alamat)->alamat ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Provinsi</p><p>{{ optional($siswa->alamat)->provinsi ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Kabupaten</p><p>{{ optional($siswa->alamat)->kabupaten ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Kecamatan</p><p>{{ optional($siswa->alamat)->kecamatan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Kelurahan</p><p>{{ optional($siswa->alamat)->kelurahan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">RT / RW</p><p>{{ optional($siswa->alamat)->rt ?? '-' }} / {{ optional($siswa->alamat)->rw ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Kode Pos</p><p>{{ optional($siswa->alamat)->kode_pos ?? '-' }}</p></div>
+                </div>
+            </div>
         </div>
 
         {{-- Data Ibu --}}
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Ibu</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Nama Ibu</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->nama ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">No HP</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->no_hp ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">NIK</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->nik ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Tahun Lahir</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->tahun_lahir ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Pendidikan</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->pendidikan ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Pekerjaan</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->pekerjaan ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Penghasilan</td>
-                        <td class="p-3">{{ optional($siswa->ibu)->penghasilan ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div x-show="isCurrent('ibu')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Ibu</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Nama Ibu</p><p>{{ optional($siswa->ibu)->nama ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">No HP</p><p>{{ optional($siswa->ibu)->no_hp ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">NIK</p><p>{{ optional($siswa->ibu)->nik ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Tahun Lahir</p><p>{{ optional($siswa->ibu)->tahun_lahir ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Pendidikan</p><p>{{ optional($siswa->ibu)->pendidikan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Pekerjaan</p><p>{{ optional($siswa->ibu)->pekerjaan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Penghasilan</p><p>{{ optional($siswa->ibu)->penghasilan ?? '-' }}</p></div>
+                </div>
+            </div>
         </div>
 
         {{-- Data Ayah --}}
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Ayah</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Nama Ayah</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->nama ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">NIK</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->nik ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Tahun Lahir</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->tahun_lahir ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Pendidikan</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->pendidikan ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Pekerjaan</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->pekerjaan ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Penghasilan</td>
-                        <td class="p-3">{{ optional($siswa->ayah)->penghasilan ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div x-show="isCurrent('ayah')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Ayah</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Nama Ayah</p><p>{{ optional($siswa->ayah)->nama ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">NIK</p><p>{{ optional($siswa->ayah)->nik ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Tahun Lahir</p><p>{{ optional($siswa->ayah)->tahun_lahir ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Pendidikan</p><p>{{ optional($siswa->ayah)->pendidikan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Pekerjaan</p><p>{{ optional($siswa->ayah)->pekerjaan ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Penghasilan</p><p>{{ optional($siswa->ayah)->penghasilan ?? '-' }}</p></div>
+                </div>
+            </div>
         </div>
 
-        @if($siswa->tinggal_bersama === 'wali')
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Wali</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Nama Wali</td>
-                        <td class="p-3">{{ $siswa->wali_nama ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">No HP Wali</td>
-                        <td class="p-3">{{ $siswa->hp_wali ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Hubungan</td>
-                        <td class="p-3">{{ $siswa->wali_hubungan ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        {{-- Data Wali --}}
+        <div x-show="isCurrent('wali')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Wali</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Nama Wali</p><p>{{ $siswa->wali_nama ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">No HP Wali</p><p>{{ $siswa->hp_wali ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Hubungan</p><p>{{ $siswa->wali_hubungan ?? '-' }}</p></div>
+                </div>
+            </div>
         </div>
-        @endif
 
         {{-- Data Pendukung --}}
-        <div class="overflow-x-auto mb-5">
-            <h3 class="font-semibold mb-2">Data Pendukung</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <tbody>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Tinggi / Berat</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->tinggi ?? '-' }} cm / {{ optional($siswa->dataPendukung)->berat ?? '-' }} kg</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Jarak Rumah</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->jarak ?? '-' }} km</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Jumlah Saudara</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->jumlah_saudara ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Asal PAUD / TK</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->paudTk->nama ?? '-' }}</td>
-                    </tr>
-                    <tr class="bg-slate-50">
-                        <td class="p-3 font-medium">Alamat TK</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->paudTk->alamat ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-medium">Hobi / Cita-cita</td>
-                        <td class="p-3 text-right">{{ optional($siswa->dataPendukung)->hobi ?? '-' }} / {{ optional($siswa->dataPendukung)->cita_cita ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div x-show="isCurrent('pendukung')" x-cloak
+            class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Pendukung</h3>
+            <div class="p-4 text-sm text-slate-900">
+                <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
+                    <div><p class="text-slate-500">Tinggi / Berat</p><p>{{ optional($siswa->dataPendukung)->tinggi ?? '-' }} cm / {{ optional($siswa->dataPendukung)->berat ?? '-' }} kg</p></div>
+                    <div><p class="text-slate-500">Jarak Rumah</p><p>{{ optional($siswa->dataPendukung)->jarak ?? '-' }} km</p></div>
+                    <div><p class="text-slate-500">Jumlah Saudara</p><p>{{ optional($siswa->dataPendukung)->jumlah_saudara ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Anak Ke (berdasarkan KK)</p><p>{{ optional($siswa->dataPendukung)->anak_ke ?? '-' }}</p></div>
+                    @php
+                        $dp = $siswa->dataPendukung;
+                        $isManual = optional($dp)->is_tk_manual;
+                        $tkNama = $isManual ? $dp->nama_tk_manual : optional(optional($dp)->paudTk)->nama;
+                        $tkAlamat = $isManual ? $dp->alamat_tk : optional(optional($dp)->paudTk)->alamat;
+                    @endphp
+                    <div><p class="text-slate-500">Asal PAUD / TK</p><p>{{ $tkNama ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Alamat TK</p><p>{{ $tkAlamat ?? '-' }}</p></div>
+                    <div><p class="text-slate-500">Hobi / Cita-cita</p><p>{{ optional($siswa->dataPendukung)->hobi ?? '-' }} / {{ optional($siswa->dataPendukung)->cita_cita ?? '-' }}</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card flex flex-wrap items-center justify-between gap-3">
+            <button
+                type="button"
+                @click="prev()"
+                :disabled="currentIndex === 0"
+                class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-none focus:ring-2 focus:ring-blue-300"
+            >
+                ← Sebelumnya
+            </button>
+            <p class="text-sm text-slate-600" x-text="currentTitle()"></p>
+            <button
+                type="button"
+                @click="next()"
+                :disabled="currentIndex === steps.length - 1"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-none focus:ring-2 focus:ring-blue-300"
+            >
+                Berikutnya →
+            </button>
         </div>
     </div>
 
     {{-- PANEL AKSI --}}
-    <div class="card space-y-3">
+    <div class="card space-y-4 h-fit md:sticky md:top-4">
 
         {{-- Rincian Biaya Pendaftaran --}}
-        <div class="overflow-x-auto mb-3">
-            <h3 class="font-semibold mb-2">Rincian Biaya Pendaftaran</h3>
-            <table class="w-full text-sm border border-slate-200 rounded-lg">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="p-3 text-left">Jenis Biaya</th>
-                        <th class="p-3 text-right">Nominal</th>
-                        <th class="p-3 text-right">Diskon</th>
-                        <th class="p-3 text-right">Total</th>
-                        <th class="p-3 text-left">Voucher</th>
-                        <th class="p-3 text-left">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $grandTotal = 0; @endphp
-                    @foreach($siswa->tagihan as $t)
-                        <tr class="{{ $loop->even ? 'bg-slate-50' : '' }}">
-                            <td class="p-3">{{ $t->biaya->nama_biaya ?? '-' }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->nominal,0,',','.') }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->diskon,0,',','.') }}</td>
-                            <td class="p-3 text-right">{{ number_format($t->total,0,',','.') }}</td>
-                            <td class="p-3">{{ $t->kode_voucher ?? '-' }}</td>
-                            <td class="p-3">{{ ucfirst($t->status) }}</td>
-                        </tr>
-                        @php $grandTotal += $t->total; @endphp
-                    @endforeach
-                    <tr class="font-semibold bg-slate-100">
-                        <td class="p-3 text-right" colspan="3">Total Bayar</td>
-                        <td class="p-3 text-right">{{ number_format($grandTotal,0,',','.') }}</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Rincian Biaya Pendaftaran</h3>
+            <div class="p-3 space-y-3 text-sm text-slate-700">
+                @php $grandTotal = 0; @endphp
+                @foreach($siswa->tagihan as $t)
+                    <div class="rounded-lg border border-slate-200 bg-white p-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="font-semibold text-slate-800">{{ $t->biaya->nama_biaya ?? '-' }}</p>
+                            <span class="badge-{{ $t->status === 'lunas' ? 'success' : 'warning' }}">{{ ui_label($t->status) }}</span>
+                        </div>
+                        <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm">
+                            <p class="text-slate-500">Nominal</p>
+                            <p class="text-slate-900 text-right">{{ number_format($t->nominal,0,',','.') }}</p>
+                            <p class="text-slate-500">Diskon</p>
+                            <p class="text-slate-900 text-right">{{ number_format($t->diskon,0,',','.') }}</p>
+                            <p class="text-slate-500">Nama Voucher</p>
+                            <p class="text-slate-900 text-right">{{ $t->kode_voucher ?? '-' }}</p>
+                            <p class="text-slate-500">Sub Total</p>
+                            <p class="font-semibold text-slate-900 text-right">{{ number_format($t->total,0,',','.') }}</p>
+                        </div>
+                    </div>
+                    @php $grandTotal += $t->total; @endphp
+                @endforeach
+
+                <div class="rounded-lg border border-green-200 bg-green-50/70 p-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-semibold text-slate-700">Total Bayar</p>
+                        <p class="text-base font-bold text-slate-900">{{ number_format($grandTotal,0,',','.') }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Tombol Aksi --}}
-        <button onclick="openModalPetugas({{ $siswa->id }})"
-    class="btn-primary w-full text-center">
-    🖨️ Cetak Formulir Pendaftaran
-</button>
+        <div class="flex flex-row flex-nowrap gap-2 w-full">
+            <button onclick="openModalPetugas({{ $siswa->id }})"
+                class="basis-1/3 min-w-0 inline-flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 py-2 text-white text-[11px] leading-tight font-semibold hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-300 text-center overflow-hidden">
+                <span>🖨️</span>
+                <span class="truncate">Cetak Formulir</span>
+            </button>
+
+            <button onclick="bukaPasswordModal('{{ route('pendaftaran.biaya', $siswa) }}')"
+                class="basis-1/3 min-w-0 inline-flex items-center justify-center gap-1 rounded-lg bg-green-600 border border-green-700 px-2 py-2 text-white text-[11px] leading-tight font-semibold shadow-sm hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-300 text-center overflow-hidden">
+                <span>💰</span>
+                <span class="truncate">Input & Cetak Nota</span>
+            </button>
+
+            <button onclick="window.location='{{ route('pendaftaran.public') }}'"
+                class="basis-1/3 min-w-0 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-700 px-2 py-2 text-white text-[11px] leading-tight font-semibold hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-slate-300 text-center overflow-hidden">
+                <span>➕</span>
+                <span class="truncate">Daftarkan Lagi</span>
+            </button>
+        </div>
 
         @include('pendaftaran.modal-cetak-formulir')
-
-        <button onclick="document.getElementById('modalNota').classList.remove('hidden')"
-            class="btn-primary w-full bg-green-600 hover:bg-green-700">
-            💰 Input & Cetak Nota Pendaftaran
-        </button>
-
-        <button onclick="window.location='{{ route('pendaftaran.public') }}'"
-            class="btn-primary w-full text-center bg-slate-600 hover:bg-slate-700">
-            ➕ Daftarkan Siswa Lain
-        </button>
 
     </div>
 
 </div>
 
-@include('pendaftaran.modal-nota')
+<div id="modalPassword"
+    onclick="closePasswordModal()"
+    class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+
+    <div class="bg-white p-6 rounded w-80 relative" onclick="event.stopPropagation()">
+
+        <button
+            type="button"
+            onclick="closePasswordModal()"
+            class="absolute top-2 right-2 text-slate-500 hover:text-slate-700 p-1"
+            aria-label="Tutup modal"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <h3 class="font-semibold mb-3">
+            Password Panitia
+        </h3>
+
+        <form method="POST" action="{{ route('verifikasi.password.panitia') }}">
+            @csrf
+
+            <input type="hidden" name="redirect_url" id="redirectUrl">
+
+            <input
+                type="password"
+                name="password"
+                class="w-full border rounded px-3 py-2 mb-3"
+                placeholder="Masukkan password"
+                required
+            >
+
+            <div class="flex gap-2">
+                <button
+                    type="button"
+                    onclick="closePasswordModal()"
+                    class="w-1/2 bg-slate-200 text-slate-700 px-4 py-2 rounded hover:bg-slate-300"
+                >
+                    Batal
+                </button>
+                <button class="w-1/2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Verifikasi
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    function bukaPasswordModal(url) {
+        document.getElementById('redirectUrl').value = url;
+
+        const modal = document.getElementById('modalPassword');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closePasswordModal() {
+        const modal = document.getElementById('modalPassword');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('successPager', ({ hasWali }) => ({
+            currentIndex: 0,
+            steps: [],
+            init() {
+                this.steps = [
+                    { key: 'siswa', title: 'Data Siswa' },
+                    { key: 'alamat', title: 'Data Alamat' },
+                    { key: 'ibu', title: 'Data Ibu' },
+                    { key: 'ayah', title: 'Data Ayah' },
+                    ...(hasWali ? [{ key: 'wali', title: 'Data Wali' }] : []),
+                    { key: 'pendukung', title: 'Data Pendukung' },
+                ];
+            },
+            isCurrent(key) {
+                return this.steps[this.currentIndex]?.key === key;
+            },
+            currentTitle() {
+                return this.steps[this.currentIndex]?.title || '';
+            },
+            goTo(index) {
+                if (index < 0 || index >= this.steps.length) {
+                    return;
+                }
+                this.currentIndex = index;
+            },
+            next() {
+                if (this.currentIndex < this.steps.length - 1) {
+                    this.currentIndex += 1;
+                }
+            },
+            prev() {
+                if (this.currentIndex > 0) {
+                    this.currentIndex -= 1;
+                }
+            }
+        }));
+    });
+</script>
 @endsection
+
+

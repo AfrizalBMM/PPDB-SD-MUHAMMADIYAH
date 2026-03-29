@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title','PPDB SD Muhammadiyah Wonorejo')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -31,7 +32,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-3">
 
             {{-- DAFTAR PENDAFTAR --}}
             <a
@@ -50,6 +51,27 @@
             </a>
 
         </div>
+
+        <details class="md:hidden relative">
+            <summary class="list-none cursor-pointer rounded-lg bg-white/15 px-3 py-2 hover:bg-white/20 transition">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </summary>
+
+            <div class="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
+                <a
+                    href="{{ route('pendaftaran.list') }}"
+                    class="block px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                    📋 Daftar Calon Siswa
+                </a>
+                <a
+                    href="{{ route('login') }}"
+                    class="block px-4 py-3 text-sm font-semibold text-primary hover:bg-slate-50 transition border-t border-slate-100">
+                    Login
+                </a>
+            </div>
+        </details>
 
 
     </div>

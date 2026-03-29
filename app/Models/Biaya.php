@@ -5,6 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @property int $id
+ * @property int $tahun_ajaran_id
+ * @property string $jenis_biaya
+ * @property string $kategori
+ * @property string $jenis_kelamin
+ * @property string $nama_biaya
+ * @property int $nominal
+ * @property bool $aktif
+ * @method static \Illuminate\Database\Eloquent\Builder|Biaya aktif()
+ * @method static \Illuminate\Database\Eloquent\Builder|Biaya untukTahun($tahunAjaranId)
+ * @method static \Illuminate\Database\Eloquent\Builder|Biaya untukJenisKelamin($jenisKelamin)
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Biaya extends Model
 {
     protected $table = 'biaya';
@@ -33,6 +47,11 @@ class Biaya extends Model
     public function tahunAjaran()
     {
         return $this->belongsTo(TahunAjaran::class);
+    }
+
+    public function tagihan()
+    {
+        return $this->hasMany(TagihanSiswa::class, 'biaya_id');
     }
 
     /*

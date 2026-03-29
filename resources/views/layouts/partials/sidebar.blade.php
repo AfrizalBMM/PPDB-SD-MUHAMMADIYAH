@@ -1,11 +1,11 @@
 {{-- HEADER --}}
-<div class="px-5 py-4 border-b border-white/10 flex items-center space-x-3">
-    <img src="{{ asset('images/logo.png') }}" alt="Logo PPDB" class="h-10 w-10 object-contain">
+<div class="px-6 py-5 border-b border-border flex items-center space-x-3">
+    <img src="{{ asset('images/logo.png') }}" alt="Logo PPDB" class="h-10 w-10 object-contain drop-shadow-sm">
     <div class="flex flex-col">
-        <div class="text-lg font-bold tracking-wide">
+        <div class="text-lg font-heading font-bold tracking-wide text-primary">
             PPDB SDM
         </div>
-        <div class="text-xs text-white/70 mt-1">
+        <div class="text-xs text-textSecondary mt-0.5 font-medium">
             Islami, Mandiri, Berprestasi
         </div>
     </div>
@@ -13,12 +13,12 @@
 
 
 {{-- MENU --}}
-<nav class="px-3 py-4 space-y-1 text-sm">
+<nav class="px-3 py-4 space-y-1.5 text-sm h-[calc(100vh-140px)] overflow-y-auto w-full">
 
     {{-- MAIN --}}
-    <p class="px-3 mb-2 text-xs uppercase tracking-wider text-white/50">
+    <h3 class="sidebar-section">
         Menu Utama
-    </p>
+    </h3>
 
     <a href="{{ route('dashboard') }}"
        class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -46,13 +46,18 @@
 
     {{-- MASTER --}}
     @role('superadmin')
-        <p class="px-3 mt-4 mb-2 text-xs uppercase tracking-wider text-white/50">
+        <h3 class="sidebar-section mt-6">
             Master Data
-        </p>
+        </h3>
 
         <a href="{{ route('admin.password.panitia') }}"
             class="sidebar-link {{ request()->routeIs('admin.password.panitia') ? 'active' : '' }}">
             🔑 Password Panitia
+        </a>
+
+        <a href="{{ route('admin.password.petugas-keuangan') }}"
+            class="sidebar-link {{ request()->routeIs('admin.password.petugas-keuangan*') ? 'active' : '' }}">
+            💼 Password Petugas Keuangan
         </a>
 
         <a href="{{ route('tahun-ajaran.index') }}"
@@ -82,44 +87,38 @@
 
         <a href="{{ route('log.aktivitas') }}"
            class="sidebar-link {{ request()->routeIs('log.aktivitas') ? 'active' : '' }}">
-            🧾 Log Aktivitas
+            🧾 Monitoring Aktivitas
+        </a>
+        <a href="{{ route('admin.settings.index') }}"
+           class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+            ⚙️ Setting Website Base
+        </a>
+        <a href="{{ route('landing-programs.index') }}"
+           class="sidebar-link {{ request()->routeIs('landing-programs.*') ? 'active' : '' }}">
+            🎯 Program Unggulan
+        </a>
+        <a href="{{ route('landing-facilities.index') }}"
+           class="sidebar-link {{ request()->routeIs('landing-facilities.*') ? 'active' : '' }}">
+            🏢 Fasilitas Sekolah
+        </a>
+        <a href="{{ route('landing-testimonials.index') }}"
+           class="sidebar-link {{ request()->routeIs('landing-testimonials.*') ? 'active' : '' }}">
+            💬 Testimonial
+        </a>
+        <a href="{{ route('landing-galleries.index') }}"
+           class="sidebar-link {{ request()->routeIs('landing-galleries.*') ? 'active' : '' }}">
+            🖼️ Galeri Sekolah
+        </a>
+        <a href="{{ route('landing-faqs.index') }}"
+           class="sidebar-link {{ request()->routeIs('landing-faqs.*') ? 'active' : '' }}">
+            ❓ FAQ Landing
         </a>
     @endrole
 
 </nav>
 
-{{-- FOOTER --}}
-<div class="absolute bottom-0 left-0 w-full border-t border-white/10 p-3">
-    <form id="logoutForm" method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button 
-            type="button"
-            onclick="openModal('logoutModal')"
-            class="sidebar-link text-red-300 hover:text-red-100 w-full text-left">
-            🚪 Logout
-        </button>
-    </form>
-</div>
 
 
-{{-- MODAL LOGOUT --}}
-<x-modal id="logoutModal" title="Konfirmasi Logout">
-    <p>Apakah Anda yakin ingin keluar dari sistem?</p>
 
-    <div class="flex justify-end gap-2 mt-4">
-        <button 
-            type="button"
-            onclick="closeModal('logoutModal')" 
-            class="btn-secondary">
-            Batal
-        </button>
 
-        <button 
-            type="button"
-            onclick="document.getElementById('logoutForm').submit()" 
-            class="btn-danger">
-            Ya, Logout
-        </button>
-    </div>
-</x-modal>
 

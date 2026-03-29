@@ -31,7 +31,7 @@
                             {{ optional($s->registration)->nomor_registrasi ?? '-' }}
                         </td>
                         <td class="px-4 py-3">
-                            {{ ucfirst($s->jenis_kelamin) }}
+                            {{ ui_label($s->jenis_kelamin) }}
                         </td>
                         <td class="px-4 py-3">
                             {{ optional(optional($s->registration)->tahunAjaran)->nama ?? '-' }}

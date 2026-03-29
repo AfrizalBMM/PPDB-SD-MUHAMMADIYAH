@@ -92,7 +92,7 @@
             <li class="flex justify-between">
                 <span>
                     {{ \Carbon\Carbon::parse($p->tanggal_bayar)->format('d-m-Y') }}
-                    — {{ ucfirst($p->metode) }}
+                    — {{ ui_label($p->metode) }}
                 </span>
                 <span class="font-medium">
                     Rp {{ number_format($p->nominal_bayar,0,',','.') }}

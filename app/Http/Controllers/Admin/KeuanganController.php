@@ -3,22 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\TagihanSiswa;
+use App\Models\Siswa;
 
 class KeuanganController extends Controller
 {
     public function index()
     {
-        $tagihan = TagihanSiswa::with([
-                'siswa.registration.tahunAjaran',
-                'biaya',
-                'pembayaran',
-                'voucher',
+        $siswa_list = Siswa::with([
+                'registration.tahunAjaran',
+                'tagihan.biaya',
+                'tagihan.pembayaran' => function ($query) {
+                    $query->orderByDesc('tanggal_bayar')->orderByDesc('created_at');
+                },
+                'tagihan.voucher',
             ])
-            ->orderByRaw("status = 'belum_lunas' DESC")
+            ->whereHas('tagihan')
             ->orderByDesc('created_at')
             ->paginate(30);
 
-        return view('keuangan.index', compact('tagihan'));
+        return view('keuangan.index', compact('siswa_list'));
     }
 }

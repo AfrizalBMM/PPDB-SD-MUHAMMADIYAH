@@ -32,6 +32,8 @@ class PasswordPanitiaController extends Controller
             ['password' => Hash::make($request->password)]
         );
 
+        logAktivitas('Password Panitia', 'Memperbarui password panitia untuk tahun ajaran ' . $tahunAjaran->nama);
+
         return back()
             ->with('success','Password panitia berhasil disimpan')
             ->with('password_plain', $request->password);

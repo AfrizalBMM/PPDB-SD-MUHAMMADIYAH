@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @property int $id
+ * @property string $nama
+ * @property bool $aktif
+ * @method static \Illuminate\Database\Eloquent\Builder|TahunAjaran aktif()
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class TahunAjaran extends Model
 {
     protected $table = 'tahun_ajaran';

@@ -2,282 +2,439 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Formulir PPDB</title>
+<title>Formulir Pendaftaran</title>
 
 <style>
-@page {
-    size: 210mm 330mm; /* F4 */
-    margin: 10mm;
+
+*{
+    font-family:'Helvetica', 'Inter', Arial, sans-serif;
 }
 
-/* FONT */
-body {
-    font-family: DejaVu Sans, sans-serif;
-    font-size: 11px;
-    line-height: 1.2;
+@page{
+    size:215mm 330mm;
+    margin:6mm;
 }
 
-/* JUDUL */
-.title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 5px;
+body{
+    margin:0;
+    padding:0;
+    padding-bottom:12mm;
+    font-size:11px;
+    color:#000;
 }
 
-/* TABLE GLOBAL */
-table {
-    width: 100%;
-    border-collapse: collapse;
+.page{
+    position:relative;
+    width:100%;
 }
 
-/* CELL */
-td {
-    padding: 2px 3px;
-    vertical-align: middle;
+.watermark{
+    position:fixed;
+    top:50%;
+    left:50%;
+    width:110mm;
+    margin-left:-55mm;
+    margin-top:-55mm;
+    opacity:0.045;
+    z-index:0;
 }
 
-/* LABEL KIRI */
-.label {
-    width: 32%;
-    white-space: nowrap;
+.header{
+    border:1px solid #000;
+    border-radius:10px;
+    padding:0;
+    margin-bottom:10px;
+    background:#fff;
+    position:relative;
+    z-index:2;
 }
 
-/* TITIK DUA */
-.colon {
-    width: 2%;
-    text-align: center;
+.header-title{
+    font-size:14px;
+    font-weight:700;
+    font-family:'Helvetica', 'Inter', Arial, sans-serif;
+    color:#1e3a8a;
+    letter-spacing:.3px;
+    margin:0;
+    padding-bottom:6px;
+    text-align:center;
 }
 
-/* VALUE */
-.value {
-    width: 66%;
+.header-subtitle{
+    margin:0;
+    font-size:10.5px;
+    color:#000;
 }
 
-/* KOTAK PANJANG (ISI DATA) */
-.box {
-    border: 1px solid #000;
-    height: 15px;
-    padding: 1px 3px;
-    font-size: 11px;
+.header-body{
+    padding:8px 12px 10px;
 }
 
-/* KOTAK KECIL PER DIGIT (NIK, Tanggal) */
-.box-small {
-    border: 1px solid #000;
-    width: 13px;
-    height: 15px;
-    text-align: center;
-    font-size: 10px;
-    display: inline-block;
-    margin-right: -1px; /* biar rapat */
+.meta{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:8px;
 }
 
-/* HEADER SECTION ABU */
-.section {
-    background: #e0e0e0;
-    font-weight: bold;
-    text-align: center;
-    padding: 3px;
-    border: 1px solid #000;
-    margin-top: 6px;
+.meta td{
+    padding:4px 6px;
+    border:1px solid #000;
+    vertical-align:top;
 }
 
-/* GARIS INPUT KOSONG */
-.line {
-    border-bottom: 1px solid #000;
-    height: 15px;
+.meta .label{
+    width:22%;
+    color:#000;
+    font-weight:600;
+    background:#f2f2f2;
 }
 
-/* RT RW BOX KECIL */
-.box-rt {
-    border: 1px solid #000;
-    width: 25px;
-    height: 15px;
-    display: inline-block;
-    text-align: center;
+.section{
+    margin-top:10px;
+    border:1px solid #000;
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+    z-index:2;
 }
 
-/* TANDA TANGAN */
-.ttd {
-    text-align: center;
-    padding-top: 30px;
+.section-title{
+    margin:0;
+    padding:7px 10px;
+    font-size:11px;
+    font-weight:700;
+    font-family:'Helvetica', 'Inter', Arial, sans-serif;
+    letter-spacing:.5px;
+    color:#000;
+    background:#e8e8e8;
+    text-transform:uppercase;
 }
+
+.kop-full{
+    width:100%;
+    height:auto;
+    display:block;
+    border-bottom:1px solid #000;
+}
+
+.grid{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.grid td{
+    border:1px solid #000;
+    padding:6px 8px;
+    vertical-align:top;
+}
+
+.grid .k{
+    width:24%;
+    background:#f2f2f2;
+    color:#000;
+    font-weight:600;
+}
+
+.grid .v{
+    width:26%;
+    color:#000;
+}
+
+.footer{
+    margin-top:12px;
+    width:100%;
+    border-collapse:collapse;
+    position:relative;
+    z-index:2;
+}
+
+.footer td{
+    vertical-align:top;
+    width:50%;
+    text-align:center;
+    padding-top:4px;
+}
+
+.muted{
+    color:#000;
+}
+
+.signature{
+    margin-top:44px;
+    font-weight:700;
+}
+
+.print-footer{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:2mm;
+    text-align:center;
+    font-size:9px;
+    color:#000;
+    z-index:2;
+}
+
 </style>
 
 </head>
 
 <body>
+@php
+    $dash = '-';
 
-<div class="title">
-FORMULIR PESERTA DIDIK SD MUHAMMADIYAH WONOREJO<br>
-Tahun Ajaran {{ date('Y') }}/{{ date('Y')+1 }}
+    $display = function ($value) use ($dash) {
+        if (is_null($value)) {
+            return $dash;
+        }
+
+        $text = trim((string) $value);
+
+        return $text !== '' ? $text : $dash;
+    };
+
+    $withUnit = function ($value, $unit) use ($display, $dash) {
+        $formatted = $display($value);
+
+        if ($formatted === $dash) {
+            return $dash;
+        }
+
+        return $formatted . ' ' . $unit;
+    };
+
+    $toLabel = function ($value) use ($dash) {
+        if (is_null($value) || trim((string) $value) === '') {
+            return $dash;
+        }
+
+        return ucwords(str_replace('_', ' ', (string) $value));
+    };
+
+    $alamat = optional($siswa->alamat);
+    $ayah = optional($siswa->ayah);
+    $ibu = optional($siswa->ibu);
+    $wali = optional($siswa->wali);
+    $dataPendukung = optional($siswa->dataPendukung);
+    $registration = optional($siswa->registration);
+
+    $tanggalDaftar = $registration->tanggal_daftar
+        ? \Carbon\Carbon::parse($registration->tanggal_daftar)->format('d-m-Y')
+        : $dash;
+
+    $tanggalLahir = $siswa->tanggal_lahir
+        ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d-m-Y')
+        : $dash;
+
+    $tinggalBersama = $toLabel($siswa->tinggal_bersama);
+    $transportasi = $toLabel($siswa->transportasi);
+
+    $berkebutuhanKhususDisplay = $dash;
+    if (!is_null($siswa->berkebutuhan_khusus) && trim((string) $siswa->berkebutuhan_khusus) !== '' && trim((string) $siswa->berkebutuhan_khusus) !== 'Tidak') {
+        $berkebutuhanKhususDisplay = 'Ya, ' . trim((string) $siswa->berkebutuhan_khusus);
+    } else {
+        $berkebutuhanKhususDisplay = 'Tidak';
+    }
+
+    $kontakUtama = $siswa->tinggal_bersama === 'wali'
+        ? ($wali->no_hp ?? $dash)
+        : ($ibu->no_hp ?? $dash);
+
+    $namaTk = $dash;
+    if ($dataPendukung->is_tk_manual) {
+        $namaTk = $display($dataPendukung->nama_tk_manual ?? null);
+    } elseif ($dataPendukung->paudTk) {
+        $namaTk = $display($dataPendukung->paudTk->nama ?? null);
+    }
+
+    $alamatTk = $display($dataPendukung->alamat_tk ?? null);
+    $asalTkPaud = $namaTk;
+    if ($namaTk !== $dash && $alamatTk !== $dash) {
+        $asalTkPaud = $namaTk . ' - ' . $alamatTk;
+    } elseif ($alamatTk !== $dash) {
+        $asalTkPaud = $alamatTk;
+    }
+
+    $panitia = $display($petugas ?? null);
+
+    $tahunAjaran = $display(optional($registration->tahunAjaran)->nama ?? null);
+    $tahunAjaranAktif = \App\Models\TahunAjaran::where('aktif', true)->value('nama');
+    $tahunAjaranJudul = $display($tahunAjaranAktif ?? optional($registration->tahunAjaran)->nama ?? null);
+
+    $tanggalCetak = now()
+        ->locale('id')
+        ->translatedFormat('l d F Y \\j\\a\\m H.i');
+@endphp
+
+<div class="page">
+    <img src="{{ public_path('images/logo.png') }}" alt="Watermark Logo" class="watermark">
+
+    <div class="header">
+        <img src="{{ public_path('images/kopsdm.png') }}" alt="Kop SD Muhammadiyah Wonorejo" class="kop-full">
+
+        <div class="header-body">
+            <h1 class="header-title">FORMULIR PESERTA DIDIK SD MUHAMMADIYAH WONOREJO TAHUN AJARAN {{ $tahunAjaranJudul }}</h1>
+
+            <table class="meta">
+                <tr>
+                    <td class="label">Nomor Registrasi</td>
+                    <td>{{ $display($registration->nomor_registrasi ?? null) }}</td>
+                    <td class="label">Tanggal Daftar</td>
+                    <td>{{ $tanggalDaftar }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Tahun Ajaran</td>
+                    <td>{{ $tahunAjaran }}</td>
+                    <td class="label">Hasil Tes</td>
+                    <td>{{ $display($siswa->hasil_tes ?? null) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Panitia Penerima</td>
+                    <td>{{ $panitia }}</td>
+                    <td class="label">Tanggal Cetak</td>
+                    <td>{{ $tanggalCetak }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3 class="section-title">IDENTITAS PESERTA DIDIK</h3>
+        <table class="grid">
+            <tr>
+                <td class="k">Nama Lengkap</td><td class="v">{{ $display($siswa->nama ?? null) }}</td>
+                <td class="k">Agama</td><td class="v">{{ $display($siswa->agama ?? 'Islam') }}</td>
+            </tr>
+            <tr>
+                <td class="k">NIK</td><td class="v">{{ $display($siswa->nik ?? null) }}</td>
+                <td class="k">Berkebutuhan Khusus</td><td class="v">{{ $berkebutuhanKhususDisplay }}</td>
+            </tr>
+            <tr>
+                <td class="k">Tempat Lahir</td><td class="v">{{ $display($siswa->tempat_lahir ?? null) }}</td>
+                <td class="k">Tinggal Bersama</td><td class="v">{{ $tinggalBersama }}</td>
+            </tr>
+            <tr>
+                <td class="k">Tanggal Lahir</td><td class="v">{{ $tanggalLahir }}</td>
+                <td class="k">Moda Transportasi</td><td class="v">{{ $transportasi }}</td>
+            </tr>
+            <tr>
+                <td class="k">No Akta Lahir</td><td class="v">{{ $display($siswa->akta_no ?? null) }}</td>
+                <td class="k">No KKS</td><td class="v">{{ $display($siswa->no_kks ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Kewarganegaraan</td><td class="v">{{ $display($siswa->kewarganegaraan ?? 'Indonesia') }}</td>
+                <td class="k">KPS / PKH</td><td class="v">{{ $display($siswa->kps ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">No KK</td><td class="v">{{ $display($siswa->no_kk ?? null) }}</td>
+                <td class="k">Peserta KIP</td><td class="v">{{ $display($siswa->kip ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Jenis Kelamin</td><td class="v">{{ $toLabel($siswa->jenis_kelamin ?? null) }}</td>
+                <td class="k">Layak PIP</td><td class="v">{{ $display($siswa->layak_pip ?? null) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3 class="section-title">ALAMAT PESERTA DIDIK</h3>
+        <table class="grid">
+            <tr>
+                <td class="k">Alamat Lengkap</td><td class="v" colspan="3">{{ $display($alamat->alamat ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Kelurahan</td><td class="v">{{ $display($alamat->kelurahan ?? null) }}</td>
+                <td class="k">Kecamatan</td><td class="v">{{ $display($alamat->kecamatan ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Kabupaten</td><td class="v">{{ $display($alamat->kabupaten ?? null) }}</td>
+                <td class="k">Provinsi</td><td class="v">{{ $display($alamat->provinsi ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">RT / RW</td><td class="v">{{ $display($alamat->rt ?? null) }} / {{ $display($alamat->rw ?? null) }}</td>
+                <td class="k">Kode Pos</td><td class="v">{{ $display($alamat->kode_pos ?? null) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3 class="section-title">DATA ORANG TUA / WALI</h3>
+        <table class="grid">
+            <tr>
+                <td class="k">Nama Ayah</td><td class="v">{{ $display($ayah->nama ?? null) }}</td>
+                <td class="k">Nama Ibu</td><td class="v">{{ $display($ibu->nama ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">No HP Ayah</td><td class="v">{{ $display($ayah->no_hp ?? null) }}</td>
+                <td class="k">No HP Ibu</td><td class="v">{{ $display($ibu->no_hp ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">NIK Ayah</td><td class="v">{{ $display($ayah->nik ?? null) }}</td>
+                <td class="k">NIK Ibu</td><td class="v">{{ $display($ibu->nik ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Tahun Lahir Ayah</td><td class="v">{{ $display($ayah->tahun_lahir ?? null) }}</td>
+                <td class="k">Tahun Lahir Ibu</td><td class="v">{{ $display($ibu->tahun_lahir ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Pendidikan Ayah</td><td class="v">{{ $display($ayah->pendidikan ?? null) }}</td>
+                <td class="k">Pendidikan Ibu</td><td class="v">{{ $display($ibu->pendidikan ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Pekerjaan Ayah</td><td class="v">{{ $display($ayah->pekerjaan ?? null) }}</td>
+                <td class="k">Pekerjaan Ibu</td><td class="v">{{ $display($ibu->pekerjaan ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Penghasilan Ayah</td><td class="v">{{ $display($ayah->penghasilan ?? null) }}</td>
+                <td class="k">Penghasilan Ibu</td><td class="v">{{ $display($ibu->penghasilan ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Nama Wali</td><td class="v">{{ $display($wali->nama ?? null) }}</td>
+                <td class="k">Hubungan Wali</td><td class="v">{{ $display($wali->hubungan ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">No HP Wali</td><td class="v">{{ $display($wali->no_hp ?? null) }}</td>
+                <td class="k">Kontak Utama</td><td class="v">{{ $display($kontakUtama) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3 class="section-title">DATA PENDUKUNG PESERTA DIDIK</h3>
+        <table class="grid">
+            <tr>
+                <td class="k">Tinggi - Berat Badan</td><td class="v">{{ $withUnit($dataPendukung->tinggi ?? null, 'cm') }} - {{ $withUnit($dataPendukung->berat ?? null, 'kg') }}</td>
+                <td class="k">Anak Ke (Berdasarkan KK)</td><td class="v">{{ $display($dataPendukung->anak_ke ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Jarak ke Sekolah</td><td class="v">{{ $withUnit($dataPendukung->jarak ?? null, 'km') }}</td>
+                <td class="k">Jumlah Saudara</td><td class="v">{{ $display($dataPendukung->jumlah_saudara ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Hobi</td><td class="v">{{ $display($dataPendukung->hobi ?? null) }}</td>
+                <td class="k">Cita-cita</td><td class="v">{{ $display($dataPendukung->cita_cita ?? null) }}</td>
+            </tr>
+            <tr>
+                <td class="k">Asal TK/PAUD (Nama & Alamat)</td><td class="v" colspan="3">{{ $asalTkPaud }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="footer">
+        <tr>
+            <td>
+                <div class="muted">Panitia Penerima</div>
+                <div class="signature">{{ $panitia }}</div>
+            </td>
+            <td>
+                <div class="muted">Wali Murid</div>
+                <div class="signature">(...............................)</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="print-footer">Dicetak otomatis melalui website https://ppdb.sdmuhwonorejo.com/</div>
 </div>
-
-<br>
-
-<!-- TANGGAL & KELAS -->
-<table>
-<tr>
-<td width="20%">Tanggal</td><td width="2%">:</td>
-<td>
-<table>
-<tr>
-<td class="box-small"></td>
-<td class="box-small"></td>
-<td>/</td>
-<td class="box-small"></td>
-<td class="box-small"></td>
-<td>/</td>
-<td class="box-small">2</td>
-<td class="box-small">0</td>
-<td class="box-small">{{ date('y')[0] }}</td>
-<td class="box-small">{{ date('y')[1] }}</td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr>
-<td>Kelas</td><td>:</td>
-<td class="box"></td>
-</tr>
-</table>
-
-<br>
-
-<!-- ================= IDENTITAS SISWA ================= -->
-<table>
-<tr><td colspan="3" class="section">IDENTITAS PESERTA DIDIK (WAJIB DIISI)</td></tr>
-
-<tr><td class="label">a Nama</td><td>:</td><td class="box">{{ $siswa->nama }}</td></tr>
-<tr><td>b Jenis Kelamin</td><td>:</td><td class="box">{{ $siswa->jenis_kelamin }}</td></tr>
-
-<tr>
-<td>c NISN</td><td>:</td>
-<td>
-<table><tr>
-@for($i=0;$i<10;$i++)
-<td class="box-small">{{ $siswa->nisn[$i] ?? '' }}</td>
-@endfor
-</tr></table>
-</td>
-</tr>
-
-<tr>
-<td>d NIK</td><td>:</td>
-<td>
-<table><tr>
-@for($i=0;$i<16;$i++)
-<td class="box-small">{{ $siswa->nik[$i] ?? '' }}</td>
-@endfor
-</tr></table>
-</td>
-</tr>
-
-<tr><td>e Tempat Lahir</td><td>:</td><td class="box">{{ $siswa->tempat_lahir }}</td></tr>
-
-<tr>
-<td>f Tanggal Lahir</td><td>:</td>
-<td>
-<table><tr>
-@php $tgl = date('dmY', strtotime($siswa->tanggal_lahir)); @endphp
-@for($i=0;$i<8;$i++)
-<td class="box-small">{{ $tgl[$i] }}</td>
-@if($i==1 || $i==3)<td>/</td>@endif
-@endfor
-</tr></table>
-</td>
-</tr>
-
-<tr><td>g No Registrasi Akta Lahir</td><td>:</td><td class="box">{{ $siswa->akta_no }}</td></tr>
-<tr><td>h Agama</td><td>:</td><td class="box">{{ $siswa->agama }}</td></tr>
-<tr><td>i Kewarganegaraan</td><td>:</td><td class="box">{{ $siswa->kewarganegaraan }}</td></tr>
-<tr><td>j Berkebutuhan Khusus</td><td>:</td><td class="box">{{ $siswa->berkebutuhan_khusus }}</td></tr>
-<tr><td>k Alamat</td><td>:</td><td class="box">{{ $siswa->alamat->alamat ?? '' }}</td></tr>
-
-<tr>
-<td></td><td></td>
-<td>RT 
-<table style="display:inline-table">
-<tr>
-<td class="box-small">{{ $siswa->alamat->rt ?? '' }}</td>
-</tr>
-</table>
-RW 
-<table style="display:inline-table">
-<tr>
-<td class="box-small">{{ $siswa->alamat->rw ?? '' }}</td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr><td>l Desa</td><td>:</td><td class="box">{{ $siswa->alamat->kelurahan ?? '' }}</td></tr>
-<tr><td>m Kecamatan</td><td>:</td><td class="box">{{ $siswa->alamat->kecamatan ?? '' }}</td></tr>
-<tr><td>n Kode Pos</td><td>:</td><td class="box">{{ $siswa->alamat->kode_pos ?? '' }}</td></tr>
-
-<tr><td>o Tempat Tinggal</td><td>:</td><td class="box">Bersama Orang Tua / Bersama Wali</td></tr>
-<tr><td>p Moda Transportasi</td><td>:</td><td class="box">Jalan Kaki / Sepeda / Antar Jemput</td></tr>
-<tr><td>q No KKS</td><td>:</td><td class="box"></td></tr>
-<tr><td>r No KPS</td><td>:</td><td class="box"></td></tr>
-<tr><td>s No KIP</td><td>:</td><td class="box"></td></tr>
-</table>
-
-<br>
-
-<!-- ================= DATA AYAH ================= -->
-<table>
-<tr><td colspan="3" class="section">DATA AYAH KANDUNG</td></tr>
-<tr><td>a Nama</td><td>:</td><td class="box">{{ $siswa->ayah->nama ?? '' }}</td></tr>
-<tr><td>b NIK Ayah</td><td>:</td><td class="box">{{ $siswa->ayah->nik ?? '' }}</td></tr>
-<tr><td>c Tahun Lahir Ayah</td><td>:</td><td class="box">{{ $siswa->ayah->tahun_lahir ?? '' }}</td></tr>
-<tr><td>d Pendidikan Ayah</td><td>:</td><td class="box">{{ $siswa->ayah->pendidikan ?? '' }}</td></tr>
-<tr><td>e Pekerjaan Ayah</td><td>:</td><td class="box">{{ $siswa->ayah->pekerjaan ?? '' }}</td></tr>
-<tr><td>f Penghasilan Ayah (WAJIB DIISI)</td><td>:</td><td class="box">{{ $siswa->ayah->penghasilan ?? '' }}</td></tr>
-</table>
-
-<br>
-
-<!-- ================= DATA IBU ================= -->
-<table>
-<tr><td colspan="3" class="section">DATA IBU KANDUNG</td></tr>
-<tr><td>a Nama</td><td>:</td><td class="box">{{ $siswa->ibu->nama ?? '' }}</td></tr>
-<tr><td>b NIK Ibu</td><td>:</td><td class="box">{{ $siswa->ibu->nik ?? '' }}</td></tr>
-<tr><td>c Tahun Lahir Ibu</td><td>:</td><td class="box">{{ $siswa->ibu->tahun_lahir ?? '' }}</td></tr>
-<tr><td>d Pendidikan Ibu</td><td>:</td><td class="box">{{ $siswa->ibu->pendidikan ?? '' }}</td></tr>
-<tr><td>e Pekerjaan Ibu</td><td>:</td><td class="box">{{ $siswa->ibu->pekerjaan ?? '' }}</td></tr>
-<tr><td>f Penghasilan Ibu (WAJIB DIISI)</td><td>:</td><td class="box">{{ $siswa->ibu->penghasilan ?? '' }}</td></tr>
-<tr><td>Nomor HP (WAJIB DIISI)</td><td>:</td><td class="box">{{ $siswa->ibu->no_hp ?? '' }}</td></tr>
-</table>
-
-<br>
-
-<!-- ================= DATA RINCI ================= -->
-<table>
-<tr><td colspan="3" class="section">DATA RINCI</td></tr>
-<tr><td>a Tinggi Badan</td><td>:</td><td class="box">{{ $siswa->tinggi_badan ?? '' }} cm</td></tr>
-<tr><td>b Berat Badan</td><td>:</td><td class="box">{{ $siswa->berat_badan ?? '' }} Kg</td></tr>
-<tr><td>c Jarak Rumah ke Sekolah</td><td>:</td><td class="box">{{ $siswa->jarak_sekolah ?? '' }} km</td></tr>
-<tr><td>d Jumlah Saudara Kandung</td><td>:</td><td class="box">{{ $siswa->jumlah_saudara ?? '' }}</td></tr>
-<tr><td>e Nama TK</td><td>:</td><td class="box">{{ $siswa->nama_tk ?? '' }}</td></tr>
-<tr><td>f Alamat TK</td><td>:</td><td class="box">{{ $siswa->alamat_tk ?? '' }}</td></tr>
-<tr><td>g Hobi dan Cita-cita</td><td>:</td><td class="box">{{ $siswa->hobi ?? '' }}</td></tr>
-</table>
-
-<br><br>
-
-<!-- ================= TTD ================= -->
-<table width="100%">
-<tr>
-<td width="60%"></td>
-<td width="40%" align="center">
-Polokarto, {{ date('d F Y') }}<br><br><br><br>
-( {{ $siswa->ibu->nama ?? '.......................' }} )<br>
-<b>Wali Murid</b>
-</td>
-</tr>
-</table>
 
 </body>
 </html>

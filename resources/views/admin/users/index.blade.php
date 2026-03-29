@@ -81,7 +81,7 @@
                             {{ $u->email }}
                         </td>
                         <td class="px-4 py-3">
-                            {{ ucfirst($u->role) }}
+                            {{ ui_label($u->role) }}
                         </td>
                     </tr>
                     @empty

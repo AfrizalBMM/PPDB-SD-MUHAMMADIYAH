@@ -63,7 +63,7 @@
                         </td>
 
                         <td>
-                            {{ ucfirst(optional(optional($p->tagihan)->biaya)->jenis_biaya ?? '-') }}
+                            {{ ui_label(optional(optional($p->tagihan)->biaya)->jenis_biaya ?? '-') }}
                         </td>
 
                         <td class="text-right whitespace-nowrap font-medium">

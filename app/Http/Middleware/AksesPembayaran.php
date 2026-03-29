@@ -11,8 +11,18 @@ class AksesPembayaran
     {
         if (!session()->has('akses_pembayaran')) {
 
-            return redirect()->back()
-                ->with('error','Masukkan password panitia terlebih dahulu');
+            // Untuk AJAX request, return JSON error
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Akses ditolak. Silakan verifikasi password panitia terlebih dahulu.',
+                    'status' => 'unauthorized'
+                ], 403);
+            }
+
+            // Untuk regular request, redirect ke halaman yang diminta
+            return redirect()
+                ->back()
+                ->with('error', 'Masukkan password panitia terlebih dahulu');
 
         }
 

@@ -12,6 +12,7 @@ class Ayah extends Model
         'siswa_id',
         'nama',
         'nik',
+        'no_hp',
         'tahun_lahir',
         'pendidikan',
         'pekerjaan',

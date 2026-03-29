@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\CetakController;
 use App\Http\Controllers\Admin\PembayaranController;
 use App\Http\Controllers\Public\PendaftaranController;
 use App\Http\Controllers\Public\PasswordPanitiaController;
+use App\Http\Controllers\Public\PasswordPetugasKeuanganController;
+use App\Http\Controllers\Public\StatistikKeuanganController;
 use App\Livewire\PendaftaranWizard;
 use App\Models\Siswa;
 use App\Http\Controllers\Public\PembayaranController as PublicPembayaranController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Public\PembayaranController as PublicPembayaranControll
 
 // landing page
 Route::view('/', 'public.landing')->name('public.landing');
+Route::post('/download-brochure', [\App\Http\Controllers\BrosurController::class, 'download'])->name('brosur.download');
 
 // pendaftaran calon siswa (Livewire)
 Route::get('/pendaftaran', PendaftaranWizard::class)
@@ -45,19 +48,38 @@ Route::get('/pendaftaran/{siswa}/biaya', [PendaftaranController::class, 'showBia
     ->name('pendaftaran.biaya');
 
 Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
+    ->whereNumber('id')
     ->name('pendaftaran.detail');
 
 Route::middleware('akses_pembayaran')->group(function () {
 
-Route::post('/pembayaran/store',
-    [PublicPembayaranController::class,'store'])
-    ->name('pembayaran.store');
+Route::get('/pendaftaran/{id}/lihat-nik', [PendaftaranController::class, 'showNik'])
+    ->whereNumber('id')
+    ->name('pendaftaran.show-nik');
+
+Route::get('/pendaftaran/{siswa}/edit', PendaftaranWizard::class)
+    ->name('pendaftaran.edit');
+
+    Route::post('/pembayaran/store',
+        [PublicPembayaranController::class,'store'])
+        ->name('pembayaran.public.store');
+
+    Route::delete('/pembayaran/{id}',
+        [PublicPembayaranController::class,'destroy'])
+        ->name('pembayaran.public.destroy');
+
+    Route::put('/pembayaran/{id}',
+        [PublicPembayaranController::class,'update'])
+        ->name('pembayaran.public.update');
 
 });
 
 // cetak formulir pendaftaran (public access setelah daftar)
 Route::get('/cetak/formulir/{siswa}', [CetakController::class, 'formulir'])
     ->name('cetak.formulir');
+
+Route::get('/cetak/formulir/{siswa}/preview', [CetakController::class, 'formulirPreview'])
+    ->name('cetak.formulir.preview');
     
 Route::post('/cetak/formulir', [CetakController::class, 'cetakFormulir'])
     ->name('cetak.formulir.post');
@@ -66,9 +88,39 @@ Route::post('/verifikasi-password-panitia',
     [PasswordPanitiaController::class,'verifikasi'])
     ->name('verifikasi.password.panitia');
 
+Route::post('/verifikasi-password-petugas-keuangan',
+    [PasswordPetugasKeuanganController::class,'verifikasi'])
+    ->name('verifikasi.password.petugas.keuangan');
+
+Route::middleware('akses_keuangan_public')->group(function () {
+    Route::get('/pendaftaran/statistik-keuangan', [StatistikKeuanganController::class, 'index'])
+        ->name('pendaftaran.statistik.keuangan');
+
+    Route::get('/pendaftaran/statistik-keuangan/export/excel', [StatistikKeuanganController::class, 'exportExcel'])
+        ->name('pendaftaran.statistik.keuangan.export.excel');
+
+    Route::get('/pendaftaran/statistik-keuangan/export/pdf', [StatistikKeuanganController::class, 'exportPdf'])
+        ->name('pendaftaran.statistik.keuangan.export.pdf');
+
+    Route::post('/pendaftaran/statistik-keuangan/logout', [StatistikKeuanganController::class, 'logout'])
+        ->name('pendaftaran.statistik.keuangan.logout');
+});
+
 Route::get('/pembayaran/{id}/nota',
     [\App\Http\Controllers\Public\PembayaranController::class,'nota']
 )->name('pembayaran.public.nota');
+
+Route::post('/pembayaran/{id}/nota',
+    [\App\Http\Controllers\Public\PembayaranController::class,'nota']
+)->name('pembayaran.public.nota.post');
+
+Route::get('/pendaftaran/{siswa}/biaya/nota-rincian',
+    [\App\Http\Controllers\Public\PembayaranController::class, 'notaRincianBiaya']
+)->name('pendaftaran.biaya.nota');
+
+Route::post('/pendaftaran/{siswa}/biaya/nota-rincian',
+    [\App\Http\Controllers\Public\PembayaranController::class, 'notaRincianBiaya']
+)->name('pendaftaran.biaya.nota.post');
 
 /*
 |--------------------------------------------------------------------------

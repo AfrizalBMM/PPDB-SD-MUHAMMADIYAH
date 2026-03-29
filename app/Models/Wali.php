@@ -12,7 +12,14 @@ class Wali extends Model
         'siswa_id',
         'nama',
         'hubungan',
+        'hubungan_lainnya',
         'no_hp',
+        'nik',
+        'tahun_lahir',
+        'pendidikan',
+        'pekerjaan',
+        'pekerjaan_lainnya',
+        'penghasilan',
         'alamat',
     ];
 

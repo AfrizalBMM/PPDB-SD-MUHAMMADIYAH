@@ -6,6 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property string $kode
+ * @property string $nama
+ * @property string $jenis_biaya
+ * @property int $diskon_nominal
+ * @property int|null $maks_penggunaan
+ * @property int $digunakan
+ * @property bool $aktif
+ * @property \Illuminate\Support\Carbon|null $tanggal_mulai
+ * @property \Illuminate\Support\Carbon|null $tanggal_selesai
+ * @method static \Illuminate\Database\Eloquent\Builder|Voucher aktif()
+ * @method static \Illuminate\Database\Eloquent\Builder|Voucher dalamPeriode()
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Voucher extends Model
 {
     protected $fillable = [

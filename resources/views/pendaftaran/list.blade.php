@@ -4,17 +4,29 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-8">
 
+    @if(session('error'))
+        <div class="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- PAGE CARD -->
     <div class="bg-white shadow-lg rounded-xl border border-slate-200 min-h-screen flex flex-col">
 
         <!-- HEADER -->
         <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">📋 Daftar Pendaftar PPDB</h1>
+                <h1 class="text-2xl font-bold text-slate-800">📋 Pendaftar PPDB</h1>
                 <p class="text-sm text-slate-500 mt-1">Manajemen data calon peserta didik baru</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
+                <button type="button"
+                    onclick="bukaPasswordKeuanganModal('{{ route('pendaftaran.statistik.keuangan') }}')"
+                    class="px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg shadow hover:bg-emerald-700">
+                    📊 Statistik Keuangan
+                </button>
+
                 <a href="{{ route('pendaftaran.public') }}"
                     class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg shadow hover:bg-blue-700">
                     + Daftar Siswa Baru
@@ -23,80 +35,322 @@
         </div>
 
         <!-- TOOLBAR -->
-        <div class="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-slate-50">
-            <!-- SEARCH -->
-            <form method="GET" class="relative w-full md:w-72">
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Cari nama siswa..."
-                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
+        <div class="p-4 bg-slate-50">
+            <form id="filterForm" method="GET" class="flex flex-col gap-3 md:flex-row md:items-end md:justify-end">
+                <div class="w-full md:ml-auto md:w-auto md:flex md:items-end md:justify-end md:gap-3">
+                    <div class="relative w-full md:w-[320px] lg:w-[380px]">
+                        <input id="searchInput" type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Cari nama, no registrasi, atau data ibu"
+                            class="w-full rounded-lg border border-slate-300 pl-3 pr-9 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+
+                @php
+                    $selectedPaymentStatuses = $paymentStatuses ?? (array) request('payment_statuses', []);
+                    $selectedBiayaIds = array_map('intval', $biayaIds ?? (array) request('biaya_ids', []));
+                    $selectedJenisKelamins = $jenisKelamins ?? (array) request('jenis_kelamins', []);
+                    $selectedDateFrom = $dateFrom ?? request('date_from');
+                    $selectedDateTo = $dateTo ?? request('date_to');
+                    $selectedOrder = $order ?? request('order', 'terbaru');
+                    $activeFilterCount = count($selectedPaymentStatuses)
+                        + count($selectedBiayaIds)
+                        + count($selectedJenisKelamins)
+                        + (!empty($selectedDateFrom) ? 1 : 0)
+                        + (!empty($selectedDateTo) ? 1 : 0)
+                        + ($selectedOrder === 'terlama' ? 1 : 0);
+
+                    $paymentLabelMap = [
+                        'lunas' => 'Lunas',
+                        'belum_lunas' => 'Belum Lunas',
+                    ];
+
+                    $selectedPaymentMap = collect($selectedPaymentStatuses)
+                        ->mapWithKeys(fn ($status) => [$status => $paymentLabelMap[$status] ?? ui_label($status)])
+                        ->all();
+
+                    $selectedBiayaMap = collect($biayaOptions)
+                        ->whereIn('id', $selectedBiayaIds)
+                        ->pluck('nama_biaya', 'id')
+                        ->toArray();
+
+                    $jenisKelaminLabelMap = [
+                        'laki-laki' => 'Laki-laki',
+                        'perempuan' => 'Perempuan',
+                    ];
+
+                    $selectedJenisKelaminMap = collect($selectedJenisKelamins)
+                        ->mapWithKeys(fn ($jenisKelamin) => [$jenisKelamin => $jenisKelaminLabelMap[$jenisKelamin] ?? ui_label($jenisKelamin)])
+                        ->all();
+
+                    $currentQuery = request()->query();
+                @endphp
+
+                <div x-data="{ open: false }" class="relative w-full md:w-auto md:shrink-0">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        class="w-full md:w-auto inline-flex items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                        <span>Filter</span>
+                        @if($activeFilterCount > 0)
+                            <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
+                        @endif
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div
+                        x-show="open"
+                        x-transition
+                        @click.away="open = false"
+                        class="absolute right-0 mt-2 w-full md:w-[360px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg z-30"
+                    >
+                        <div class="space-y-3">
+                            <div>
+                                <div class="mb-2 flex items-center justify-between">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status Bayar</p>
+                                    <button type="button" onclick="document.querySelectorAll('input[name=\'payment_statuses[]\']').forEach(el => el.checked = false)" class="text-[10px] font-medium text-slate-500 hover:text-slate-700">Reset</button>
+                                </div>
+                                <div class="space-y-1.5 text-xs text-slate-700">
+                                    <label class="flex items-center gap-2"><input type="checkbox" name="payment_statuses[]" value="lunas" class="rounded border-slate-300" {{ in_array('lunas', $selectedPaymentStatuses, true) ? 'checked' : '' }}>Lunas</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" name="payment_statuses[]" value="belum_lunas" class="rounded border-slate-300" {{ in_array('belum_lunas', $selectedPaymentStatuses, true) ? 'checked' : '' }}>Belum Lunas</label>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-100 pt-3">
+                                <div class="mb-2 flex items-center justify-between">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Jenis Biaya</p>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="document.querySelectorAll('input[name=\'biaya_ids[]\']').forEach(el => el.checked = true)" class="text-[10px] font-medium text-blue-600 hover:text-blue-700">Pilih Semua</button>
+                                        <button type="button" onclick="document.querySelectorAll('input[name=\'biaya_ids[]\']').forEach(el => el.checked = false)" class="text-[10px] font-medium text-slate-500 hover:text-slate-700">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="max-h-32 overflow-y-auto space-y-1.5 text-xs text-slate-700 pr-1">
+                                    @foreach($biayaOptions as $biaya)
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" name="biaya_ids[]" value="{{ $biaya->id }}" class="rounded border-slate-300" {{ in_array((int) $biaya->id, $selectedBiayaIds, true) ? 'checked' : '' }}>
+                                            <span>{{ $biaya->nama_biaya }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-100 pt-3">
+                                <div class="mb-2 flex items-center justify-between">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Jenis Kelamin</p>
+                                    <button type="button" onclick="document.querySelectorAll('input[name=\'jenis_kelamins[]\']').forEach(el => el.checked = false)" class="text-[10px] font-medium text-slate-500 hover:text-slate-700">Reset</button>
+                                </div>
+                                <div class="space-y-1.5 text-xs text-slate-700">
+                                    <label class="flex items-center gap-2"><input type="checkbox" name="jenis_kelamins[]" value="laki-laki" class="rounded border-slate-300" {{ in_array('laki-laki', $selectedJenisKelamins, true) ? 'checked' : '' }}>Laki-laki</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" name="jenis_kelamins[]" value="perempuan" class="rounded border-slate-300" {{ in_array('perempuan', $selectedJenisKelamins, true) ? 'checked' : '' }}>Perempuan</label>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
+                                <a href="{{ route('pendaftaran.list') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100">Reset</a>
+                                <button type="submit" class="w-1/2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Terapkan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full flex flex-col gap-2 sm:flex-row sm:items-end md:w-auto md:justify-end md:shrink-0">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Dari</label>
+                        <input type="date" id="dateFromInput" name="date_from" value="{{ $selectedDateFrom }}" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Sampai</label>
+                        <input type="date" id="dateToInput" name="date_to" value="{{ $selectedDateTo }}" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                    </div>
+                    <div class="flex flex-col sm:w-36">
+                        <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Urutan</label>
+                        <select id="orderSelect" name="order" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                            <option value="terlama" {{ $selectedOrder === 'terlama' ? 'selected' : '' }}>Data Terlama</option>
+                            <option value="terbaru" {{ $selectedOrder === 'terbaru' ? 'selected' : '' }}>Data Terbaru</option>
+                        </select>
+                    </div>
+                </div>
+                </div>
+
             </form>
 
-            <!-- FILTER STATUS -->
-            <div class="flex gap-2">
-                <button class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full">Diterima</button>
-                <button class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Pending</button>
-                <button class="px-3 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Semua</button>
-            </div>
+            @if($activeFilterCount > 0)
+                <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Filter Aktif:</span>
+
+                    @foreach($selectedPaymentMap as $statusValue => $label)
+                        @php
+                            $queryWithoutStatus = $currentQuery;
+                            $remainingStatuses = array_values(array_filter(
+                                $selectedPaymentStatuses,
+                                fn ($status) => $status !== $statusValue
+                            ));
+
+                            if (empty($remainingStatuses)) {
+                                unset($queryWithoutStatus['payment_statuses']);
+                            } else {
+                                $queryWithoutStatus['payment_statuses'] = $remainingStatuses;
+                            }
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutStatus) }}" class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-100" title="Hapus filter {{ $label }}">
+                            <span>{{ $label }}</span>
+                            <span class="text-blue-500">x</span>
+                        </a>
+                    @endforeach
+
+                    @foreach($selectedBiayaMap as $biayaId => $label)
+                        @php
+                            $queryWithoutBiaya = $currentQuery;
+                            $remainingBiayaIds = array_values(array_filter(
+                                $selectedBiayaIds,
+                                fn ($id) => (int) $id !== (int) $biayaId
+                            ));
+
+                            if (empty($remainingBiayaIds)) {
+                                unset($queryWithoutBiaya['biaya_ids']);
+                            } else {
+                                $queryWithoutBiaya['biaya_ids'] = $remainingBiayaIds;
+                            }
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutBiaya) }}" class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-100" title="Hapus filter {{ $label }}">
+                            <span>{{ $label }}</span>
+                            <span class="text-emerald-500">x</span>
+                        </a>
+                    @endforeach
+
+                    @foreach($selectedJenisKelaminMap as $jenisKelaminValue => $label)
+                        @php
+                            $queryWithoutJenisKelamin = $currentQuery;
+                            $remainingJenisKelamins = array_values(array_filter(
+                                $selectedJenisKelamins,
+                                fn ($jenisKelamin) => $jenisKelamin !== $jenisKelaminValue
+                            ));
+
+                            if (empty($remainingJenisKelamins)) {
+                                unset($queryWithoutJenisKelamin['jenis_kelamins']);
+                            } else {
+                                $queryWithoutJenisKelamin['jenis_kelamins'] = $remainingJenisKelamins;
+                            }
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutJenisKelamin) }}" class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-2 py-0.5 text-[10px] font-medium text-fuchsia-700 hover:bg-fuchsia-100" title="Hapus filter {{ $label }}">
+                            <span>{{ $label }}</span>
+                            <span class="text-fuchsia-500">x</span>
+                        </a>
+                    @endforeach
+
+                    @if($selectedOrder === 'terlama')
+                        @php
+                            $queryWithoutOrder = $currentQuery;
+                            unset($queryWithoutOrder['order']);
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutOrder) }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:bg-amber-100" title="Kembali ke urutan terbaru (default)">
+                            <span>Terlama</span>
+                            <span class="text-amber-500">x</span>
+                        </a>
+                    @endif
+
+                    @if(!empty($selectedDateFrom))
+                        @php
+                            $queryWithoutDateFrom = $currentQuery;
+                            unset($queryWithoutDateFrom['date_from']);
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutDateFrom) }}" class="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-700 hover:bg-cyan-100" title="Hapus tanggal dari">
+                            <span>Dari: {{ \Illuminate\Support\Carbon::parse($selectedDateFrom)->format('d/m/Y') }}</span>
+                            <span class="text-cyan-500">x</span>
+                        </a>
+                    @endif
+
+                    @if(!empty($selectedDateTo))
+                        @php
+                            $queryWithoutDateTo = $currentQuery;
+                            unset($queryWithoutDateTo['date_to']);
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutDateTo) }}" class="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-700 hover:bg-cyan-100" title="Hapus tanggal sampai">
+                            <span>Sampai: {{ \Illuminate\Support\Carbon::parse($selectedDateTo)->format('d/m/Y') }}</span>
+                            <span class="text-cyan-500">x</span>
+                        </a>
+                    @endif
+
+                    <a href="{{ route('pendaftaran.list') }}" class="ml-1 text-[10px] font-medium text-slate-500 hover:text-slate-700">Hapus semua</a>
+                </div>
+            @endif
         </div>
 
         <!-- TABLE WRAPPER -->
-        <div class="flex-1 overflow-auto">
-            <table class="w-full text-sm border-collapse">
-                <thead class="bg-slate-100 text-slate-700 sticky top-0 z-10">
+        <div class="flex-1 overflow-x-auto overflow-y-visible">
+            <table class="table">
+                <thead>
                     <tr>
-                        <th class="p-3 border">No</th>
-                        <th class="p-2 border">Tanggal Daftar</th>
-                        <th class="p-3 border text-left">Data Siswa</th>
-                        <th class="p-3 border">JK</th>
-                        <th class="p-3 border text-left">Data Ibu</th>
-                        <th class="p-3 border">Voucher</th>
-                        <th class="p-3 border">Biaya</th>
-                        <th class="p-3 border">Status</th>
-                        <th class="p-3 border">Aksi</th>
+                        <th rowspan="2" class="text-center align-middle">No</th>
+                        <th rowspan="2" class="text-center align-middle">No Registrasi</th>
+                        <th rowspan="2" class="text-center align-middle">Tanggal Daftar</th>
+                        <th rowspan="2" class="text-center align-middle">Data Peserta</th>
+                        <th rowspan="2" class="text-center align-middle">Data Ibu</th>
+                        <th rowspan="2" class="text-center align-middle">Voucher</th>
+                        <th colspan="3" class="align-middle" style="text-align: center;">Biaya</th>
+                        <th rowspan="2" class="text-center align-middle">Aksi</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center w-16 min-w-[72px]">P</th>
+                        <th class="text-center w-16 min-w-[72px]">DU</th>
+                        <th class="text-center w-16 min-w-[72px]">UDP</th>
                     </tr>
                 </thead>
 
                 <tbody class="bg-white">
                     @forelse($siswa as $item)
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr>
                         
                         <!-- NO -->
-                        <td class="p-2 border text-center">
+                        <td class="text-center">
                             {{ $loop->iteration }}
                         </td>
 
+                        <!-- NO REG -->
+                        <td class="text-left text-xs text-slate-600 whitespace-nowrap">
+                            {{ optional($item->registration)->nomor_registrasi ?? '-' }}
+                        </td>
+
                         <!-- TANGGAL DAFTAR -->
-                        <td class="p-2 border text-center text-xs">
-                            {{ $item->created_at->format('d M Y') }}
+                        <td class="text-center text-xs text-slate-600 whitespace-nowrap">
+                            {{ optional($item->registration)->tanggal_daftar ? \Illuminate\Support\Carbon::parse(optional($item->registration)->tanggal_daftar)->format('d M Y') : '-' }}
                         </td>
 
-                        <!-- NAMA + NO REGISTRASI -->
-                        <td class="p-2 border">
-                            <div class="font-semibold text-slate-800">
-                                {{ $item->nama }}
-                            </div>
+                        <!-- DATA SISWA -->
+                        <td>
+                            <div class="space-y-0.5">
+                                <div class="font-semibold text-slate-800">
+                                    {{ $item->nama }}
+                                </div>
 
-                            <div class="text-xs mt-1">
-                                <span class="px-2 py-1 bg-green-600 text-white rounded-full text-[10px]">
-                                    {{ optional($item->registration)->nomor_registrasi ?? '-' }}
-                                </span>
+                                <div class="text-[11px] text-slate-500 capitalize">
+                                    {{ $item->jenis_kelamin }}
+                                </div>
                             </div>
-                        </td>
-
-                        <!-- JK -->
-                        <td class="p-2 border text-center capitalize">
-                            {{ $item->jenis_kelamin }}
                         </td>
 
                         <!-- NAMA IBU + NO HP -->
-                        <td class="p-2 border">
+                        <td>
                             <div class="font-medium">
                                 {{ optional($item->ibu)->nama ?? '-' }}
                             </div>
 
-                            <div class="text-xs text-slate-500">
-                                {{ optional($item->ibu)->no_hp ?? '-' }}
-                            </div>
+                            @if(optional($item->ibu)->no_hp)
+                                <button
+                                    type="button"
+                                    onclick="salinNoTelp(@js(optional($item->ibu)->no_hp))"
+                                    class="text-xs text-slate-500 hover:text-blue-600 hover:underline"
+                                    title="Klik untuk salin nomor telepon"
+                                >
+                                    {{ optional($item->ibu)->no_hp }}
+                                </button>
+                            @else
+                                <div class="text-xs text-slate-500">-</div>
+                            @endif
                         </td>
 
                         <!-- VOUCHER -->
@@ -104,9 +358,9 @@
                         $voucher = $item->tagihan->firstWhere('kode_voucher','!=',null);
                         @endphp
 
-                        <td class="p-2 border text-center">
+                        <td class="text-center">
                         @if($voucher)
-                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                            <span class="badge-info">
                                 {{ $voucher->kode_voucher }}
                             </span>
                         @else
@@ -114,66 +368,173 @@
                         @endif
                         </td>
 
-                        <!-- BIAYA -->
-                        <td class="p-2 border text-center font-semibold text-slate-700">
-                            Rp {{ number_format($item->tagihan_sum_total ?? 0, 0, ',', '.') }}
-                        </td>
+                        @php
+                            $tagihanPendaftaran = $item->tagihan
+                                ->filter(fn ($tagihan) => optional($tagihan->biaya)->jenis_biaya === 'pendaftaran');
+                            $tagihanDaftarUlang = $item->tagihan
+                                ->filter(fn ($tagihan) => optional($tagihan->biaya)->jenis_biaya === 'daftar_ulang');
+                            $tagihanUdp = $item->tagihan
+                                ->filter(fn ($tagihan) => optional($tagihan->biaya)->jenis_biaya === 'udp');
 
-                        <!-- STATUS -->
-                        <td class="p-2 border text-center">
-                            @if($item->status == 'diterima')
-                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                                    Diterima
+                            $isPendaftaranLunas = $tagihanPendaftaran->sum('total') === 0
+                                || $tagihanPendaftaran->every(fn ($tagihan) => $tagihan->status === 'lunas');
+                            $isDaftarUlangLunas = $tagihanDaftarUlang->sum('total') === 0
+                                || $tagihanDaftarUlang->every(fn ($tagihan) => $tagihan->status === 'lunas');
+                            $isUdpLunas = $tagihanUdp->sum('total') === 0
+                                || $tagihanUdp->every(fn ($tagihan) => $tagihan->status === 'lunas');
+                        @endphp
+
+                        <td class="text-center w-16 min-w-[72px]">
+                            @if($isPendaftaranLunas)
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
                                 </span>
                             @else
-                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                                    Pending
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </span>
+                            @endif
+                        </td>
+                        <td class="text-center w-16 min-w-[72px]">
+                            @if($isDaftarUlangLunas)
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                            @else
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </span>
+                            @endif
+                        </td>
+                        <td class="text-center w-16 min-w-[72px]">
+                            @if($isUdpLunas)
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                            @else
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </span>
                             @endif
                         </td>
 
                         <!-- AKSI -->
-                        <td class="p-2 border text-center">
-                            <div x-data="{ open: false }" class="relative inline-block">
+                        <td class="text-center">
+                            <div
+                                x-data="{
+                                    open: false,
+                                    triggerEl: null,
+                                    x: 0,
+                                    y: 0,
+                                    placement: 'bottom',
+                                    menuHeight: 132,
+                                    menuWidth: 176,
+                                    toggle($el) {
+                                        this.triggerEl = $el;
+                                        this.updatePosition();
+                                        this.open = !this.open;
+                                    },
+                                    updatePosition() {
+                                        if (!this.triggerEl) {
+                                            return;
+                                        }
+
+                                        const rect = this.triggerEl.getBoundingClientRect();
+                                        const spaceBelow = window.innerHeight - rect.bottom;
+
+                                        this.placement = spaceBelow < this.menuHeight ? 'top' : 'bottom';
+                                        this.x = rect.right - this.menuWidth;
+                                        this.y = this.placement === 'top' ? rect.top - 8 : rect.bottom + 8;
+                                    },
+                                    menuStyle() {
+                                        const left = Math.max(8, Math.min(this.x, window.innerWidth - this.menuWidth - 8));
+                                        const top = this.placement === 'top'
+                                            ? Math.max(8, this.y - this.menuHeight)
+                                            : Math.min(this.y, window.innerHeight - this.menuHeight - 8);
+
+                                        return `left:${left}px; top:${top}px;`;
+                                    }
+                                }"
+                                @scroll.window="open && updatePosition()"
+                                @resize.window="open && updatePosition()"
+                                class="relative inline-block text-left"
+                            >
 
                                 <!-- BUTTON -->
-                                <button @click="open = !open"
-                                    class="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 flex items-center gap-1">
-                                    Aksi
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7" />
+                                <button @click="toggle($el)"
+                                    class="btn-secondary px-3 py-1.5 text-[11px] flex items-center gap-1.5 mx-auto">
+                                    <span>Aksi</span>
+                                    <svg class="w-3 h-3 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
 
                                 <!-- DROPDOWN -->
-                                <div x-show="open"
-                                    x-transition
-                                    @click.away="open = false"
-                                    class="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded shadow-lg text-xs z-50">
+                                <template x-teleport="body">
+                                    <div x-show="open"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        @click.outside="open = false"
+                                        @keydown.escape.window="open = false"
+                                        class="fixed w-44 bg-white border border-border rounded-lg shadow-hover z-[120] py-1.5 overflow-hidden"
+                                        :style="menuStyle()">
 
-                                    <!-- CETAK -->
-                                    <button 
-                                        @click="open = false; openModalPetugas({{ $item->id }})"
-                                        class="block w-full text-left px-4 py-2 hover:bg-slate-100">
-                                        📄 Cetak Formulir
-                                    </button>
+                                        <!-- CETAK -->
+                                        <button 
+                                            @click="open = false; openModalPetugas({{ $item->id }})"
+                                            class="flex w-full items-center gap-2.5 px-4 py-2 hover:bg-primary/5 hover:text-primary text-[11px] text-textPrimary transition-colors">
+                                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                            Cetak Formulir
+                                        </button>
 
-                                    <!-- BIAYA -->
-                                    <a href="#"
-                                    onclick="event.preventDefault(); bukaPasswordModal('{{ route('pendaftaran.biaya', $item) }}')"
-                                    class="block px-4 py-2 hover:bg-slate-100">
-                                    💰 Rincian Biaya
-                                    </a>
+                                        <!-- DETAIL -->
+                                        <a href="#"
+                                            onclick="event.preventDefault(); bukaPasswordModal('{{ route('pendaftaran.detail', $item->id) }}')"
+                                            class="flex items-center gap-2.5 px-4 py-2 hover:bg-primary/5 hover:text-primary text-[11px] text-textPrimary transition-colors border-t border-gray-50">
+                                            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            Detail
+                                        </a>
 
-                                </div>
+                                        <!-- BIAYA -->
+                                        <a href="#"
+                                            onclick="event.preventDefault(); bukaPasswordModal('{{ route('pendaftaran.biaya', $item) }}')"
+                                            class="flex items-center gap-2.5 px-4 py-2 hover:bg-primary/5 hover:text-primary text-[11px] text-textPrimary transition-colors border-t border-gray-50">
+                                            <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            Rincian Biaya
+                                        </a>
+
+                                    </div>
+                                </template>
                             </div>
                         </td>
 
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="p-6 text-center text-slate-500">
+                        <td colspan="10" class="p-6 text-center text-slate-500">
                             Belum ada pendaftar
                         </td>
                     </tr>
@@ -184,8 +545,27 @@
 
         <!-- FOOTER PAGINATION -->
         <div class="p-4 border-t border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div class="text-sm text-slate-600">
-                Menampilkan {{ $siswa->firstItem() }} - {{ $siswa->lastItem() }} dari {{ $siswa->total() }} data
+            <div class="text-sm text-slate-600 flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+                <span>Menampilkan {{ $siswa->firstItem() }} - {{ $siswa->lastItem() }} dari {{ $siswa->total() }} data</span>
+                <span class="inline-flex items-center rounded-full bg-green-50/80 text-green-700 border border-green-200 px-2.5 py-0.5 text-xs">P : Pendaftaran, DU : Daftar Ulang, UDP : Pengembangan</span>
+                <span class="inline-flex items-center gap-3 rounded-full bg-slate-50 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-xs">
+                    <span class="inline-flex items-center gap-1">
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500/70">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </span>
+                        <span> = Lunas</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500/70">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </span>
+                        <span> = Belum Lunas</span>
+                    </span>
+                </span>
             </div>
 
             <div class="flex justify-center md:justify-end w-full md:w-auto">
@@ -201,14 +581,15 @@
 <div id="modalPetugas" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
         <h3 class="text-lg font-semibold mb-4">🖨️ Cetak Formulir Pendaftaran</h3>
+        <p class="text-sm text-slate-600 -mt-1 mb-4">Isi nama panitia, lalu file akan otomatis terunduh tanpa membuka tab kosong.</p>
 
-        <form method="POST" action="{{ route('cetak.formulir.post') }}" target="_blank">
+        <form id="formCetakFormulirList" method="POST" action="{{ route('cetak.formulir.post') }}" target="cetakFormulirFrameList" onsubmit="submitCetakFormulirList()">
             @csrf
             <input type="hidden" name="siswa_id" id="modalSiswaId">
 
             <div class="mb-4">
-                <label class="text-sm font-medium">Nama Petugas</label>
-                <input type="text" name="nama_petugas" required
+            <label class="text-sm font-medium">Nama Panitia</label>
+            <input type="text" name="nama_panitia" required
                     class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
             </div>
 
@@ -218,19 +599,33 @@
                     Batal
                 </button>
 
-                <button type="submit"
+                <button id="btnCetakFormulirList" type="submit"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Cetak
+                    Download PDF
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="modalPassword"
-     class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+<iframe name="cetakFormulirFrameList" id="cetakFormulirFrameList" class="hidden"></iframe>
 
-    <div class="bg-white p-6 rounded w-80">
+<div id="modalPassword"
+     onclick="closePasswordModal()"
+     class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+
+    <div class="bg-white p-6 rounded w-80 relative" onclick="event.stopPropagation()">
+
+        <button
+            type="button"
+            onclick="closePasswordModal()"
+            class="absolute top-2 right-2 text-slate-500 hover:text-slate-700 p-1"
+            aria-label="Tutup modal"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
 
         <h3 class="font-semibold mb-3">
             Password Panitia
@@ -249,16 +644,93 @@
                 required
             >
 
-            <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">
-                Verifikasi
-            </button>
+            <div class="flex gap-2">
+                <button
+                    type="button"
+                    onclick="closePasswordModal()"
+                    class="w-1/2 bg-slate-200 text-slate-700 px-4 py-2 rounded hover:bg-slate-300"
+                >
+                    Batal
+                </button>
+                <button class="w-1/2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Verifikasi
+                </button>
+            </div>
         </form>
 
     </div>
 
 </div>
 
+<div id="modalPasswordKeuangan"
+     onclick="closePasswordKeuanganModal()"
+     class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+
+    <div class="bg-white p-6 rounded w-80 relative" onclick="event.stopPropagation()">
+
+        <button
+            type="button"
+            onclick="closePasswordKeuanganModal()"
+            class="absolute top-2 right-2 text-slate-500 hover:text-slate-700 p-1"
+            aria-label="Tutup modal"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <h3 class="font-semibold mb-3">
+            🔐 Akses Statistik Keuangan
+        </h3>
+
+        <form method="POST" action="{{ route('verifikasi.password.petugas.keuangan') }}">
+            @csrf
+
+            <input type="hidden" name="redirect_url" id="redirectUrlKeuangan">
+
+            <input
+                type="text"
+                name="nama"
+                class="w-full border rounded px-3 py-2 mb-3"
+                placeholder="Nama petugas"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                class="w-full border rounded px-3 py-2 mb-3"
+                placeholder="Password"
+                required
+            >
+
+            <div class="flex gap-2">
+                <button
+                    type="button"
+                    onclick="closePasswordKeuanganModal()"
+                    class="w-1/2 bg-slate-200 text-slate-700 px-4 py-2 rounded hover:bg-slate-300"
+                >
+                    Batal
+                </button>
+                <button class="w-1/2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Verifikasi
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+<div id="miniToast" class="fixed bottom-4 right-4 z-[70] pointer-events-none opacity-0 translate-y-2 transition-all duration-200">
+    <div id="miniToastContent" class="rounded-lg border border-green-200 bg-green-100/60 px-3 py-2 text-xs font-medium text-green-700 shadow-lg backdrop-blur-sm">
+        Nomor telepon tersalin
+    </div>
+</div>
+
 <script>
+let isCetakFormulirListSubmitting = false;
+
 function openModalPetugas(id) {
     document.getElementById('modalSiswaId').value = id;
     document.getElementById('modalPetugas').classList.remove('hidden');
@@ -267,6 +739,48 @@ function openModalPetugas(id) {
 function closeModalPetugas() {
     document.getElementById('modalPetugas').classList.add('hidden');
 }
+
+function submitCetakFormulirList() {
+    isCetakFormulirListSubmitting = true;
+
+    const button = document.getElementById('btnCetakFormulirList');
+    if (button) {
+        button.disabled = true;
+        button.classList.add('opacity-70', 'cursor-not-allowed');
+    }
+
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const frame = document.getElementById('cetakFormulirFrameList');
+    const form = document.getElementById('formCetakFormulirList');
+    const button = document.getElementById('btnCetakFormulirList');
+
+    if (!frame) {
+        return;
+    }
+
+    frame.addEventListener('load', function () {
+        if (!isCetakFormulirListSubmitting) {
+            return;
+        }
+
+        closeModalPetugas();
+        showMiniToast('Download formulir dimulai');
+
+        if (form) {
+            form.reset();
+        }
+
+        if (button) {
+            button.disabled = false;
+            button.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
+
+        isCetakFormulirListSubmitting = false;
+    });
+});
 
 function bukaPasswordModal(url)
 {
@@ -277,6 +791,170 @@ function bukaPasswordModal(url)
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
+
+function closePasswordModal()
+{
+    const modal = document.getElementById('modalPassword');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function bukaPasswordKeuanganModal(url)
+{
+    document.getElementById('redirectUrlKeuangan').value = url;
+
+    const modal = document.getElementById('modalPasswordKeuangan');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closePasswordKeuanganModal()
+{
+    const modal = document.getElementById('modalPasswordKeuangan');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+let toastTimer = null;
+
+function showMiniToast(message, type = 'success')
+{
+    const toast = document.getElementById('miniToast');
+    const content = document.getElementById('miniToastContent');
+
+    if (!toast || !content) {
+        return;
+    }
+
+    content.textContent = message;
+
+    if (type === 'error') {
+        content.className = 'rounded-lg border border-red-200 bg-red-50/95 px-3 py-2 text-xs font-medium text-red-700 shadow-lg';
+    } else {
+        content.className = 'rounded-lg border border-green-200 bg-green-100/60 px-3 py-2 text-xs font-medium text-green-700 shadow-lg backdrop-blur-sm';
+    }
+
+    toast.classList.remove('opacity-0', 'translate-y-2');
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+        toast.classList.add('opacity-0', 'translate-y-2');
+    }, 1400);
+}
+
+function salinNoTelp(nomor)
+{
+    if (!nomor) {
+        return;
+    }
+
+    navigator.clipboard.writeText(nomor)
+        .then(function () {
+            showMiniToast('Nomor telepon tersalin');
+        })
+        .catch(function () {
+            try {
+                const tempInput = document.createElement('input');
+                tempInput.value = nomor;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showMiniToast('Nomor telepon tersalin');
+            } catch (error) {
+                showMiniToast('Gagal menyalin nomor', 'error');
+            }
+        });
+}
+
+const filterForm = document.getElementById('filterForm');
+const searchInput = document.getElementById('searchInput');
+const orderSelect = document.getElementById('orderSelect');
+const dateFromInput = document.getElementById('dateFromInput');
+const dateToInput = document.getElementById('dateToInput');
+let searchDebounceTimer = null;
+const SEARCH_FOCUS_KEY = 'ppdb:list:restore-search-focus';
+
+function isDateRangeValid()
+{
+    if (!dateFromInput || !dateToInput) {
+        return true;
+    }
+
+    if (!dateFromInput.value || !dateToInput.value) {
+        return true;
+    }
+
+    return dateFromInput.value <= dateToInput.value;
+}
+
+function syncDateBounds()
+{
+    if (!dateFromInput || !dateToInput) {
+        return;
+    }
+
+    dateFromInput.max = dateToInput.value || '';
+    dateToInput.min = dateFromInput.value || '';
+}
+
+function submitIfDateRangeValid()
+{
+    if (!filterForm) {
+        return;
+    }
+
+    if (!isDateRangeValid()) {
+        showMiniToast('Rentang tanggal tidak valid', 'error');
+        return;
+    }
+
+    filterForm.submit();
+}
+
+if (searchInput && sessionStorage.getItem(SEARCH_FOCUS_KEY) === '1') {
+    sessionStorage.removeItem(SEARCH_FOCUS_KEY);
+
+    requestAnimationFrame(function () {
+        searchInput.focus();
+
+        const len = searchInput.value.length;
+        searchInput.setSelectionRange(len, len);
+    });
+}
+
+if (filterForm && searchInput) {
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchDebounceTimer);
+
+        searchDebounceTimer = setTimeout(function () {
+            sessionStorage.setItem(SEARCH_FOCUS_KEY, '1');
+            filterForm.submit();
+        }, 350);
+    });
+}
+
+if (filterForm && orderSelect) {
+    orderSelect.addEventListener('change', function () {
+        submitIfDateRangeValid();
+    });
+}
+
+if (filterForm && dateFromInput) {
+    dateFromInput.addEventListener('change', function () {
+        syncDateBounds();
+        submitIfDateRangeValid();
+    });
+}
+
+if (filterForm && dateToInput) {
+    dateToInput.addEventListener('change', function () {
+        syncDateBounds();
+        submitIfDateRangeValid();
+    });
+}
+
+syncDateBounds();
 </script>
 
 @endsection

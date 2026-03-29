@@ -11,10 +11,7 @@ use Illuminate\Http\Request;
 
 class CetakController extends Controller
 {
-    /**
-     * CETAK FORMULIR PENDAFTARAN (F4)
-     */
-    public function formulir(Siswa $siswa)
+    private function loadRelasiCetakFormulir(Siswa $siswa): void
     {
         $siswa->load([
             'registration.tahunAjaran',
@@ -26,6 +23,24 @@ class CetakController extends Controller
             'tagihan.biaya',
             'tagihan.voucher',
         ]);
+    }
+
+    /**
+     * CETAK FORMULIR PENDAFTARAN (F4)
+     */
+    public function formulir(Request $request, Siswa $siswa)
+    {
+        $this->loadRelasiCetakFormulir($siswa);
+
+        if ($request->boolean('preview')) {
+            logAktivitas(
+                'Review Formulir',
+                'Review formulir pendaftaran #' . $siswa->id . ' ' . $siswa->nama .
+                ' (' . $siswa->registration->nomor_registrasi . ')'
+            );
+
+            return view('pdf.formulir', compact('siswa'));
+        }
 
         logAktivitas(
             'Cetak Formulir',
@@ -33,7 +48,7 @@ class CetakController extends Controller
             ' (' . $siswa->registration->nomor_registrasi . ')'
         );
 
-        $pdf = Pdf::loadView('cetak.formulir', compact('siswa'))
+        $pdf = Pdf::loadView('pdf.formulir', compact('siswa'))
             ->setPaper('f4', 'portrait'); // PALING AMAN
 
         return $pdf->stream(
@@ -41,33 +56,39 @@ class CetakController extends Controller
         );
     }
 
-    public function cetakFormulir(Request $request)
+    public function formulirPreview(Siswa $siswa)
+    {
+        $this->loadRelasiCetakFormulir($siswa);
+
+        logAktivitas(
+            'Review Formulir',
+            'Review formulir pendaftaran #' . $siswa->id . ' ' . $siswa->nama .
+            ' (' . $siswa->registration->nomor_registrasi . ')'
+        );
+
+        return view('pdf.formulir', compact('siswa'));
+    }
+
+    public function cetakFormulir(Request $request, \App\Services\CetakService $cetakService)
     {
         $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
-            'nama_petugas' => 'required|string|max:255'
+            'nama_panitia' => 'required_without_all:nama_penerima,nama_petugas|string|max:255',
+            'nama_penerima' => 'required_without_all:nama_panitia,nama_petugas|string|max:255',
+            'nama_petugas' => 'required_without_all:nama_panitia,nama_penerima|string|max:255',
         ]);
+
+        $namaPenerima = trim((string) ($request->nama_panitia ?? $request->nama_penerima ?? $request->nama_petugas));
 
         $siswa = Siswa::with([
-            'ibu','ayah','alamat','dataPendukung','registration'
+            'ibu','ayah','wali','alamat','dataPendukung.paudTk','registration.tahunAjaran'
         ])->findOrFail($request->siswa_id);
 
-        // SIMPAN LOG CETAK
-        LogCetak::create([
-            'siswa_id' => $siswa->id,
-            'jenis_dokumen' => 'formulir',
-            'nama_petugas' => $request->nama_petugas
-        ]);
+        $pdf = $cetakService->generatePdfFormulir($siswa, $namaPenerima);
 
-        $pdf = Pdf::loadView('pdf.formulir', [
-            'siswa'   => $siswa,
-            'petugas' => $request->nama_petugas
-        ]);
+        $fileName = 'FORMULIR-' . preg_replace('/[^A-Za-z0-9\-]+/', '-', strtoupper($siswa->nama)) . '.pdf';
 
-        // F4 custom size
-        $pdf->setPaper([0, 0, 595, 935], 'portrait');
-
-        return $pdf->stream("FORMULIR-{$siswa->nama}.pdf");
+        return $pdf->download($fileName);
     }
 
     /**
@@ -90,10 +111,10 @@ class CetakController extends Controller
     $namaAdmin = $request->nama_admin;
 
     logAktivitas(
-        'Cetak Nota',
-        'Cetak nota pembayaran #'.$pembayaran->id.
+        'Admin - Cetak Nota Pembayaran',
+        'Mencetak nota pembayaran ID '.$pembayaran->id.
         ' untuk siswa '.$pembayaran->tagihan->siswa->nama.
-        ' oleh admin '.$namaAdmin
+        ' oleh admin/penerima '.$namaAdmin
     );
 
     $pdf = Pdf::loadView(

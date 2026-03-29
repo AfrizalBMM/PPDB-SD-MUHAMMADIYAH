@@ -80,9 +80,9 @@
                             @endif
                         </td>
                         <td class="px-4 py-2 font-medium">{{ $b->nama_biaya }}</td>
-                        <td class="px-4 py-2">{{ ucfirst($b->jenis_biaya) }}</td>
-                        <td class="px-4 py-2">{{ ucfirst($b->kategori) }}</td>
-                        <td class="px-4 py-2">{{ ucfirst($b->jenis_kelamin) }}</td>
+                        <td class="px-4 py-2">{{ ui_label($b->jenis_biaya) }}</td>
+                        <td class="px-4 py-2">{{ ui_label($b->kategori) }}</td>
+                        <td class="px-4 py-2">{{ ui_label($b->jenis_kelamin) }}</td>
                         <td class="px-4 py-2 font-semibold text-slate-800">
                             Rp {{ number_format($b->nominal,0,',','.') }}
                         </td>
