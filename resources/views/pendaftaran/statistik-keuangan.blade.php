@@ -74,7 +74,7 @@
             </div>
 
             <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <p class="text-xs text-rose-700 font-semibold uppercase tracking-wide">Sisa Piutang Saat Ini</p>
+                <p class="text-xs text-rose-700 font-semibold uppercase tracking-wide">Jumlah yang Belum Lunas</p>
                 <p class="text-2xl font-bold text-rose-900 mt-2">Rp {{ number_format($jumlahSisaPiutang, 0, ',', '.') }}</p>
             </div>
 

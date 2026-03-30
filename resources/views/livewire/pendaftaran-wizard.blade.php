@@ -40,7 +40,7 @@
     {{-- HEADER --}}
     <div class="text-center mb-6">
         <h1 class="text-2xl font-bold text-slate-800">
-            {{ $isEditMode ? 'Formulir Edit Data Pendaftar' : 'Formulir Pendaftaran Calon Siswa' }}
+            {{ $isEditMode ? 'Formulir Edit Data Pendaftar' : 'Formulir Pendaftaran Calon Peserta Didik' }}
         </h1>
         <p class="text-sm text-slate-500">
             {{ $isEditMode ? 'Perbarui data menggunakan form yang sama seperti pendaftaran.' : 'Diisi oleh panitia PPDB' }}
@@ -394,7 +394,7 @@
                 </div>
 
                 <div>
-                    <label class="label">Hubungan dengan Siswa <span class="text-red-500">*</span></label>
+                    <label class="label">Hubungan dengan Peserta Didik <span class="text-red-500">*</span></label>
                     <select wire:model.blur="wali_hubungan"
                         class="input @error('wali_hubungan') border-red-500 @enderror">
                         <option value="">Pilih</option>
@@ -1844,12 +1844,19 @@
                     });
                 },
 
-                switchToListMode() {
+                async switchToListMode() {
                     const hasManualDraft = (this.manualNama && this.manualNama.trim() !== '')
                         || (this.manualAlamat && this.manualAlamat.trim() !== '');
 
                     if (hasManualDraft) {
-                        const proceed = window.confirm('Input manual akan dihapus jika kembali ke daftar TK. Lanjutkan?');
+                        let proceed = true;
+                        if (typeof window.showGlobalConfirm === 'function') {
+                            proceed = await window.showGlobalConfirm('Input manual akan dihapus jika kembali ke daftar TK. Lanjutkan?', {
+                                title: 'Konfirmasi Perubahan',
+                                okText: 'Ya, Lanjutkan',
+                                cancelText: 'Batal'
+                            });
+                        }
                         if (!proceed) {
                             return;
                         }

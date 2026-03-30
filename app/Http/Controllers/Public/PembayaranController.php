@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\TagihanSiswa;
 use App\Models\Pembayaran;
 use App\Models\Siswa;
+use App\Services\StatusPpdbService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PembayaranController extends Controller
 {
+    public function __construct(private readonly StatusPpdbService $statusPpdbService)
+    {
+    }
+
     private function actorLabel(?string $namaPetugas): string
     {
         $nama = trim((string) $namaPetugas);
@@ -74,6 +79,7 @@ class PembayaranController extends Controller
 
         $tagihan->save();
         $tagihan->refreshStatus();
+        $this->statusPpdbService->syncBySiswa($tagihan->siswa);
 
         logAktivitas(
             $aktor . ' - Simpan Pembayaran',
@@ -133,6 +139,7 @@ class PembayaranController extends Controller
 
         // refreshStatus() memanggil is_lunas → sisa → total_dibayar
         $tagihan->refreshStatus();
+        $this->statusPpdbService->syncBySiswa($tagihan->siswa);
 
         return redirect()
             ->route('pendaftaran.biaya', $tagihan->siswa_id)
@@ -191,6 +198,7 @@ class PembayaranController extends Controller
         // Buang cache relasi agar status tagihan dihitung ulang dari data terbaru.
         $tagihan->unsetRelation('pembayaran');
         $tagihan->refreshStatus();
+        $this->statusPpdbService->syncBySiswa($tagihan->siswa);
 
         logAktivitas(
             $aktor . ' - Edit Riwayat Cicilan',

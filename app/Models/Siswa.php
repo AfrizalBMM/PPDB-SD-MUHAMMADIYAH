@@ -10,6 +10,7 @@ class Siswa extends Model
 
     protected $fillable = [
         'registration_id',
+        'kelas_siswa_id',
         'nama',
         'jenis_kelamin',
         'nik',
@@ -41,6 +42,11 @@ class Siswa extends Model
     public function registration()
     {
         return $this->belongsTo(Registration::class);
+    }
+
+    public function kelasSiswa()
+    {
+        return $this->belongsTo(KelasSiswa::class, 'kelas_siswa_id');
     }
 
     public function alamat()

@@ -17,8 +17,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $settings['seo_title'] ?? 'PPDB SD Muhammadiyah Wonorejo' }}</title>
-    <meta name="description" content="{{ $settings['seo_description'] ?? 'Pendaftaran Peserta Didik Baru SD Muhammadiyah Menerima Siswa Baru.' }}">
-    <meta name="keywords" content="PPDB SD, SD Muhammadiyah, Sekolah Islam, Pendaftaran Siswa Baru">
+    <meta name="description" content="{{ $settings['seo_description'] ?? 'Pendaftaran Peserta Didik Baru SD Muhammadiyah Menerima Peserta Didik Baru.' }}">
+    <meta name="keywords" content="PPDB SD, SD Muhammadiyah, Sekolah Islam, Pendaftaran Peserta Didik Baru">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -58,7 +58,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800 font-sans antialiased overflow-x-hidden" x-data="{ brosurModal: false, scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
+<body class="bg-gray-50 text-slate-800 font-sans antialiased overflow-x-hidden" x-data="{ brosurModal: {{ $errors->has('name') || $errors->has('nomor_wa') ? 'true' : 'false' }}, scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
 
     {{-- NAVBAR --}}
     <nav :class="scrolled ? 'glass shadow-sm py-3' : 'bg-transparent py-5'" class="fixed w-full top-0 z-50 transition-all duration-300">
@@ -417,11 +417,25 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap Orang Tua</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" placeholder="Masukkan nama Anda">
+                        <input type="text" name="name" value="{{ old('name') }}" required minlength="3" class="w-full px-4 py-3 bg-gray-50 border {{ $errors->has('name') ? 'border-red-400' : 'border-gray-200' }} rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" placeholder="Masukkan nama Anda">
+                        @error('name')
+                            <p class="text-red-500 text-[10px] mt-1 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Aktif</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" placeholder="contoh@email.com">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nomor WhatsApp Aktif</label>
+                        <input type="text" 
+                               name="nomor_wa" 
+                               value="{{ old('nomor_wa') }}"
+                               required 
+                               pattern="[0-9]{7,14}" 
+                               title="Nomor WhatsApp harus berupa angka 7-14 digit"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full px-4 py-3 bg-gray-50 border {{ $errors->has('nomor_wa') ? 'border-red-400' : 'border-gray-200' }} rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" 
+                               placeholder="Contoh: 081234567890">
+                        @error('nomor_wa')
+                            <p class="text-red-500 text-[10px] mt-1 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
                     <button type="submit" class="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all mt-4 text-lg">
                         Unduh Sekarang
@@ -484,7 +498,9 @@
             revealOnScroll();
             
             @if(session('error'))
-                alert('{{ session("error") }}');
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('danger', '{{ session("error") }}');
+                }
             @endif
         });
     </script>

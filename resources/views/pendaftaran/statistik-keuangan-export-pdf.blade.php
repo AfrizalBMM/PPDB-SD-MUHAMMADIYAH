@@ -29,7 +29,7 @@
     <table>
         <tbody>
             <tr><th>Jumlah Biaya Keseluruhan</th><td class="text-right">Rp {{ number_format($jumlahBiayaKeseluruhan, 0, ',', '.') }}</td></tr>
-            <tr><th>Sisa Piutang Saat Ini</th><td class="text-right">Rp {{ number_format($jumlahSisaPiutang, 0, ',', '.') }}</td></tr>
+            <tr><th>Jumlah yang Belum Lunas</th><td class="text-right">Rp {{ number_format($jumlahSisaPiutang, 0, ',', '.') }}</td></tr>
             <tr><th>Jumlah Yang Sudah Lunas</th><td class="text-right">Rp {{ number_format($jumlahLunasNominal, 0, ',', '.') }}</td></tr>
             <tr><th>Persentase Pelunasan</th><td class="text-right">{{ number_format($persentasePelunasan, 1, ',', '.') }}%</td></tr>
             <tr><th>Jumlah Uang Masuk Periode</th><td class="text-right">Rp {{ number_format($jumlahUangMasukPeriode, 0, ',', '.') }}</td></tr>

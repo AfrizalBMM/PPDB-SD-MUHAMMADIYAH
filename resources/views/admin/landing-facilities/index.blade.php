@@ -65,7 +65,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </button>
-                                <form action="{{ route('landing-facilities.destroy', $f->id) }}" method="POST" onsubmit="return confirm('Yakin hapus fasilitas ini?');" class="inline">
+                                <form action="{{ route('landing-facilities.destroy', $f->id) }}" method="POST" onsubmit="return window.globalConfirmSubmit(this, 'Yakin hapus fasilitas ini?', { title: 'Konfirmasi Hapus' });" class="inline">
                                     @csrf @method('DELETE')
                                     <button class="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors" title="Hapus">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,6 +79,22 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 border-t border-border pt-3 md:flex-row md:items-center md:justify-between">
+            <form method="GET" class="flex items-center gap-2 text-xs text-textSecondary">
+                <label for="perPageFacilities">Tampilkan</label>
+                <select id="perPageFacilities" name="per_page" onchange="this.form.submit()" class="rounded border border-border px-2 py-1 text-xs">
+                    @foreach([10,20,50,100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 20) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>data</span>
+            </form>
+
+            <div>
+                {{ $facilities->links() }}
+            </div>
         </div>
     </div>
 

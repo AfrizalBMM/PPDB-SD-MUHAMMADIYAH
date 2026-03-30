@@ -951,7 +951,7 @@ class PendaftaranWizard extends Component
                 'tanggal_daftar' => $this->tanggal_daftar,
                 'tahun_ajaran_id' => $this->tahun_ajaran_id,
                 'voucher_id' => $this->voucher_id, // ✅ ditambahkan
-                'status' => 'pending',
+                'status' => Registration::STATUS_BAKAL_CALON,
                 'input_by' => auth()->id(),
             ]);
 

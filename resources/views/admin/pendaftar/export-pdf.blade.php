@@ -62,7 +62,7 @@
                 <th style="width:24%">Nama</th>
                 <th style="width:12%">Jenis Kelamin</th>
                 <th style="width:12%">Tanggal Daftar</th>
-                <th style="width:14%">Status Seleksi</th>
+                <th style="width:14%">Status PPDB</th>
                 <th style="width:14%">Status Pembayaran</th>
                 <th style="width:14%">NIK</th>
             </tr>
@@ -70,7 +70,7 @@
         <tbody>
             @forelse($rows as $index => $siswa)
                 @php
-                    $statusSeleksi = $siswa->registration->status ?? 'belum_diproses';
+                    $statusPpdb = \App\Models\Registration::statusLabel((int) optional($siswa->registration)->status);
                     $tagihanAktif = $siswa->tagihan->filter(fn ($t) => (float) $t->total > 0);
 
                     if ($tagihanAktif->isEmpty()) {
@@ -87,7 +87,7 @@
                     <td>{{ $siswa->nama }}</td>
                     <td>{{ ui_label($siswa->jenis_kelamin ?? '-') }}</td>
                     <td>{{ optional($siswa->registration?->tanggal_daftar)->format('d-m-Y') ?? '-' }}</td>
-                    <td>{{ ui_label($statusSeleksi, 'Belum Diproses') }}</td>
+                    <td>{{ $statusPpdb }}</td>
                     <td>{{ $statusPembayaran }}</td>
                     <td>{{ $siswa->nik ?? '-' }}</td>
                 </tr>

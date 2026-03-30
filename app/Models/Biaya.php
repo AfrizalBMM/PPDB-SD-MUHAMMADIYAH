@@ -31,11 +31,13 @@ class Biaya extends Model
         'nama_biaya',
         'nominal',
         'aktif',
+        'is_acuan_status_ppdb',
     ];
 
     protected $casts = [
         'nominal' => 'integer',
         'aktif'   => 'boolean',
+        'is_acuan_status_ppdb' => 'boolean',
     ];
 
     /*

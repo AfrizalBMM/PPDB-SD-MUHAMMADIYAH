@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Registration extends Model
 {
+    public const STATUS_BAKAL_CALON = 1;
+    public const STATUS_CALON = 2;
+    public const STATUS_PESERTA_DIDIK = 3;
+
     protected $fillable = [
         'nomor_registrasi',
         'tanggal_daftar',
@@ -17,7 +21,18 @@ class Registration extends Model
 
     protected $casts = [
         'tanggal_daftar' => 'date',
+        'status' => 'integer',
     ];
+
+    public static function statusLabel(?int $status): string
+    {
+        return match ((int) $status) {
+            self::STATUS_BAKAL_CALON => 'Bakal Calon',
+            self::STATUS_CALON => 'Calon',
+            self::STATUS_PESERTA_DIDIK => 'Peserta Didik',
+            default => 'Bakal Calon',
+        };
+    }
 
     // ================= RELATIONS =================
 

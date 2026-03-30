@@ -51,6 +51,9 @@ Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
     ->whereNumber('id')
     ->name('pendaftaran.detail');
 
+Route::post('/pendaftaran/{siswa}/terima-peserta', [PendaftaranController::class, 'terimaPeserta'])
+    ->name('pendaftaran.terima-peserta');
+
 Route::middleware('akses_pembayaran')->group(function () {
 
 Route::get('/pendaftaran/{id}/lihat-nik', [PendaftaranController::class, 'showNik'])

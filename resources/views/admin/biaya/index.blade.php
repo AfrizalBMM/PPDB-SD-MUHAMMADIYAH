@@ -46,6 +46,13 @@
             <x-input name="nama_biaya" label="Nama Biaya" />
             <x-input name="nominal" type="number" label="Nominal" />
 
+            <div class="md:col-span-3">
+                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" name="is_acuan_status_ppdb" value="1" class="rounded border-slate-300">
+                    Jadikan acuan perpindahan status PPDB (dari Calon Peserta Didik ke Peserta Didik)
+                </label>
+            </div>
+
             <div class="md:col-span-3 flex justify-end">
                 <button type="submit" class="btn-primary">Simpan Biaya</button>
             </div>
@@ -78,6 +85,12 @@
                             @else
                                 <x-badge>Nonaktif</x-badge>
                             @endif
+
+                            @if($b->is_acuan_status_ppdb)
+                                <div class="mt-1">
+                                    <x-badge type="success">Acuan</x-badge>
+                                </div>
+                            @endif
                         </td>
                         <td class="px-4 py-2 font-medium">{{ $b->nama_biaya }}</td>
                         <td class="px-4 py-2">{{ ui_label($b->jenis_biaya) }}</td>
@@ -95,18 +108,41 @@
                                     {{ $b->aktif ? 'Nonaktifkan' : 'Aktifkan' }}
                                 </button>
                             </form>
+                            <form method="POST" action="{{ route('biaya.toggle-acuan-status',$b) }}">
+                                @csrf
+                                @method('PATCH')
+                                <button class="text-xs px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700">
+                                    {{ $b->is_acuan_status_ppdb ? 'Batalkan Acuan' : 'Pilih Acuan' }}
+                                </button>
+                            </form>
                             <x-button type="button" onclick="openDeleteModal('{{ route('biaya.destroy',$b) }}')" class="bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Hapus</x-button>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-6 text-slate-500">
+                        <td colspan="7" class="text-center py-6 text-slate-500">
                             Data biaya belum tersedia
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-3 md:flex-row md:items-center md:justify-between">
+            <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                <label for="perPageBiaya">Tampilkan</label>
+                <select id="perPageBiaya" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                    @foreach([10,20,50,100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 20) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>data</span>
+            </form>
+
+            <div>
+                {{ $biaya->links() }}
+            </div>
         </div>
     </x-card>
 

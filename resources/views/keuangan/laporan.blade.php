@@ -85,6 +85,28 @@
             </table>
         </div>
 
+        <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-3 md:flex-row md:items-center md:justify-between">
+            <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                @if(!empty($mulai))
+                    <input type="hidden" name="mulai" value="{{ $mulai }}">
+                @endif
+                @if(!empty($selesai))
+                    <input type="hidden" name="selesai" value="{{ $selesai }}">
+                @endif
+                <label for="perPageLaporan">Tampilkan</label>
+                <select id="perPageLaporan" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                    @foreach([10,20,50,100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 50) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>data</span>
+            </form>
+
+            <div>
+                {{ $pembayaran->links() }}
+            </div>
+        </div>
+
     </div>
 
 </div>

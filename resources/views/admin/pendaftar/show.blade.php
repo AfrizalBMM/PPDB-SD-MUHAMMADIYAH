@@ -29,18 +29,23 @@
                 </p>
 
                 <p>
-                    <span class="text-xs font-bold text-textSecondary uppercase tracking-wider block mb-0.5">Status</span><br>
-                    @php $regStatus = $siswa->registration->status ?? 'pending'; @endphp
-                    <span class="{{ $regStatus === 'diterima' ? 'badge-success' : ($regStatus === 'ditolak' ? 'badge-danger' : ($regStatus === 'arsip' ? 'badge-info' : 'badge-warning')) }}">
-                        {{ ui_label($regStatus) }}
+                    <span class="text-xs font-bold text-textSecondary uppercase tracking-wider block mb-0.5">Status PPDB</span><br>
+                    @php
+                        $regStatus = (int) ($siswa->registration->status ?? \App\Models\Registration::STATUS_BAKAL_CALON);
+                        $regBadge = $regStatus === \App\Models\Registration::STATUS_PESERTA_DIDIK
+                            ? 'badge-success'
+                            : ($regStatus === \App\Models\Registration::STATUS_CALON ? 'badge-info' : 'badge-warning');
+                    @endphp
+                    <span class="{{ $regBadge }}">
+                        {{ \App\Models\Registration::statusLabel($regStatus) }}
                     </span>
                 </p>
             </div>
         </div>
 
-        {{-- DATA SISWA --}}
+        {{-- DATA PESERTA DIDIK --}}
         <div class="card">
-            <h3 class="font-heading font-bold text-lg text-primary mb-4 border-b border-border pb-2">Data Siswa</h3>
+            <h3 class="font-heading font-bold text-lg text-primary mb-4 border-b border-border pb-2">Data Peserta Didik</h3>
 
             <div class="space-y-1 text-sm">
                 <p><strong>Nama</strong><br>{{ $siswa->nama }}</p>

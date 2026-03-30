@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class BiayaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $tahunAktif = TahunAjaran::aktifSekarang();
 
@@ -19,9 +19,16 @@ class BiayaController extends Controller
                 ->with('error', 'Silakan aktifkan Tahun Ajaran terlebih dahulu.');
         }
 
-        $biaya = Biaya::untukTahun($tahunAktif->id)->get();
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
 
-        return view('admin.biaya.index', compact('biaya', 'tahunAktif'));
+        $biaya = Biaya::untukTahun($tahunAktif->id)
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.biaya.index', compact('biaya', 'tahunAktif', 'perPage'));
     }
 
     public function store(Request $request)
@@ -32,6 +39,7 @@ class BiayaController extends Controller
             'jenis_kelamin' => 'required|in:laki-laki,perempuan,semua',
             'nama_biaya'    => 'required|string|max:150',
             'nominal'       => 'required|integer|min:0',
+            'is_acuan_status_ppdb' => 'nullable|boolean',
         ]);
 
         $tahunAktif = TahunAjaran::aktifSekarang();
@@ -48,6 +56,7 @@ class BiayaController extends Controller
             'nama_biaya'      => $request->nama_biaya,
             'nominal'         => $request->nominal,
             'aktif'           => true,
+            'is_acuan_status_ppdb' => (bool) $request->boolean('is_acuan_status_ppdb'),
         ]);
 
         logAktivitas(
@@ -125,6 +134,23 @@ class BiayaController extends Controller
         );
 
         return back()->with('success','Status biaya diperbarui');
+    }
+
+    public function toggleAcuanStatus(Biaya $biaya)
+    {
+        $statusBaru = !$biaya->is_acuan_status_ppdb;
+
+        $biaya->update([
+            'is_acuan_status_ppdb' => $statusBaru,
+        ]);
+
+        logAktivitas(
+            'Kelola Biaya - Acuan Status PPDB',
+            ($statusBaru ? 'Menjadikan' : 'Membatalkan')
+            . ' biaya #' . $biaya->id . ' "' . $biaya->nama_biaya . '" sebagai acuan perpindahan status PPDB.'
+        );
+
+        return back()->with('success', 'Acuan status PPDB pada biaya berhasil diperbarui.');
     }
     
 }

@@ -12,6 +12,10 @@ class LaporanKeuanganController extends Controller
     {
         $mulai   = $request->mulai;
         $selesai = $request->selesai;
+        $perPage = (int) $request->input('per_page', 50);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 50;
+        }
 
         $query = Pembayaran::with([
             'tagihan.biaya',
@@ -30,7 +34,7 @@ class LaporanKeuanganController extends Controller
         // ================= URUTKAN =================
         $query->orderByDesc('tanggal_bayar');
 
-        $pembayaran = $query->paginate(50);
+        $pembayaran = $query->paginate($perPage)->withQueryString();
 
         $total = $query->clone()->sum('nominal_bayar');
 
@@ -38,7 +42,8 @@ class LaporanKeuanganController extends Controller
             'pembayaran',
             'total',
             'mulai',
-            'selesai'
+            'selesai',
+            'perPage'
         ));
     }
 }

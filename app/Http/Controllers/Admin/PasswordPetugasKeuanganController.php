@@ -9,11 +9,18 @@ use Illuminate\Support\Facades\Hash;
 
 class PasswordPetugasKeuanganController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $petugas = PasswordPetugasKeuangan::latest()->get();
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
 
-        return view('admin.password_petugas_keuangan', compact('petugas'));
+        $petugas = PasswordPetugasKeuangan::latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.password_petugas_keuangan', compact('petugas', 'perPage'));
     }
 
     public function store(Request $request)

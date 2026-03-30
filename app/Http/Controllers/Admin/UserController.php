@@ -9,10 +9,16 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
         return view('admin.users.index', [
-            'users' => User::latest()->get()
+            'users' => User::latest()->paginate($perPage)->withQueryString(),
+            'perPage' => $perPage,
         ]);
     }
 

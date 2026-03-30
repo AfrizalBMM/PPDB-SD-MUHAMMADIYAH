@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\PendaftarExport;
 use App\Http\Controllers\Controller;
 use App\Models\LogAktivitas;
+use App\Models\Registration;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,17 +20,26 @@ class PendaftarController extends Controller
             abort(422, 'Data registrasi siswa tidak ditemukan.');
         }
 
+        if (empty($siswa->registration->status)) {
+            $siswa->registration->status = Registration::STATUS_BAKAL_CALON;
+            $siswa->registration->save();
+        }
+
         return $siswa->registration;
     }
 
     private function resolveFilterContext(Request $request): array
     {
-        $validStatuses = ['diterima', 'pending', 'ditolak', 'belum_diproses', 'arsip'];
+        $validStatuses = [
+            Registration::STATUS_BAKAL_CALON,
+            Registration::STATUS_CALON,
+            Registration::STATUS_PESERTA_DIDIK,
+        ];
         $validJenisKelamin = ['laki-laki', 'perempuan'];
         $validPaymentStatus = ['lunas', 'belum_lunas', 'belum_ada_tagihan'];
 
-        $status = in_array($request->input('status'), $validStatuses, true)
-            ? $request->input('status')
+        $status = in_array((int) $request->input('status'), $validStatuses, true)
+            ? (int) $request->input('status')
             : null;
         $jenisKelamin = in_array($request->input('jenis_kelamin'), $validJenisKelamin, true)
             ? $request->input('jenis_kelamin')
@@ -61,27 +71,9 @@ class PendaftarController extends Controller
             });
         }
 
-        if ($status === 'belum_diproses') {
-            $query->where(function ($q) {
-                $q->whereDoesntHave('registration')
-                    ->orWhereHas('registration', function ($q2) {
-                        $q2->whereNull('status')->orWhere('status', '');
-                    });
-            });
-        } elseif ($status === 'arsip') {
-            $query->whereHas('registration', function ($q) {
-                $q->where('status', 'arsip');
-            });
-        } elseif (!empty($status)) {
+        if (!is_null($status)) {
             $query->whereHas('registration', function ($q) use ($status) {
                 $q->where('status', $status);
-            });
-        } else {
-            $query->where(function ($q) {
-                $q->whereDoesntHave('registration')
-                    ->orWhereHas('registration', function ($q2) {
-                        $q2->where('status', '!=', 'arsip')->orWhereNull('status');
-                    });
             });
         }
 
@@ -140,32 +132,27 @@ class PendaftarController extends Controller
     {
         $context = $this->resolveFilterContext($request);
         $query = $context['query'];
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
 
         return view('admin.pendaftar.index', [
             'siswa' => $query
-                ->paginate(20)
+                ->paginate($perPage)
                 ->withQueryString(),
             'filters' => $context['filters'],
             'tahunAjaranOptions' => $context['tahunAjaranOptions'],
             'isArsipPage' => false,
+            'perPage' => $perPage,
         ]);
     }
 
     public function arsip(Request $request)
     {
-        $request->merge(['status' => 'arsip']);
-
-        $context = $this->resolveFilterContext($request);
-        $query = $context['query'];
-
-        return view('admin.pendaftar.index', [
-            'siswa' => $query
-                ->paginate(20)
-                ->withQueryString(),
-            'filters' => $context['filters'],
-            'tahunAjaranOptions' => $context['tahunAjaranOptions'],
-            'isArsipPage' => true,
-        ]);
+        return redirect()
+            ->route('pendaftar.index')
+            ->with('error', 'Mode arsip sudah tidak digunakan pada flow status PPDB baru.');
     }
 
     public function export(Request $request)
@@ -264,57 +251,35 @@ class PendaftarController extends Controller
 
     public function updateStatus(Request $request, Siswa $siswa)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,diterima,ditolak',
-            'catatan_status' => 'nullable|string|max:500',
-        ]);
+        return $this->jadikanPesertaDidik($siswa);
+    }
 
+    public function jadikanPesertaDidik(Siswa $siswa)
+    {
         $registration = $this->ensureRegistration($siswa);
-        $beforeStatus = $registration->status ?: 'belum_diproses';
+        $beforeStatus = (int) ($registration->status ?: Registration::STATUS_BAKAL_CALON);
 
-        if ($validated['status'] === 'ditolak' && empty(trim((string) ($validated['catatan_status'] ?? '')))) {
-            return back()->with('error', 'Catatan status wajib diisi saat memilih Ditolak.');
+        if ($beforeStatus === Registration::STATUS_PESERTA_DIDIK) {
+            return back()->with('success', 'Data sudah berstatus Peserta Didik.');
         }
 
-        $registration->status = $validated['status'];
+        $registration->status = Registration::STATUS_PESERTA_DIDIK;
         $registration->save();
 
         logAktivitas(
-            'Admin - Ubah Status Seleksi',
+            'Admin - Jadikan Peserta Didik',
             'Siswa ID: ' . $siswa->id
             . ' | No Registrasi: ' . ($registration->nomor_registrasi ?? '-')
-            . ' | Status: ' . $beforeStatus . ' -> ' . $validated['status']
-            . ' | Catatan: ' . (!empty($validated['catatan_status']) ? $validated['catatan_status'] : '-')
+            . ' | Status PPDB: ' . Registration::statusLabel($beforeStatus)
+            . ' -> ' . Registration::statusLabel(Registration::STATUS_PESERTA_DIDIK)
         );
 
-        return back()->with('success', 'Status seleksi berhasil diperbarui.');
+        return back()->with('success', 'Status berhasil diperbarui menjadi Peserta Didik.');
     }
 
     public function toggleArsip(Siswa $siswa)
     {
-        $registration = $this->ensureRegistration($siswa);
-        $beforeStatus = $registration->status ?: 'belum_diproses';
-
-        if ($registration->status === 'arsip') {
-            $registration->status = 'pending';
-            $message = 'Data pendaftar berhasil dipulihkan dari arsip.';
-            $aksi = 'Admin - Pulihkan Pendaftar';
-        } else {
-            $registration->status = 'arsip';
-            $message = 'Data pendaftar berhasil diarsipkan.';
-            $aksi = 'Admin - Arsipkan Pendaftar';
-        }
-
-        $registration->save();
-
-        logAktivitas(
-            $aksi,
-            'Siswa ID: ' . $siswa->id
-            . ' | No Registrasi: ' . ($registration->nomor_registrasi ?? '-')
-            . ' | Status: ' . $beforeStatus . ' -> ' . $registration->status
-        );
-
-        return back()->with('success', $message);
+        return back()->with('error', 'Fitur arsip dinonaktifkan pada flow status PPDB baru.');
     }
 
     public function activity(Siswa $siswa)

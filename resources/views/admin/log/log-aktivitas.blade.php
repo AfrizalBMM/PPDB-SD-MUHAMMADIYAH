@@ -195,7 +195,21 @@
         {{-- Pagination --}}
         @if($logs->hasPages())
         <div class="p-6 border-t border-border bg-background/30">
-            {{ $logs->links() }}
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                    @foreach(request()->except(['page', 'per_page']) as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <label for="perPageLogs">Tampilkan</label>
+                    <select id="perPageLogs" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 50) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                        @endforeach
+                    </select>
+                    <span>data</span>
+                </form>
+                {{ $logs->links() }}
+            </div>
         </div>
         @endif
     </div>

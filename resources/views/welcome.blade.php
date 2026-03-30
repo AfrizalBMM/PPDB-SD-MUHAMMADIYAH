@@ -15,7 +15,7 @@
 
         <p class="text-sm text-slate-600 leading-relaxed mb-6">
             Sistem Penerimaan Peserta Didik Baru (PPDB) ini digunakan untuk
-            proses pendaftaran calon siswa baru secara resmi dan terintegrasi.
+            proses pendaftaran calon peserta didik baru secara resmi dan terintegrasi.
             <br class="hidden md:block">
             Silakan melanjutkan ke formulir pendaftaran dengan menekan tombol di bawah ini.
         </p>

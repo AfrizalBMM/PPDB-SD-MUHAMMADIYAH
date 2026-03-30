@@ -9,5 +9,5 @@ class BrochureDownload extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'phone'];
+    protected $fillable = ['name', 'nomor_wa'];
 }

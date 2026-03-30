@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Biaya;
+use App\Models\PasswordPanitia;
+use App\Models\Registration;
 use App\Models\Siswa;
+use App\Models\TagihanSiswa;
+use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 
 class PendaftaranController extends Controller
@@ -70,11 +75,26 @@ class PendaftaranController extends Controller
         $dateFrom = $validatedDateRange['date_from'] ?? null;
         $dateTo = $validatedDateRange['date_to'] ?? null;
         $order = $request->order === 'terbaru' ? 'terbaru' : 'terlama';
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 10;
+        }
+        $statusPpdb = (int) $request->input('status_ppdb', 0);
+        $allowedStatusPpdb = [
+            Registration::STATUS_BAKAL_CALON,
+            Registration::STATUS_CALON,
+            Registration::STATUS_PESERTA_DIDIK,
+        ];
+
+        if (!in_array($statusPpdb, $allowedStatusPpdb, true)) {
+            $statusPpdb = null;
+        }
 
         $siswa = Siswa::with([
                 'registration',
                 'ibu',
                 'tagihan.biaya',
+                'tagihan.pembayaran',
             ])
             ->withSum('tagihan', 'total')
             ->when(!empty($paymentStatuses), function ($q) use ($paymentStatuses, $biayaIds) {
@@ -140,6 +160,11 @@ class PendaftaranController extends Controller
                     $q2->whereDate('tanggal_daftar', '<=', $dateTo);
                 });
             })
+            ->when(!empty($statusPpdb), function ($q) use ($statusPpdb) {
+                $q->whereHas('registration', function ($q2) use ($statusPpdb) {
+                    $q2->where('status', $statusPpdb);
+                });
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($q2) use ($search) {
                     $q2->where('nama', 'like', "%$search%")
@@ -159,12 +184,12 @@ class PendaftaranController extends Controller
                 $q->orderBy('created_at', 'asc')
                     ->orderBy('id', 'asc');
             })
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         $biayaOptions = Biaya::orderBy('nama_biaya')->get(['id', 'nama_biaya']);
 
-        if ($search || !empty($paymentStatuses) || !empty($biayaIds) || !empty($jenisKelamins) || !empty($dateFrom) || !empty($dateTo) || (int) $request->input('page', 1) > 1) {
+        if ($search || !empty($paymentStatuses) || !empty($biayaIds) || !empty($jenisKelamins) || !empty($dateFrom) || !empty($dateTo) || !empty($statusPpdb) || (int) $request->input('page', 1) > 1) {
             logAktivitas(
                 'Panitia Public - Lihat Daftar Pendaftaran',
                 'Melihat daftar pendaftar dengan filter: '
@@ -173,12 +198,13 @@ class PendaftaranController extends Controller
                 . 'biaya ID ' . $this->formatFilterList($biayaIds) . ', '
                 . 'jenis kelamin ' . $this->formatFilterList($jenisKelamins) . ', '
                 . 'rentang tanggal ' . ($dateFrom ?: '-') . ' s/d ' . ($dateTo ?: '-') . ', '
+                . 'status PPDB ' . ($statusPpdb ? Registration::statusLabel($statusPpdb) : '-') . ', '
                 . 'urutan ' . $order . ', '
                 . 'halaman ' . (int) $request->input('page', 1) . '.'
             );
         }
 
-        return view('pendaftaran.list', compact('siswa', 'search', 'paymentStatuses', 'biayaIds', 'jenisKelamins', 'dateFrom', 'dateTo', 'order', 'biayaOptions'));
+        return view('pendaftaran.list', compact('siswa', 'search', 'paymentStatuses', 'biayaIds', 'jenisKelamins', 'dateFrom', 'dateTo', 'order', 'statusPpdb', 'perPage', 'biayaOptions'));
     }
 
     public function show($id)
@@ -353,6 +379,88 @@ class PendaftaranController extends Controller
         return redirect()
             ->route('pendaftaran.detail', ['id' => $siswa->id])
             ->with('success', 'Data berhasil diperbarui.');
+    }
+
+    public function terimaPeserta(Request $request, Siswa $siswa)
+    {
+        $validated = $request->validate([
+            'nama_panitia' => 'required|string|max:255',
+            'password' => 'required|string',
+        ]);
+
+        $tahunAjaran = TahunAjaran::where('aktif', 1)->first();
+        if (!$tahunAjaran) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tahun ajaran aktif tidak ditemukan.',
+            ], 400);
+        }
+
+        $passwordPanitia = PasswordPanitia::where('tahun_ajaran_id', $tahunAjaran->id)->first();
+        if (!$passwordPanitia) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password panitia belum dibuat.',
+            ], 400);
+        }
+
+        if (!Hash::check($validated['password'], $passwordPanitia->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password panitia tidak sesuai.',
+            ], 422);
+        }
+
+        $siswa->loadMissing('registration');
+        if (!$siswa->registration) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data registrasi siswa tidak ditemukan.',
+            ], 422);
+        }
+
+        $pendaftaranBelumLunas = TagihanSiswa::query()
+            ->where('siswa_id', $siswa->id)
+            ->where('total', '>', 0)
+            ->where('status', '!=', 'lunas')
+            ->whereHas('biaya', function ($q) {
+                $q->where('jenis_biaya', 'pendaftaran');
+            })
+            ->exists();
+
+        if ($pendaftaranBelumLunas) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lunasi biaya jenis pendaftaran = pendaftaran',
+            ], 422);
+        }
+
+        $statusSebelumnya = (int) ($siswa->registration->status ?? Registration::STATUS_BAKAL_CALON);
+
+        if ($statusSebelumnya !== Registration::STATUS_PESERTA_DIDIK) {
+            $siswa->registration->status = Registration::STATUS_PESERTA_DIDIK;
+            $siswa->registration->save();
+        }
+
+        $nomorRegistrasi = $siswa->registration->nomor_registrasi ?? '-';
+
+        logAktivitas(
+            'Panitia Public - Jadikan Peserta Didik',
+            'Panitia ' . $validated['nama_panitia']
+            . ' mengubah status siswa ' . ($siswa->nama ?? '-')
+            . ' (ID: ' . $siswa->id
+            . ', No Registrasi: ' . $nomorRegistrasi
+            . ') dari ' . Registration::statusLabel($statusSebelumnya)
+            . ' menjadi ' . Registration::statusLabel(Registration::STATUS_PESERTA_DIDIK) . '.'
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menjadikan ' . ($siswa->nama ?? '-')
+                . ' (No. Registrasi ' . $nomorRegistrasi . ')'
+                . ' sebagai Peserta Didik SD Muhammadiyah Wonorejo.',
+            'status' => Registration::STATUS_PESERTA_DIDIK,
+        ]);
     }
 
     public function showBiaya(Siswa $siswa)

@@ -31,9 +31,9 @@
             <div class="absolute right-0 top-0 h-full w-1.5 bg-success opacity-80"></div>
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="text-xs font-bold text-textSecondary uppercase tracking-wider mb-1">Diterima</p>
+                    <p class="text-xs font-bold text-textSecondary uppercase tracking-wider mb-1">Total Peserta Didik</p>
                     <h2 class="text-3xl font-heading font-bold text-textPrimary">
-                        {{ $totalDiterima }}
+                        {{ $totalSiswa }}
                     </h2>
                 </div>
                 <div class="p-3 bg-success/10 rounded-xl text-success group-hover:bg-success group-hover:text-white transition-colors">
@@ -139,6 +139,24 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="p-4 border-t border-border bg-background/40">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                    @foreach(request()->except(['page', 'per_page']) as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <label for="perPageDashboard">Tampilkan</label>
+                    <select id="perPageDashboard" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 10) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                        @endforeach
+                    </select>
+                    <span>data</span>
+                </form>
+                {{ $pendaftarTerbaru->links() }}
+            </div>
         </div>
     </div>
 

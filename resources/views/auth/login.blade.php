@@ -33,7 +33,7 @@
                 </div>
 
                 <h1 class="mt-8 text-4xl font-black leading-tight">
-                    Portal Admin Penerimaan Siswa Baru
+                    Portal Admin Penerimaan Peserta Didik Baru
                 </h1>
             </div>
 
@@ -93,12 +93,33 @@
 
                     <div>
                         <label class="label">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="••••••••"
-                            class="input"
-                            required>
+                        <div class="relative">
+                            <input
+                                id="login_password"
+                                type="password"
+                                name="password"
+                                placeholder="••••••••"
+                                class="input pr-12"
+                                required>
+
+                            <button
+                                type="button"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+                                aria-label="Tampilkan password"
+                                aria-pressed="false"
+                                data-password-toggle="login_password">
+                                <svg data-password-icon="eye" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                                </svg>
+                                <svg data-password-icon="eye-off" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4l16 16" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.2 10.3a2.5 2.5 0 0 0 3.5 3.5" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.8 6.9C4.2 8.6 2.5 12 2.5 12s3.5 7 9.5 7c2.1 0 4-.6 5.5-1.5" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.1 5.3C10 5.1 11 5 12 5c6 0 9.5 7 9.5 7s-1.2 2.4-3.6 4.3" />
+                                </svg>
+                            </button>
+                        </div>
                         @error('password')
                             <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror

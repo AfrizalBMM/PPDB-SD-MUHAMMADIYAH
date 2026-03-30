@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\BrochureManagerController;
 use App\Http\Controllers\Admin\PendaftarController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\TahunAjaranController;
@@ -33,6 +34,12 @@ Route::prefix('admin')
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
 
+        // ================= KELOLA BROSUR =================
+        Route::get('/brochure-downloads', [BrochureManagerController::class, 'index'])
+            ->name('admin.brochure.index');
+        Route::delete('/brochure-downloads/{brochure}', [BrochureManagerController::class, 'destroy'])
+            ->name('admin.brochure.destroy');
+
         // ================= PROFILE / SECURITY =================
         Route::get('/profile/password', [ProfileController::class, 'editPassword'])
             ->name('admin.profile.password.edit');
@@ -57,6 +64,9 @@ Route::prefix('admin')
             Route::post('/pendaftar/{siswa}/status', [PendaftarController::class, 'updateStatus'])
                 ->name('pendaftar.update-status');
 
+            Route::post('/pendaftar/{siswa}/jadikan-peserta-didik', [PendaftarController::class, 'jadikanPesertaDidik'])
+                ->name('pendaftar.jadikan-peserta-didik');
+
             Route::post('/pendaftar/{siswa}/toggle-arsip', [PendaftarController::class, 'toggleArsip'])
                 ->name('pendaftar.toggle-arsip');
 
@@ -72,8 +82,41 @@ Route::prefix('admin')
             Route::get('/pendaftaran/{siswa}/cetak/review', [CetakController::class, 'formulirPreview'])
                 ->name('pendaftaran.cetak.review');
 
+            Route::get('/siswa', [SiswaController::class, 'kelas1'])
+                ->name('siswa.index');
+
             Route::get('/siswa/kelas-1', [SiswaController::class, 'kelas1'])
                 ->name('siswa.kelas1');
+
+            Route::get('/siswa/management-kelas', [SiswaController::class, 'managementKelas'])
+                ->name('siswa.management-kelas');
+
+            Route::get('/siswa/export/excel', [SiswaController::class, 'exportExcel'])
+                ->name('siswa.export.excel');
+
+            Route::get('/siswa/export/excel-keuangan', [SiswaController::class, 'exportExcelKeuangan'])
+                ->name('siswa.export.excel-keuangan');
+
+            Route::get('/siswa/export/pdf', [SiswaController::class, 'exportPdf'])
+                ->name('siswa.export.pdf');
+
+            Route::get('/siswa/export/pdf-keuangan', [SiswaController::class, 'exportPdfKeuangan'])
+                ->name('siswa.export.pdf-keuangan');
+
+            Route::post('/siswa/kelas', [SiswaController::class, 'storeKelas'])
+                ->name('siswa.kelas.store');
+
+            Route::post('/siswa/{siswa}/assign-kelas', [SiswaController::class, 'assignKelas'])
+                ->name('siswa.assign-kelas');
+
+            Route::post('/siswa/{siswa}/remove-kelas', [SiswaController::class, 'removeKelas'])
+                ->name('siswa.remove-kelas');
+
+            Route::patch('/siswa/kelas/{kelas}', [SiswaController::class, 'updateKelas'])
+                ->name('siswa.kelas.update');
+
+            Route::delete('/siswa/kelas/{kelas}', [SiswaController::class, 'destroyKelas'])
+                ->name('siswa.kelas.destroy');
         });
 
         // ================= SUPERADMIN + KEUANGAN =================
@@ -106,6 +149,10 @@ Route::prefix('admin')
             Route::patch('/admin/biaya/{biaya}/toggle',
                 [BiayaController::class, 'toggle']
             )->name('biaya.toggle');
+
+            Route::patch('/biaya/{biaya}/toggle-acuan-status',
+                [BiayaController::class, 'toggleAcuanStatus']
+            )->name('biaya.toggle-acuan-status');
 
             Route::delete('/voucher/destroy-all', [VoucherController::class, 'destroyAll'])
                 ->name('voucher.destroyAll');

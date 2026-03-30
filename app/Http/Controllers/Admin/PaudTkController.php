@@ -10,10 +10,16 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PaudTkController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 30);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 30;
+        }
+
         return view('admin.paud-tk.index', [
-            'data' => PaudTk::orderBy('nama')->paginate(30)
+            'data' => PaudTk::orderBy('nama')->paginate($perPage)->withQueryString(),
+            'perPage' => $perPage,
         ]);
     }
 

@@ -8,14 +8,21 @@ use Illuminate\Http\Request;
 
 class TahunAjaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
         $data = TahunAjaran::orderByDesc('aktif') 
                             ->orderByDesc('id') 
-                            ->get();
+                            ->paginate($perPage)
+                            ->withQueryString();
 
         return view('admin.tahun-ajaran.index', [
-            'data' => $data
+            'data' => $data,
+            'perPage' => $perPage,
         ]);
     }
 

@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 
 class LandingTestimonialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $testimonials = LandingTestimonial::latest()->get();
-        return view('admin.landing-testimonials.index', compact('testimonials'));
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $testimonials = LandingTestimonial::latest()
+            ->paginate($perPage)
+            ->withQueryString();
+        return view('admin.landing-testimonials.index', compact('testimonials', 'perPage'));
     }
 
     public function store(Request $request)

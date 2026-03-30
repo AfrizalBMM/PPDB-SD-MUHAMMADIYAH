@@ -62,6 +62,10 @@ class LogAktivitasController extends Controller
     {
         $allowedRoles = ['superadmin', 'admin', 'keuangan', 'public'];
         $allowedKategori = ['pendaftaran', 'pembayaran', 'verifikasi', 'manajemen-log', 'lainnya'];
+        $perPage = (int) $request->input('per_page', 50);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 50;
+        }
         $query = LogAktivitas::with('user');
 
         // ================= SEARCH =================
@@ -93,7 +97,8 @@ class LogAktivitasController extends Controller
 
         $logs = $query
             ->orderByDesc('created_at')
-            ->paginate(50);
+            ->paginate($perPage)
+            ->withQueryString();
 
         $today = now()->toDateString();
         $stats = [
@@ -107,7 +112,7 @@ class LogAktivitasController extends Controller
             return view('admin.log.logs-table', compact('logs'))->render();
         }
 
-        return view('admin.log.log-aktivitas', compact('logs', 'stats'));
+        return view('admin.log.log-aktivitas', compact('logs', 'stats', 'perPage'));
     }
 
     public function destroyAll()

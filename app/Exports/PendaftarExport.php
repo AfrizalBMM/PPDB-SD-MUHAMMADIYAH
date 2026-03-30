@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Registration;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -21,7 +22,7 @@ class PendaftarExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Nama',
             'Jenis Kelamin',
             'Tanggal Daftar',
-            'Status Seleksi',
+            'Status PPDB',
             'Status Pembayaran',
             'NIK',
         ];
@@ -30,7 +31,7 @@ class PendaftarExport implements FromCollection, WithHeadings, ShouldAutoSize
     public function collection(): Collection
     {
         return $this->rows->values()->map(function ($siswa, $index) {
-            $statusSeleksi = $siswa->registration->status ?? 'belum_diproses';
+            $statusPpdb = Registration::statusLabel((int) optional($siswa->registration)->status);
             $tagihanAktif = $siswa->tagihan->filter(fn ($t) => (float) $t->total > 0);
 
             if ($tagihanAktif->isEmpty()) {
@@ -47,7 +48,7 @@ class PendaftarExport implements FromCollection, WithHeadings, ShouldAutoSize
                 $siswa->nama,
                 ui_label($siswa->jenis_kelamin ?? '-'),
                 optional($siswa->registration?->tanggal_daftar)->format('d-m-Y') ?? '-',
-                ui_label($statusSeleksi, 'Belum Diproses'),
+                $statusPpdb,
                 $statusPembayaran,
                 $siswa->nik ?? '-',
             ];

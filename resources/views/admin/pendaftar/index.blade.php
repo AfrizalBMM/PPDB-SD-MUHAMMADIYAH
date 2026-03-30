@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('page-title', ($isArsipPage ?? false) ? 'Arsip Pendaftar' : 'Pendaftar')
+@section('page-title', 'Pendaftar')
 
 @section('content')
 <div x-data="{
@@ -12,12 +12,6 @@
         quickEditNik: '',
         quickEditNoKk: '',
         quickEditJenisKelamin: 'laki-laki',
-        openStatusModal: false,
-        statusAction: '',
-        statusValue: 'pending',
-        catatanStatus: '',
-        showCopyToast: false,
-        copyToastText: '',
         setQuickEdit(data) {
             this.quickEditAction = data.action;
             this.quickEditNama = data.nama || '';
@@ -26,13 +20,7 @@
             this.quickEditJenisKelamin = data.jenisKelamin || 'laki-laki';
             this.openQuickEdit = true;
         },
-        setStatus(data) {
-            this.statusAction = data.action;
-            this.statusValue = data.status || 'pending';
-            this.catatanStatus = '';
-            this.openStatusModal = true;
-        },
-        copyPhone(value) {
+        async copyPhone(value) {
             if (!value) {
                 return;
             }
@@ -42,25 +30,29 @@
                 return;
             }
 
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text);
-            } else {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.left = '-9999px';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                }
 
-            this.copyToastText = 'Nomor HP berhasil disalin';
-            this.showCopyToast = true;
-            setTimeout(() => {
-                this.showCopyToast = false;
-            }, 1400);
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('success', 'Nomor HP berhasil disalin');
+                }
+            } catch (error) {
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('danger', 'Gagal menyalin nomor HP');
+                }
+            }
         }
     }" class="space-y-6">
 
@@ -83,21 +75,6 @@
             </div>
 
             <div class="flex items-stretch gap-2 w-full md:w-auto md:shrink-0">
-                <div class="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 w-full md:w-auto">
-                    <a
-                        href="{{ route('pendaftar.index') }}"
-                        class="w-1/2 md:w-auto text-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors {{ ($isArsipPage ?? false) ? 'text-slate-600 hover:bg-white' : 'bg-white text-blue-700 shadow-sm' }}"
-                    >
-                        Aktif
-                    </a>
-                    <a
-                        href="{{ route('pendaftar.arsip') }}"
-                        class="w-1/2 md:w-auto text-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors {{ ($isArsipPage ?? false) ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:bg-white' }}"
-                    >
-                        Arsip
-                    </a>
-                </div>
-
                 <div class="relative w-full md:w-auto">
                     <button
                         type="button"
@@ -121,14 +98,11 @@
                     >
                         <div class="space-y-3">
                             <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status Seleksi</label>
+                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status PPDB</label>
                                 <select name="status" class="input mt-1">
                                     <option value="">Semua</option>
-                                    <option value="diterima" {{ ($filters['status'] ?? '') === 'diterima' ? 'selected' : '' }}>Diterima</option>
-                                    <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="ditolak" {{ ($filters['status'] ?? '') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                                    <option value="belum_diproses" {{ ($filters['status'] ?? '') === 'belum_diproses' ? 'selected' : '' }}>Belum Diproses</option>
-                                    <option value="arsip" {{ ($filters['status'] ?? '') === 'arsip' ? 'selected' : '' }}>Arsip</option>
+                                    <option value="1" {{ (int) ($filters['status'] ?? 0) === 1 ? 'selected' : '' }}>Calon Peserta Didik</option>
+                                    <option value="2" {{ (int) ($filters['status'] ?? 0) === 2 ? 'selected' : '' }}>Peserta Didik</option>
                                 </select>
                             </div>
 
@@ -172,7 +146,7 @@
                             </div>
 
                             <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
-                                <a href="{{ ($isArsipPage ?? false) ? route('pendaftar.arsip') : route('pendaftar.index') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100">Reset</a>
+                                <a href="{{ route('pendaftar.index') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100">Reset</a>
                                 <button type="submit" class="w-1/2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Terapkan</button>
                             </div>
                         </div>
@@ -223,7 +197,11 @@
                 <tbody class="divide-y">
                     @forelse($siswa as $i => $s)
                         @php
-                            $status = $s->registration->status ?? 'belum_diproses';
+                            $status = (int) ($s->registration->status ?? \App\Models\Registration::STATUS_BAKAL_CALON);
+                            $statusLabel = \App\Models\Registration::statusLabel($status);
+                            $statusBadge = $status === \App\Models\Registration::STATUS_PESERTA_DIDIK
+                                ? 'badge-success'
+                                : ($status === \App\Models\Registration::STATUS_CALON ? 'badge-info' : 'badge-warning');
                             $tagihanAktif = $s->tagihan->filter(fn($t) => (float) $t->total > 0);
 
                             if ($tagihanAktif->isEmpty()) {
@@ -251,6 +229,9 @@
                             <td class="font-medium text-textPrimary">
                                 <div>{{ $s->nama }}</div>
                                 <div class="text-xs font-normal text-textSecondary mt-0.5">{{ ui_label($s->jenis_kelamin ?? '-') }}</div>
+                                <div class="mt-1">
+                                    <span class="{{ $statusBadge }} text-[10px]">{{ $statusLabel }}</span>
+                                </div>
                             </td>
 
                             <td class="text-textSecondary">
@@ -369,19 +350,6 @@
                                             </svg>
                                             <span>Quick Edit</span>
                                         </button>
-                                        <button
-                                            type="button"
-                                            class="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-100"
-                                            @click='setStatus({
-                                                action: @js(route('pendaftar.update-status', $s->id)),
-                                                status: @js($status === 'arsip' ? 'pending' : ($status ?: 'pending'))
-                                            }); open = false'
-                                        >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <span>Ubah Status Seleksi</span>
-                                        </button>
                                         <a href="{{ route('pendaftar.activity', $s->id) }}" class="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -389,19 +357,17 @@
                                             <span>Riwayat Aktivitas</span>
                                         </a>
 
-                                        <form method="POST" action="{{ route('pendaftar.toggle-arsip', $s->id) }}" class="mt-1" onsubmit="return confirm('Yakin melanjutkan aksi ini?')">
-                                            @csrf
-                                            <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium {{ $status === 'arsip' ? 'text-emerald-700 hover:bg-emerald-50' : 'text-amber-700 hover:bg-amber-50' }}">
-                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    @if($status === 'arsip')
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                    @else
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l2-3h10l2 3M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8M9 12h6" />
-                                                    @endif
-                                                </svg>
-                                                <span>{{ $status === 'arsip' ? 'Pulihkan dari Arsip' : 'Arsipkan Data' }}</span>
-                                            </button>
-                                        </form>
+                                        @if($status !== \App\Models\Registration::STATUS_PESERTA_DIDIK)
+                                            <form method="POST" action="{{ route('pendaftar.jadikan-peserta-didik', $s->id) }}" class="mt-1" onsubmit="return window.globalConfirmSubmit(this, 'Jadikan data ini sebagai Peserta Didik?', { title: 'Konfirmasi Status' })">
+                                                @csrf
+                                                <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>Jadikan Peserta Didik</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                         </div>
                                     </template>
                                 </div>
@@ -419,7 +385,27 @@
         </div>
 
         <div class="p-4 border-t border-border bg-background/40">
-            {{ $siswa->links() }}
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                    @foreach(request()->except(['page', 'per_page']) as $key => $value)
+                        @if(is_array($value))
+                            @foreach($value as $item)
+                                <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                    <label for="perPagePendaftar">Tampilkan</label>
+                    <select id="perPagePendaftar" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 20) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                        @endforeach
+                    </select>
+                    <span>data</span>
+                </form>
+                {{ $siswa->links() }}
+            </div>
         </div>
     </div>
 
@@ -466,57 +452,6 @@
                     <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Simpan</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div
-        x-show="openStatusModal"
-        x-transition
-        class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4"
-        style="display: none;"
-    >
-        <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl">
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-slate-800">Ubah Status Seleksi</h3>
-                <button type="button" @click="openStatusModal = false" class="text-slate-400 hover:text-slate-700">✕</button>
-            </div>
-
-            <form :action="statusAction" method="POST" class="space-y-3">
-                @csrf
-                <div>
-                    <label class="text-xs font-medium text-slate-600">Status</label>
-                    <select name="status" x-model="statusValue" class="input mt-1" required>
-                        <option value="pending">Pending</option>
-                        <option value="diterima">Diterima</option>
-                        <option value="ditolak">Ditolak</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-slate-600">Catatan (wajib saat Ditolak)</label>
-                    <textarea name="catatan_status" x-model="catatanStatus" rows="3" class="input mt-1"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" @click="openStatusModal = false" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100">Batal</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Simpan Status</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div
-        x-show="showCopyToast"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 translate-y-2"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-2"
-        class="fixed right-4 bottom-4 z-[120]"
-        style="display: none;"
-    >
-        <div class="rounded-lg border border-emerald-200 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
-            <span x-text="copyToastText"></span>
         </div>
     </div>
 

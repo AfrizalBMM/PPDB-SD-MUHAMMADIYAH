@@ -5,17 +5,24 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Models\Pembayaran;
+use App\Models\Registration;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 10;
+        }
+
         // ================= TOTAL PENDAFTAR =================
         $totalPendaftar = Siswa::count();
 
-        // ================= TOTAL DITERIMA =================
-        $totalDiterima = Siswa::whereHas('registration', function ($q) {
-            $q->where('status', 'diterima');
+        // ================= TOTAL PESERTA DIDIK =================
+        $totalSiswa = Siswa::whereHas('registration', function ($q) {
+            $q->where('status', Registration::STATUS_PESERTA_DIDIK);
         })->count();
 
         // ================= PENDAFTAR HARI INI =================
@@ -35,16 +42,17 @@ class DashboardController extends Controller
                 'registration.tahunAjaran'
             ])
             ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('admin.dashboard', compact(
             'totalPendaftar',
-            'totalDiterima',
+            'totalSiswa',
             'pendaftarHariIni',
             'totalPembayaran',
             'pembayaranHariIni',
-            'pendaftarTerbaru'
+            'pendaftarTerbaru',
+            'perPage'
         ));
     }
 }

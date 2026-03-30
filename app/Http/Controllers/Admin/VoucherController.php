@@ -9,10 +9,15 @@ use Illuminate\Support\Str;
 
 class VoucherController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $vouchers = Voucher::latest()->get();
-        return view('admin.voucher.index', compact('vouchers'));
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $vouchers = Voucher::latest()->paginate($perPage)->withQueryString();
+        return view('admin.voucher.index', compact('vouchers', 'perPage'));
     }
 
     public function store(Request $request)

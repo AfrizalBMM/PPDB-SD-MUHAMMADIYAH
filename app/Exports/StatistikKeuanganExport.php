@@ -23,7 +23,7 @@ class StatistikKeuanganExport implements FromCollection, ShouldAutoSize
 
         $rows->push(['Ringkasan', 'Nilai', '', '', '']);
         $rows->push(['Jumlah Biaya Keseluruhan', (int) ($this->data['jumlahBiayaKeseluruhan'] ?? 0), '', '', '']);
-        $rows->push(['Sisa Piutang Saat Ini', (int) ($this->data['jumlahSisaPiutang'] ?? 0), '', '', '']);
+        $rows->push(['Jumlah yang Belum Lunas', (int) ($this->data['jumlahSisaPiutang'] ?? 0), '', '', '']);
         $rows->push(['Jumlah Yang Sudah Lunas', (int) ($this->data['jumlahLunasNominal'] ?? 0), '', '', '']);
         $rows->push(['Persentase Pelunasan (%)', (float) ($this->data['persentasePelunasan'] ?? 0), '', '', '']);
         $rows->push(['Jumlah Uang Masuk Periode', (int) ($this->data['jumlahUangMasukPeriode'] ?? 0), '', '', '']);

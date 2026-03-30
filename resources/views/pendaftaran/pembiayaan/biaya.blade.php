@@ -18,21 +18,21 @@
         <div class="md:col-span-2 card">
 
             <h2 class="font-semibold text-lg text-slate-800 mb-4">
-                Rincian Pembiayaan Calon Siswa
+                Rincian Pembiayaan Calon Peserta Didik
             </h2>
 
             <div class="bg-yellow-50 border border-yellow-200 p-3 text-xs rounded mb-6">
-                ⚠️ Informasi pembiayaan ini bersifat RAHASIA, hanya untuk panitia dan orang tua/wali siswa.
+                ⚠️ Informasi pembiayaan ini bersifat RAHASIA, hanya untuk panitia dan orang tua/wali peserta didik.
             </div>
 
 
             {{-- ===============================
-            DATA SISWA
+            DATA PESERTA DIDIK
             =============================== --}}
             <div class="overflow-x-auto mb-8">
 
                 <h3 class="font-semibold mb-3">
-                    Informasi Siswa
+                    Informasi Peserta Didik
                 </h3>
 
                 <table class="w-full text-sm border border-slate-200 rounded-lg">
@@ -41,7 +41,7 @@
 
                         <tr class="bg-slate-50">
                             <td class="p-3 w-48 font-medium">
-                                Nama Siswa
+                                Nama Peserta Didik
                             </td>
 
                             <td class="p-3">
@@ -649,7 +649,7 @@
                 Edit Riwayat Cicilan
             </h3>
 
-            <form id="formEdit" method="POST" onsubmit="return confirmEditCicilan()">
+            <form id="formEdit" method="POST" onsubmit="return confirmEditCicilan(event)">
                 @csrf
                 @method('PUT')
 
@@ -866,7 +866,9 @@
                         if (response.status === 403) {
                             console.log('❌ Status 403 - Forbidden/Unauthorized');
                             console.warn('This could be CSRF token issue or session expired');
-                            alert('⚠️ Error 403: Unauthorized.\n\nPossible causes:\n- CSRF token invalid\n- Session expired\n- No permission\n\nSilakan verifikasi password panitia kembali.');
+                            if (typeof window.showGlobalToast === 'function') {
+                                window.showGlobalToast('warning', 'Akses ditolak (403). Silakan verifikasi password panitia kembali.');
+                            }
                             bukaPasswordModal(window.location.href);
                             throw new Error('403 Forbidden - showing password modal');
                         }
@@ -899,7 +901,9 @@
                 
                 // Don't show alert if it's the session expired error (password modal already shown)
                 if (!error.message.includes('Session expired')) {
-                    alert('❌ Terjadi Error:\n' + error.message);
+                    if (typeof window.showGlobalToast === 'function') {
+                        window.showGlobalToast('danger', 'Terjadi error: ' + error.message);
+                    }
                 }
             })
             .finally(() => {
@@ -1051,10 +1055,14 @@
             return true;
         }
 
-        function confirmEditCicilan() {
+        function confirmEditCicilan(event) {
+            event.preventDefault();
+
             const nominal = Number(document.getElementById('editNominalBayar').value || 0);
             if (nominal < 1) {
-                alert('Nominal bayar harus lebih dari 0');
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('warning', 'Nominal bayar harus lebih dari 0');
+                }
                 document.getElementById('editNominalDisplay').focus();
                 return false;
             }
@@ -1064,7 +1072,19 @@
                 return false;
             }
 
-            return confirm('Yakin ingin menyimpan perubahan cicilan ini?');
+            const form = document.getElementById('formEdit');
+            if (!form) {
+                return false;
+            }
+
+            if (typeof window.globalConfirmSubmit === 'function') {
+                return window.globalConfirmSubmit(form, 'Yakin ingin menyimpan perubahan cicilan ini?', {
+                    title: 'Konfirmasi Simpan'
+                });
+            }
+
+            form.submit();
+            return false;
         }
 
         // ---- Modal Cetak Nota ----
@@ -1106,7 +1126,9 @@
             console.log('🔐 Password submit - redirectUrl:', redirectUrl);
             
             if (!pwd) {
-                alert('❌ Masukkan password terlebih dahulu');
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('warning', 'Masukkan password terlebih dahulu');
+                }
                 return false;
             }
             
@@ -1141,12 +1163,16 @@
                 console.log('✅ Password verified! Reloading page...');
                 // Password verified, session now set on server
                 // Reload page to get fresh session state
-                alert('✅ Password verified! Loading...');
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('success', 'Password terverifikasi. Memuat ulang halaman...');
+                }
                 window.location.reload();
             })
             .catch(error => {
                 console.error('❌ Password error:', error.message);
-                alert('❌ Error: ' + error.message);
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('danger', 'Error: ' + error.message);
+                }
                 btn.disabled = false;
                 btn.textContent = 'Verifikasi';
             });

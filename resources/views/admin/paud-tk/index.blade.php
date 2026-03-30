@@ -174,7 +174,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-xs text-red-600 hover:underline"
-                                        onclick="return confirm('Hapus data ini?')">
+                                        onclick="return window.globalConfirmSubmit(this.form, 'Hapus data ini?', { title: 'Konfirmasi Hapus' })">
                                         Hapus
                                     </button>
                                 </form>
@@ -202,6 +202,22 @@
                 </tbody>
 
             </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-3 md:flex-row md:items-center md:justify-between">
+            <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                <label for="perPagePaudTk">Tampilkan</label>
+                <select id="perPagePaudTk" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                    @foreach([10,20,50,100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 30) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>data</span>
+            </form>
+
+            <div>
+                {{ $data->links() }}
+            </div>
         </div>
     </div>
 

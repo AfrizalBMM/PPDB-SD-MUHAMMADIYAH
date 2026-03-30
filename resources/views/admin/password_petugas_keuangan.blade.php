@@ -62,7 +62,7 @@
                                 Edit
                             </button>
 
-                            <form method="POST" action="{{ route('admin.password.petugas-keuangan.destroy', $item->id) }}" onsubmit="return confirm('Yakin ingin menghapus petugas ini?')" class="inline-block">
+                            <form method="POST" action="{{ route('admin.password.petugas-keuangan.destroy', $item->id) }}" onsubmit="return window.globalConfirmSubmit(this, 'Yakin ingin menghapus petugas ini?', { title: 'Konfirmasi Hapus' })" class="inline-block">
                                 @csrf
                                 @method('DELETE')
                                 <button class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Hapus</button>
@@ -76,6 +76,22 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-3 md:flex-row md:items-center md:justify-between">
+            <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                <label for="perPagePetugas">Tampilkan</label>
+                <select id="perPagePetugas" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                    @foreach([10,20,50,100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 20) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>data</span>
+            </form>
+
+            <div>
+                {{ $petugas->links() }}
+            </div>
         </div>
     </div>
 </div>

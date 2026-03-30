@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 
 class LandingFaqController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $faqs = LandingFaq::orderBy('order')->get();
-        return view('admin.landing-faqs.index', compact('faqs'));
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $faqs = LandingFaq::orderBy('order')
+            ->paginate($perPage)
+            ->withQueryString();
+        return view('admin.landing-faqs.index', compact('faqs', 'perPage'));
     }
 
     public function store(Request $request)

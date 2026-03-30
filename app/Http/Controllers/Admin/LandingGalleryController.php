@@ -9,10 +9,18 @@ use Illuminate\Support\Facades\Storage;
 
 class LandingGalleryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $galleries = LandingGallery::orderBy('order')->get();
-        return view('admin.landing-galleries.index', compact('galleries'));
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $galleries = LandingGallery::orderBy('order')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.landing-galleries.index', compact('galleries', 'perPage'));
     }
 
     public function store(Request $request)

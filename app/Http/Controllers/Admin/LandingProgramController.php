@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 
 class LandingProgramController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $programs = LandingProgram::orderBy('order')->get();
-        return view('admin.landing-programs.index', compact('programs'));
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $programs = LandingProgram::orderBy('order')
+            ->paginate($perPage)
+            ->withQueryString();
+        return view('admin.landing-programs.index', compact('programs', 'perPage'));
     }
 
     public function store(Request $request)

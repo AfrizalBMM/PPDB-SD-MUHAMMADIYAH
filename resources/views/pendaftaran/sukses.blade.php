@@ -13,7 +13,7 @@
             </h2>
 
             <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-sm text-green-800 leading-relaxed">
-                Data calon siswa berhasil disimpan.
+                Data calon peserta didik berhasil disimpan.
                 Silakan lakukan pembayaran biaya pendaftaran.
             </div>
 
@@ -39,10 +39,10 @@
         {{-- Data Siswa --}}
         <div x-show="isCurrent('siswa')" x-cloak
             class="card overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700">
-            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Siswa</h3>
+            <h3 class="font-semibold px-4 py-3 border-b border-slate-200 bg-slate-50">Data Peserta Didik</h3>
             <div class="p-4 text-sm text-slate-900">
                 <div class="[&>div]:grid [&>div]:grid-cols-1 sm:[&>div]:grid-cols-[180px_1fr] [&>div]:gap-1 sm:[&>div]:gap-4 [&>div]:py-3 [&>div]:border-b [&>div]:border-dashed [&>div]:border-slate-200 [&>div:last-child]:border-b-0">
-                    <div><p class="text-slate-500">Nama Siswa</p><p>{{ $siswa->nama }}</p></div>
+                    <div><p class="text-slate-500">Nama Peserta Didik</p><p>{{ $siswa->nama }}</p></div>
                     <div><p class="text-slate-500">No Registrasi</p><p>{{ optional($siswa->registration)->nomor_registrasi ?? '-' }}</p></div>
                     <div><p class="text-slate-500">Jenis Kelamin</p><p>{{ ui_label($siswa->jenis_kelamin) }}</p></div>
                     <div><p class="text-slate-500">NIK</p><p>{{ $siswa->nik ?? '-' }}</p></div>

@@ -181,6 +181,10 @@
             background: #f8fafc;
         }
 
+        .ringkas .value {
+            font-weight: bold;
+        }
+
         table.ttd {
             width: 100%;
             border-collapse: collapse;
@@ -372,15 +376,15 @@
         <table class="ringkas">
             <tr>
                 <td class="label">Total Biaya</td>
-                <td class="text-right">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</td>
+                <td class="text-right value">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td class="label">Total Terbayar</td>
-                <td class="text-right">Rp {{ number_format($totalTerbayar, 0, ',', '.') }}</td>
+                <td class="text-right value">Rp {{ number_format($totalTerbayar, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td class="label">Total Kekurangan</td>
-                <td class="text-right">Rp {{ number_format($totalKekurangan, 0, ',', '.') }}</td>
+                <td class="text-right value">Rp {{ number_format($totalKekurangan, 0, ',', '.') }}</td>
             </tr>
         </table>
 

@@ -29,7 +29,7 @@
 
                 <a href="{{ route('pendaftaran.public') }}"
                     class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg shadow hover:bg-blue-700">
-                    + Daftar Siswa Baru
+                    + Daftar Peserta Didik Baru
                 </a>
             </div>
         </div>
@@ -54,12 +54,17 @@
                     $selectedDateFrom = $dateFrom ?? request('date_from');
                     $selectedDateTo = $dateTo ?? request('date_to');
                     $selectedOrder = $order ?? request('order', 'terbaru');
+                    $selectedStatusPpdb = (int) ($statusPpdb ?? request('status_ppdb', 0));
+                    if (!in_array($selectedStatusPpdb, [1, 2, 3], true)) {
+                        $selectedStatusPpdb = 0;
+                    }
                     $activeFilterCount = count($selectedPaymentStatuses)
                         + count($selectedBiayaIds)
                         + count($selectedJenisKelamins)
                         + (!empty($selectedDateFrom) ? 1 : 0)
                         + (!empty($selectedDateTo) ? 1 : 0)
-                        + ($selectedOrder === 'terlama' ? 1 : 0);
+                        + ($selectedOrder === 'terlama' ? 1 : 0)
+                        + ($selectedStatusPpdb > 0 ? 1 : 0);
 
                     $paymentLabelMap = [
                         'lunas' => 'Lunas',
@@ -80,6 +85,12 @@
                         'perempuan' => 'Perempuan',
                     ];
 
+                    $statusPpdbLabelMap = [
+                        1 => 'Calon Peserta Didik',
+                        2 => 'Peserta Didik',
+                        3 => 'Peserta Didik',
+                    ];
+
                     $selectedJenisKelaminMap = collect($selectedJenisKelamins)
                         ->mapWithKeys(fn ($jenisKelamin) => [$jenisKelamin => $jenisKelaminLabelMap[$jenisKelamin] ?? ui_label($jenisKelamin)])
                         ->all();
@@ -87,23 +98,36 @@
                     $currentQuery = request()->query();
                 @endphp
 
-                <div x-data="{ open: false }" class="relative w-full md:w-auto md:shrink-0">
+                <div class="flex gap-2 w-full md:w-auto md:shrink-0">
                     <button
                         type="button"
-                        @click="open = !open"
-                        class="w-full md:w-auto inline-flex items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                        onclick="location.reload()"
+                        class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                        title="Refresh halaman"
                     >
-                        <span>Filter</span>
-                        @if($activeFilterCount > 0)
-                            <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
-                        @endif
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
 
+                    <div x-data="{ open: false }" class="relative w-full md:w-auto md:shrink-0">
+                        <button
+                            type="button"
+                            @click="open = !open"
+                            class="w-full md:w-auto inline-flex items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                            <span>Filter</span>
+                            @if($activeFilterCount > 0)
+                                <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
+                            @endif
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
                     <div
                         x-show="open"
+                        x-cloak
                         x-transition
                         @click.away="open = false"
                         class="absolute right-0 mt-2 w-full md:w-[360px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg z-30"
@@ -155,6 +179,7 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 sm:flex-row sm:items-end md:w-auto md:justify-end md:shrink-0">
@@ -171,6 +196,14 @@
                         <select id="orderSelect" name="order" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
                             <option value="terlama" {{ $selectedOrder === 'terlama' ? 'selected' : '' }}>Data Terlama</option>
                             <option value="terbaru" {{ $selectedOrder === 'terbaru' ? 'selected' : '' }}>Data Terbaru</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col sm:w-44">
+                        <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Status Peserta Didik</label>
+                        <select id="statusPpdbSelect" name="status_ppdb" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                            <option value="">Semua Status</option>
+                            <option value="2" {{ $selectedStatusPpdb === 2 ? 'selected' : '' }}>Calon Peserta Didik</option>
+                            <option value="3" {{ $selectedStatusPpdb === 3 ? 'selected' : '' }}>Peserta Didik</option>
                         </select>
                     </div>
                 </div>
@@ -253,6 +286,17 @@
                         </a>
                     @endif
 
+                    @if($selectedStatusPpdb > 0)
+                        @php
+                            $queryWithoutStatusPpdb = $currentQuery;
+                            unset($queryWithoutStatusPpdb['status_ppdb']);
+                        @endphp
+                        <a href="{{ route('pendaftaran.list', $queryWithoutStatusPpdb) }}" class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700 hover:bg-rose-100" title="Hapus filter status peserta didik">
+                            <span>{{ $statusPpdbLabelMap[$selectedStatusPpdb] ?? 'Status Peserta Didik' }}</span>
+                            <span class="text-rose-500">x</span>
+                        </a>
+                    @endif
+
                     @if(!empty($selectedDateFrom))
                         @php
                             $queryWithoutDateFrom = $currentQuery;
@@ -290,7 +334,6 @@
                         <th rowspan="2" class="text-center align-middle">Tanggal Daftar</th>
                         <th rowspan="2" class="text-center align-middle">Data Peserta</th>
                         <th rowspan="2" class="text-center align-middle">Data Ibu</th>
-                        <th rowspan="2" class="text-center align-middle">Voucher</th>
                         <th colspan="3" class="align-middle" style="text-align: center;">Biaya</th>
                         <th rowspan="2" class="text-center align-middle">Aksi</th>
                     </tr>
@@ -310,9 +353,26 @@
                             {{ $loop->iteration }}
                         </td>
 
-                        <!-- NO REG -->
+                        <!-- NO REG + VOUCHER -->
                         <td class="text-left text-xs text-slate-600 whitespace-nowrap">
-                            {{ optional($item->registration)->nomor_registrasi ?? '-' }}
+                            <div class="font-medium text-slate-700">{{ optional($item->registration)->nomor_registrasi ?? '-' }}</div>
+                            @php
+                                $voucherWithBiaya = $item->tagihan
+                                    ->firstWhere(fn($t) => !empty($t->kode_voucher));
+                            @endphp
+                            @if($voucherWithBiaya && $voucherWithBiaya->biaya)
+                                @php
+                                    $colorClass = match($voucherWithBiaya->biaya->jenis_biaya) {
+                                        'pendaftaran' => 'border-blue-200 bg-blue-50 text-blue-700',
+                                        'daftar_ulang' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                                        'udp' => 'border-violet-200 bg-violet-50 text-violet-700',
+                                        default => 'border-slate-200 bg-slate-50 text-slate-700',
+                                    };
+                                @endphp
+                                <div class="mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-medium {{ $colorClass }}">
+                                    {{ $voucherWithBiaya->kode_voucher }}
+                                </div>
+                            @endif
                         </td>
 
                         <!-- TANGGAL DAFTAR -->
@@ -353,21 +413,6 @@
                             @endif
                         </td>
 
-                        <!-- VOUCHER -->
-                        @php
-                        $voucher = $item->tagihan->firstWhere('kode_voucher','!=',null);
-                        @endphp
-
-                        <td class="text-center">
-                        @if($voucher)
-                            <span class="badge-info">
-                                {{ $voucher->kode_voucher }}
-                            </span>
-                        @else
-                            -
-                        @endif
-                        </td>
-
                         @php
                             $tagihanPendaftaran = $item->tagihan
                                 ->filter(fn ($tagihan) => optional($tagihan->biaya)->jenis_biaya === 'pendaftaran');
@@ -376,55 +421,101 @@
                             $tagihanUdp = $item->tagihan
                                 ->filter(fn ($tagihan) => optional($tagihan->biaya)->jenis_biaya === 'udp');
 
-                            $isPendaftaranLunas = $tagihanPendaftaran->sum('total') === 0
-                                || $tagihanPendaftaran->every(fn ($tagihan) => $tagihan->status === 'lunas');
-                            $isDaftarUlangLunas = $tagihanDaftarUlang->sum('total') === 0
-                                || $tagihanDaftarUlang->every(fn ($tagihan) => $tagihan->status === 'lunas');
-                            $isUdpLunas = $tagihanUdp->sum('total') === 0
-                                || $tagihanUdp->every(fn ($tagihan) => $tagihan->status === 'lunas');
+                            // Helper to get status for a tagihan collection
+                            // Calculate based on actual pembayaran, not just status field
+                            $getPaymentStatus = function($collection) {
+                                if ($collection->isEmpty()) {
+                                    return 'lunas'; // Tidak ada tagihan = dianggap lunas
+                                }
+                                
+                                $totalTagihan = $collection->sum('total');
+                                if ($totalTagihan === 0) {
+                                    return 'lunas'; // Total 0 = lunas
+                                }
+                                
+                                // Calculate total dibayar from pembayaran
+                                $totalDibayar = 0;
+                                foreach ($collection as $tagihan) {
+                                    if ($tagihan->relationLoaded('pembayaran') && $tagihan->pembayaran->isNotEmpty()) {
+                                        $totalDibayar += $tagihan->pembayaran->sum('nominal_bayar');
+                                    }
+                                }
+                                
+                                if ($totalDibayar >= $totalTagihan) {
+                                    return 'lunas';
+                                } elseif ($totalDibayar > 0) {
+                                    return 'cicil';
+                                } else {
+                                    return 'belum';
+                                }
+                            };
+
+                            $pendaftaranStatus = $getPaymentStatus($tagihanPendaftaran);
+                            $daftarUlangStatus = $getPaymentStatus($tagihanDaftarUlang);
+                            $udpStatus = $getPaymentStatus($tagihanUdp);
+                            $statusPpdbSaatIni = (int) (optional($item->registration)->status ?? 0);
+                            $isSudahSiswa = $statusPpdbSaatIni === \App\Models\Registration::STATUS_PESERTA_DIDIK;
                         @endphp
 
                         <td class="text-center w-16 min-w-[72px]">
-                            @if($isPendaftaranLunas)
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                            @if($pendaftaranStatus === 'lunas')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                    </svg>
+                                </span>
+                            @elseif($pendaftaranStatus === 'cicil')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/70" title="Cicil Sebagian">
                                     <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
                                 </span>
                             @else
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
-                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Cicil">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                                     </svg>
                                 </span>
                             @endif
                         </td>
                         <td class="text-center w-16 min-w-[72px]">
-                            @if($isDaftarUlangLunas)
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                            @if($daftarUlangStatus === 'lunas')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                    </svg>
+                                </span>
+                            @elseif($daftarUlangStatus === 'cicil')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/70" title="Cicil Sebagian">
                                     <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
                                 </span>
                             @else
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
-                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Cicil">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                                     </svg>
                                 </span>
                             @endif
                         </td>
                         <td class="text-center w-16 min-w-[72px]">
-                            @if($isUdpLunas)
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas / 0">
+                            @if($udpStatus === 'lunas')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/70" title="Lunas">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                    </svg>
+                                </span>
+                            @elseif($udpStatus === 'cicil')
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/70" title="Cicil Sebagian">
                                     <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
                                 </span>
                             @else
-                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Lunas">
-                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/70" title="Belum Cicil">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                                     </svg>
                                 </span>
                             @endif
@@ -526,6 +617,23 @@
                                             Rincian Biaya
                                         </a>
 
+                                        <button
+                                            type="button"
+                                            @click="open = false; openTerimaPesertaModal({
+                                                url: @js(route('pendaftaran.terima-peserta', $item->id)),
+                                                nama: @js($item->nama),
+                                                nomorRegistrasi: @js(optional($item->registration)->nomor_registrasi ?? '-'),
+                                                canTerimaPendaftaran: @js($pendaftaranStatus === 'lunas'),
+                                                isSudahSiswa: @js($isSudahSiswa)
+                                            })"
+                                            class="flex w-full items-center gap-2.5 px-4 py-2 text-[11px] text-textPrimary transition-colors border-t border-gray-50 {{ $isSudahSiswa ? 'hover:bg-slate-50 hover:text-slate-700' : 'hover:bg-emerald-50 hover:text-emerald-700' }}"
+                                        >
+                                            <svg class="w-4 h-4 {{ $isSudahSiswa ? 'text-slate-500' : 'text-emerald-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {{ $isSudahSiswa ? 'Sudah Menjadi Peserta Didik' : 'Jadikan Peserta Didik' }}
+                                        </button>
+
                                     </div>
                                 </template>
                             </div>
@@ -534,7 +642,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="p-6 text-center text-slate-500">
+                        <td colspan="9" class="p-6 text-center text-slate-500">
                             Belum ada pendaftar
                         </td>
                     </tr>
@@ -551,24 +659,50 @@
                 <span class="inline-flex items-center gap-3 rounded-full bg-slate-50 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-xs">
                     <span class="inline-flex items-center gap-1">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500/70">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
                         </span>
                         <span> = Lunas</span>
                     </span>
                     <span class="inline-flex items-center gap-1">
-                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500/70">
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/70">
                             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </span>
-                        <span> = Belum Lunas</span>
+                        <span> = Tahap Cicil</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500/70">
+                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </span>
+                        <span> = Belum Cicil</span>
                     </span>
                 </span>
             </div>
 
-            <div class="flex justify-center md:justify-end w-full md:w-auto">
+            <div class="flex w-full flex-col items-center gap-2 md:w-auto md:items-end">
+                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+                    @foreach(request()->except(['page', 'per_page']) as $key => $value)
+                        @if(is_array($value))
+                            @foreach($value as $item)
+                                <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                    <label for="perPagePublicList">Tampilkan</label>
+                    <select id="perPagePublicList" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 10) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                        @endforeach
+                    </select>
+                    <span>data</span>
+                </form>
                 {{ $siswa->links() }}
             </div>
         </div>
@@ -722,14 +856,124 @@
 
 </div>
 
-<div id="miniToast" class="fixed bottom-4 right-4 z-[70] pointer-events-none opacity-0 translate-y-2 transition-all duration-200">
-    <div id="miniToastContent" class="rounded-lg border border-green-200 bg-green-100/60 px-3 py-2 text-xs font-medium text-green-700 shadow-lg backdrop-blur-sm">
-        Nomor telepon tersalin
+<div id="modalTerimaPeserta"
+     onclick="closeTerimaPesertaModal()"
+     class="fixed inset-0 bg-slate-900/55 backdrop-blur-[2px] hidden items-center justify-center z-50 p-4">
+
+    <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" onclick="event.stopPropagation()">
+        <div class="relative overflow-hidden border-b border-slate-100 bg-gradient-to-r from-emerald-50 via-white to-sky-50 px-6 py-4">
+            <div class="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-100/60 blur-2xl"></div>
+            <div class="flex items-start gap-3">
+                <div class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-100 text-emerald-700">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0" />
+                    </svg>
+                </div>
+                <div class="pr-8">
+                    <h3 class="text-base font-semibold text-slate-800">
+                        Konfirmasi Jadikan Peserta Didik
+                    </h3>
+                    <p class="mt-0.5 text-xs text-slate-500">Verifikasi panitia diperlukan sebelum status peserta didik diperbarui.</p>
+                </div>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            onclick="closeTerimaPesertaModal()"
+            class="absolute right-3 top-3 rounded-lg p-1 text-slate-500 transition hover:bg-white hover:text-slate-700"
+            aria-label="Tutup modal"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="px-6 py-5">
+            <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <p id="terimaPesertaConfirmText" class="text-sm leading-relaxed text-slate-700">
+                    Apakah Anda yakin ingin menjadikan peserta ini sebagai peserta didik SD Muhammadiyah Wonorejo?
+                </p>
+            </div>
+
+            <form id="formTerimaPeserta" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="terimaNamaPanitia" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Panitia</label>
+                    <input
+                        id="terimaNamaPanitia"
+                        type="text"
+                        name="nama_panitia"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                        placeholder="Contoh: Ahmad Fauzi"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="terimaPasswordPanitia" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Password Panitia</label>
+                    <input
+                        id="terimaPasswordPanitia"
+                        type="password"
+                        name="password"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                        placeholder="Masukkan password panitia"
+                        required
+                    >
+                </div>
+
+                <div class="flex gap-2 pt-1">
+                    <button
+                        type="button"
+                        onclick="closeTerimaPesertaModal()"
+                        class="w-1/2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                        Batal
+                    </button>
+                    <button id="btnSubmitTerimaPeserta" class="w-1/2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                        Konfirmasi
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
+
+</div>
+
+<div id="modalTerimaPesertaSuccess"
+     onclick="closeTerimaPesertaSuccessModal()"
+     class="fixed inset-0 bg-slate-900/55 backdrop-blur-[2px] hidden items-center justify-center z-50 p-4">
+
+    <div class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" onclick="event.stopPropagation()">
+        <div class="px-6 py-5">
+            <div class="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0" />
+                </svg>
+            </div>
+
+            <h3 class="mb-1 text-center text-base font-semibold text-emerald-700">Perubahan Status Berhasil</h3>
+            <p id="terimaPesertaSuccessText" class="mb-5 text-center text-sm leading-relaxed text-slate-700">Status peserta berhasil diperbarui menjadi Peserta Didik.</p>
+
+            <div class="flex justify-end">
+            <button
+                type="button"
+                onclick="closeTerimaPesertaSuccessModal(true)"
+                class="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+                Tutup
+            </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
 let isCetakFormulirListSubmitting = false;
+let terimaPesertaActionUrl = '';
+let terimaPesertaNama = '';
+let terimaPesertaNoRegistrasi = '-';
 
 function openModalPetugas(id) {
     document.getElementById('modalSiswaId').value = id;
@@ -815,31 +1059,102 @@ function closePasswordKeuanganModal()
     modal.classList.remove('flex');
 }
 
-let toastTimer = null;
-
-function showMiniToast(message, type = 'success')
+function openTerimaPesertaModal(payload)
 {
-    const toast = document.getElementById('miniToast');
-    const content = document.getElementById('miniToastContent');
-
-    if (!toast || !content) {
+    if (payload?.isSudahSiswa === true) {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('info', 'Peserta ini sudah menjadi peserta didik.');
+        }
         return;
     }
 
-    content.textContent = message;
-
-    if (type === 'error') {
-        content.className = 'rounded-lg border border-red-200 bg-red-50/95 px-3 py-2 text-xs font-medium text-red-700 shadow-lg';
-    } else {
-        content.className = 'rounded-lg border border-green-200 bg-green-100/60 px-3 py-2 text-xs font-medium text-green-700 shadow-lg backdrop-blur-sm';
+    if (payload?.canTerimaPendaftaran === false) {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('warning', 'Lunasi biaya jenis pendaftaran = pendaftaran');
+        }
+        return;
     }
 
-    toast.classList.remove('opacity-0', 'translate-y-2');
+    terimaPesertaActionUrl = payload?.url || '';
+    terimaPesertaNama = payload?.nama || '-';
+    terimaPesertaNoRegistrasi = payload?.nomorRegistrasi || '-';
 
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () {
-        toast.classList.add('opacity-0', 'translate-y-2');
-    }, 1400);
+    const text = `Apakah Anda yakin ingin menjadikan ${terimaPesertaNama} (No. Registrasi ${terimaPesertaNoRegistrasi}) sebagai peserta didik SD Muhammadiyah Wonorejo?`;
+    const modal = document.getElementById('modalTerimaPeserta');
+    const confirmText = document.getElementById('terimaPesertaConfirmText');
+
+    if (confirmText) {
+        confirmText.textContent = text;
+    }
+
+    const form = document.getElementById('formTerimaPeserta');
+    if (form) {
+        form.reset();
+    }
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeTerimaPesertaModal()
+{
+    const modal = document.getElementById('modalTerimaPeserta');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function openTerimaPesertaSuccessModal(message)
+{
+    const modal = document.getElementById('modalTerimaPesertaSuccess');
+    const text = document.getElementById('terimaPesertaSuccessText');
+
+    if (text) {
+        text.textContent = message;
+    }
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeTerimaPesertaSuccessModal(reloadPage = false)
+{
+    const modal = document.getElementById('modalTerimaPesertaSuccess');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    if (reloadPage) {
+        window.location.reload();
+    }
+}
+
+function showMiniToast(message, type = 'success')
+{
+    const toastTypeMap = {
+        success: 'success',
+        warning: 'warning',
+        info: 'info',
+        danger: 'danger',
+        error: 'danger',
+    };
+
+    if (typeof window.showGlobalToast === 'function') {
+        window.showGlobalToast(toastTypeMap[type] || 'info', message, { duration: 1800 });
+        return;
+    }
 }
 
 function salinNoTelp(nomor)
@@ -870,6 +1185,7 @@ function salinNoTelp(nomor)
 const filterForm = document.getElementById('filterForm');
 const searchInput = document.getElementById('searchInput');
 const orderSelect = document.getElementById('orderSelect');
+const statusPpdbSelect = document.getElementById('statusPpdbSelect');
 const dateFromInput = document.getElementById('dateFromInput');
 const dateToInput = document.getElementById('dateToInput');
 let searchDebounceTimer = null;
@@ -940,6 +1256,12 @@ if (filterForm && orderSelect) {
     });
 }
 
+if (filterForm && statusPpdbSelect) {
+    statusPpdbSelect.addEventListener('change', function () {
+        submitIfDateRangeValid();
+    });
+}
+
 if (filterForm && dateFromInput) {
     dateFromInput.addEventListener('change', function () {
         syncDateBounds();
@@ -955,6 +1277,68 @@ if (filterForm && dateToInput) {
 }
 
 syncDateBounds();
+
+const formTerimaPeserta = document.getElementById('formTerimaPeserta');
+if (formTerimaPeserta) {
+    formTerimaPeserta.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        if (!terimaPesertaActionUrl) {
+            showMiniToast('Aksi tidak valid', 'error');
+            return;
+        }
+
+        const formData = new FormData(formTerimaPeserta);
+        const namaPanitia = (formData.get('nama_panitia') || '').toString().trim();
+        const password = (formData.get('password') || '').toString();
+
+        if (!namaPanitia || !password) {
+            showMiniToast('Nama panitia dan password wajib diisi', 'error');
+            return;
+        }
+
+        const submitButton = document.getElementById('btnSubmitTerimaPeserta');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+        }
+
+        try {
+            const response = await fetch(terimaPesertaActionUrl, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': formData.get('_token'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nama_panitia: namaPanitia,
+                    password,
+                }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.success === false) {
+                showMiniToast(data.message || 'Gagal memproses penerimaan peserta', 'error');
+                return;
+            }
+
+            closeTerimaPesertaModal();
+            openTerimaPesertaSuccessModal(
+                data.message || `Berhasil menjadikan ${terimaPesertaNama} (No. Registrasi ${terimaPesertaNoRegistrasi}) sebagai peserta didik SD Muhammadiyah Wonorejo.`
+            );
+        } catch (error) {
+            showMiniToast('Terjadi kesalahan saat memproses data', 'error');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        }
+    });
+}
 </script>
 
 @endsection
