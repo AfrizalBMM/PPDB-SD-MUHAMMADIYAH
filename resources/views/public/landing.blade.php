@@ -20,6 +20,10 @@
     <meta name="description" content="{{ $settings['seo_description'] ?? 'Pendaftaran Peserta Didik Baru SD Muhammadiyah Menerima Peserta Didik Baru.' }}">
     <meta name="keywords" content="PPDB SD, SD Muhammadiyah, Sekolah Islam, Pendaftaran Peserta Didik Baru">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- AlpineJS with Collapse Plugin -->
@@ -58,7 +62,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800 font-sans antialiased overflow-x-hidden" x-data="{ brosurModal: {{ $errors->has('name') || $errors->has('nomor_wa') ? 'true' : 'false' }}, scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
+<body class="bg-gray-50 text-slate-800 font-sans antialiased overflow-x-hidden" x-data="{ brosurModal: {{ $errors->has('name') || $errors->has('nomor_wa') ? 'true' : 'false' }}, scrolled: false, mobileMenuOpen: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
 
     {{-- NAVBAR --}}
     <nav :class="scrolled ? 'glass shadow-sm py-3' : 'bg-transparent py-5'" class="fixed w-full top-0 z-50 transition-all duration-300">
@@ -67,6 +71,8 @@
                 <img src="{{ $logo }}" alt="Logo" class="h-10 w-10 object-contain">
                 <span :class="scrolled ? 'text-slate-800' : 'text-white'" class="font-bold text-xl tracking-tight transition-colors">SD Muhammadiyah</span>
             </div>
+            
+            {{-- DESKTOP MENU --}}
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#keunggulan" :class="scrolled ? 'text-slate-600 hover:text-primary' : 'text-gray-100 hover:text-white'" class="font-medium text-sm transition-colors">Keunggulan</a>
                 <a href="#program" :class="scrolled ? 'text-slate-600 hover:text-primary' : 'text-gray-100 hover:text-white'" class="font-medium text-sm transition-colors">Program</a>
@@ -74,6 +80,25 @@
                 <a href="#galeri" :class="scrolled ? 'text-slate-600 hover:text-primary' : 'text-gray-100 hover:text-white'" class="font-medium text-sm transition-colors">Galeri</a>
                 <a href="#faq" :class="scrolled ? 'text-slate-600 hover:text-primary' : 'text-gray-100 hover:text-white'" class="font-medium text-sm transition-colors">FAQ</a>
                 <a href="{{ route('pendaftaran.public') }}" class="bg-primary text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all">Daftar Sekarang</a>
+            </div>
+
+            {{-- MOBILE HAMBURGER MENU BUTTON --}}
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden flex items-center justify-center p-2 rounded-lg transition-colors" :class="scrolled ? 'text-slate-700' : 'text-white'">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        {{-- MOBILE DROPDOWN MENU --}}
+        <div x-show="mobileMenuOpen" x-transition class="md:hidden absolute top-full left-0 right-0 mt-0 glass-dark shadow-lg">
+            <div class="max-w-7xl mx-auto px-6 py-4 space-y-3">
+                <a href="#keunggulan" @click="mobileMenuOpen = false" class="block text-white font-medium text-sm hover:text-primary transition-colors py-2">Keunggulan</a>
+                <a href="#program" @click="mobileMenuOpen = false" class="block text-white font-medium text-sm hover:text-primary transition-colors py-2">Program</a>
+                <a href="#fasilitas" @click="mobileMenuOpen = false" class="block text-white font-medium text-sm hover:text-primary transition-colors py-2">Fasilitas</a>
+                <a href="#galeri" @click="mobileMenuOpen = false" class="block text-white font-medium text-sm hover:text-primary transition-colors py-2">Galeri</a>
+                <a href="#faq" @click="mobileMenuOpen = false" class="block text-white font-medium text-sm hover:text-primary transition-colors py-2">FAQ</a>
+                <a href="{{ route('pendaftaran.public') }}" @click="mobileMenuOpen = false" class="block bg-primary text-white px-4 py-2.5 rounded-full text-sm font-semibold text-center hover:-translate-y-0.5 transition-all">Daftar Sekarang</a>
             </div>
         </div>
     </nav>
@@ -384,7 +409,7 @@
     {{-- FOOTER --}}
     <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-            <img src="{{ $logo }}" class="h-12 w-12 mx-auto mb-6 grayscale opacity-50" alt="Logo Footer">
+            <img src="{{ asset('images/footer.png') }}" class="h-auto w-full max-w-xs mx-auto mb-6" alt="Footer">
             <p>&copy; {{ date('Y') }} SD Muhammadiyah Wonorejo. All rights reserved.</p>
         </div>
     </footer>

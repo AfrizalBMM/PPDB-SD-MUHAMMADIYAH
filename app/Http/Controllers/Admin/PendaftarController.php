@@ -10,6 +10,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PendaftarController extends Controller
@@ -155,6 +156,43 @@ class PendaftarController extends Controller
             ->with('error', 'Mode arsip sudah tidak digunakan pada flow status PPDB baru.');
     }
 
+    private function isExportDirectoryAccessible(string $dir): bool
+    {
+        return File::exists($dir)
+            && File::isDirectory($dir)
+            && File::isReadable($dir)
+            && File::isWritable($dir);
+    }
+
+    private function ensureExportDirectories(): bool
+    {
+        $excelDir = public_path('file' . DIRECTORY_SEPARATOR . 'excel');
+        $pdfDir = public_path('file' . DIRECTORY_SEPARATOR . 'pdf');
+
+        File::ensureDirectoryExists($excelDir, 0755, true);
+        File::ensureDirectoryExists($pdfDir, 0755, true);
+
+        return $this->isExportDirectoryAccessible($excelDir)
+            && $this->isExportDirectoryAccessible($pdfDir);
+    }
+
+    private function cleanupOldExportFiles(int $days = 7): void
+    {
+        $expiryTimestamp = now()->subDays($days)->timestamp;
+        foreach (['excel', 'pdf'] as $subdir) {
+            $dir = public_path('file' . DIRECTORY_SEPARATOR . $subdir);
+            if (!File::exists($dir) || !File::isDirectory($dir)) {
+                continue;
+            }
+
+            foreach (File::files($dir) as $file) {
+                if ($file->getMTime() <= $expiryTimestamp) {
+                    File::delete($file->getPathname());
+                }
+            }
+        }
+    }
+
     public function export(Request $request)
     {
         $format = $request->input('format');
@@ -162,18 +200,38 @@ class PendaftarController extends Controller
             return redirect()->route('pendaftar.index')->with('error', 'Format export tidak valid.');
         }
 
+        $this->cleanupOldExportFiles(7);
+
+        if (!$this->ensureExportDirectories()) {
+            return redirect()->route('pendaftar.index')
+                ->with('error', 'Folder export tidak dapat diakses atau ditulis. Pastikan public/file/excel dan public/file/pdf dapat dibaca/ditulis oleh server.');
+        }
+
         $context = $this->resolveFilterContext($request);
         $rows = $context['query']->get();
 
+        $exportRoot = public_path('file');
+        $excelDir = $exportRoot . DIRECTORY_SEPARATOR . 'excel';
+        $pdfDir = $exportRoot . DIRECTORY_SEPARATOR . 'pdf';
+
         if ($format === 'excel') {
-            logAktivitas('Export Pendaftar', 'Export data pendaftar ke Excel (' . $rows->count() . ' baris).');
-            return Excel::download(new PendaftarExport($rows), 'pendaftar-' . now()->format('Ymd-His') . '.xlsx');
+            $fileName = 'pendaftar-' . now()->format('Ymd-His') . '.xlsx';
+            $filePath = $excelDir . DIRECTORY_SEPARATOR . $fileName;
+
+            $excelData = Excel::raw(new PendaftarExport($rows), \Maatwebsite\Excel\Excel::XLSX);
+            File::put($filePath, $excelData);
+
+            logAktivitas('Export Pendaftar', 'Export data pendaftar ke Excel (' . $rows->count() . ' baris). Disimpan ke public/file/excel/.');
+            return response()->download($filePath, $fileName);
         }
 
-        logAktivitas('Export Pendaftar', 'Export data pendaftar ke PDF (' . $rows->count() . ' baris).');
+        $fileName = 'pendaftar-' . now()->format('Ymd-His') . '.pdf';
+        $filePath = $pdfDir . DIRECTORY_SEPARATOR . $fileName;
         $pdf = Pdf::loadView('admin.pendaftar.export-pdf', ['rows' => $rows]);
+        $pdf->save($filePath);
 
-        return $pdf->download('pendaftar-' . now()->format('Ymd-His') . '.pdf');
+        logAktivitas('Export Pendaftar', 'Export data pendaftar ke PDF (' . $rows->count() . ' baris). Disimpan ke public/file/pdf/.');
+        return response()->download($filePath, $fileName);
     }
 
     public function show(Siswa $siswa)

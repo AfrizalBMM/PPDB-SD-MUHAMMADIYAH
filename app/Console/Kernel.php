@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Jalankan cleanup file export setiap hari jam 02:00 pagi
+        $schedule->command('exports:cleanup --days=7')->dailyAt('02:00');
     }
 
     /**
