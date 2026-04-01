@@ -195,10 +195,10 @@
                         </div>
                         <div class="p-6">
                             <p class="text-slate-600 line-clamp-3">{{ $program->description }}</p>
-                            <div class="mt-4 flex items-center text-primary font-medium group-hover:gap-2 transition-all">
+                            <a href="{{ route('public.program.detail', $program) }}" class="mt-4 inline-flex items-center text-primary font-medium group-hover:gap-2 transition-all">
                                 <span>Pelajari lebih lanjut</span>
                                 <svg class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 @endforeach

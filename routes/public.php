@@ -22,6 +22,11 @@ use App\Http\Controllers\Public\PembayaranController as PublicPembayaranControll
 Route::view('/', 'public.landing')->name('public.landing');
 Route::post('/download-brochure', [\App\Http\Controllers\BrosurController::class, 'download'])->name('brosur.download');
 
+// program detail page
+Route::get('/program/{landingProgram}', function (\App\Models\LandingProgram $landingProgram) {
+    return view('public.program-detail', compact('landingProgram'));
+})->name('public.program.detail');
+
 // pendaftaran calon siswa (Livewire)
 Route::get('/pendaftaran', PendaftaranWizard::class)
     ->name('pendaftaran.public');
