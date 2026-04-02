@@ -101,20 +101,6 @@
 
             {{-- ALERTS --}}
             <div class="absolute top-0 left-0 w-full px-4 md:px-0">
-                {{-- Success --}}
-                @if(session('success'))
-                    <div class="alert-success bg-green-100 text-green-800 px-4 py-2 rounded mb-4 shadow-md max-w-2xl mx-auto">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                {{-- Error --}}
-                @if(session('error'))
-                    <div class="alert-error bg-red-100 text-red-800 px-4 py-2 rounded mb-4 shadow-md max-w-2xl mx-auto">
-                        {{ session('error') }}
-                    </div>
-                @endif
-
                 {{-- Validation Errors --}}
                 @if($errors->any())
                     <div class="alert-error bg-red-100 text-red-800 px-4 py-2 rounded mb-4 shadow-md max-w-2xl mx-auto">
@@ -265,6 +251,10 @@ document.addEventListener("DOMContentLoaded", function(){
     // ===== LOADING BUTTON OTOMATIS UNTUK SEMUA FORM =====
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', function(){
+            if (form.dataset.disableAutoLoading === 'true') {
+                return;
+            }
+
             const btn = form.querySelector('button[type="submit"]');
             if(btn){
                 btn.disabled = true;
@@ -396,6 +386,33 @@ document.addEventListener("DOMContentLoaded", function(){
         return false;
     };
 })();
+
+document.addEventListener('DOMContentLoaded', function () {
+    const successMessage = @json(session('success'));
+    const warningMessage = @json(session('warning'));
+    const errorMessage = @json(session('error'));
+
+    if (successMessage && typeof window.showGlobalToast === 'function') {
+        window.showGlobalToast('success', successMessage, {
+            title: 'Berhasil',
+            duration: 3200,
+        });
+    }
+
+    if (warningMessage && typeof window.showGlobalToast === 'function') {
+        window.showGlobalToast('warning', warningMessage, {
+            title: 'Peringatan',
+            duration: 3600,
+        });
+    }
+
+    if (errorMessage && typeof window.showGlobalToast === 'function') {
+        window.showGlobalToast('danger', errorMessage, {
+            title: 'Gagal',
+            duration: 3800,
+        });
+    }
+});
 
     function updateClock() {
     const clock = document.getElementById('live-clock');

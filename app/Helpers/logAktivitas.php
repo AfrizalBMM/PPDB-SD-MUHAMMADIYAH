@@ -76,3 +76,36 @@ if (!function_exists('ui_label')) {
         return $result !== '' ? $result : $fallback;
     }
 }
+
+if (!function_exists('ui_title_case_name')) {
+    /**
+     * Normalisasi nama agar tampil Title Case.
+     */
+    function ui_title_case_name($value, string $fallback = '-'): string
+    {
+        if ($value === null) {
+            return $fallback;
+        }
+
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return $fallback;
+        }
+
+        $text = mb_strtolower($text, 'UTF-8');
+        $parts = preg_split('/([\s\-]+)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+
+        $formatted = array_map(function ($part) {
+            if ($part === '' || preg_match('/^[\s\-]+$/u', $part)) {
+                return $part;
+            }
+
+            return mb_convert_case($part, MB_CASE_TITLE, 'UTF-8');
+        }, $parts);
+
+        $result = trim(implode('', $formatted));
+
+        return $result !== '' ? $result : $fallback;
+    }
+}

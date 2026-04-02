@@ -39,6 +39,24 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    @if($isScopedKelas)
+                        <button
+                            type="button"
+                            onclick="openNormalizeNamaModal({
+                                scopeLabel: @js($scopeLabel ?? 'Per Kelas'),
+                                scopeCount: @js((int) ($scopeNormalizeCount ?? 0)),
+                                kelasId: @js(!empty($filterBelumKelas ?? false) ? 'belum' : (int) $kelasId),
+                                title: @js('Normalisasi Nama Siswa')
+                            })"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 md:min-w-[120px]"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>Title Case</span>
+                        </button>
+                    @endif
+
                     <button
                         type="button"
                         @click="open = !open"
@@ -181,11 +199,30 @@
                 <tbody class="divide-y divide-slate-100 bg-white">
                     @forelse($siswa as $item)
                         <tr class="transition hover:bg-slate-50">
-                            <td class="px-4 py-3 font-medium text-slate-800">{{ $item->nama }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-800">
+                                <button
+                                    type="button"
+                                    data-copy-name="{{ $item->nama }}"
+                                    onclick="copyStudentName(this)"
+                                    class="text-left transition hover:text-blue-600 focus:outline-none"
+                                    title="Klik untuk menyalin nama"
+                                >
+                                    {{ $item->nama }}
+                                </button>
+                            </td>
                             <td class="px-4 py-3 text-slate-600">{{ optional($item->registration)->nomor_registrasi ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-600">
                                 <div>{{ optional($item->ibu)->nama ?? '-' }}</div>
-                                <div class="text-xs text-slate-500">{{ optional($item->ibu)->no_hp ?? '-' }}</div>
+                                <div class="text-xs text-slate-500">
+                                    <button
+                                        type="button"
+                                        onclick="copyIbuPhone(@js(optional($item->ibu)->no_hp ?? ''))"
+                                        class="text-left transition hover:text-blue-600 focus:outline-none"
+                                        title="Klik untuk menyalin nomor HP ibu"
+                                    >
+                                        {{ optional($item->ibu)->no_hp ?? '-' }}
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ ui_label($item->jenis_kelamin) }}</td>
                             <td class="px-4 py-3">
@@ -332,7 +369,184 @@
     </div>
 </div>
 
+<div id="modalNormalizeNama" class="fixed inset-0 z-[120] hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onclick="closeNormalizeNamaModal()">
+    <div class="w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl" onclick="event.stopPropagation()">
+        <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50 via-white to-orange-50 px-6 py-5">
+            <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shadow-sm">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">Aksi Massal</p>
+                    <h3 id="normalizeNamaTitle" class="mt-1 text-lg font-semibold text-slate-800">Normalisasi Nama Siswa</h3>
+                    <p class="mt-1 text-sm text-slate-500">Ubah penulisan nama menjadi Title Case untuk scope yang sedang dibuka.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-5">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Scope</div>
+                    <div id="normalizeNamaScope" class="mt-1 text-sm font-semibold text-slate-800">-</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jumlah Data</div>
+                    <div id="normalizeNamaCount" class="mt-1 text-sm font-semibold text-slate-800">0 siswa</div>
+                </div>
+            </div>
+
+            <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Semua nama yang masih huruf besar/kecil campuran akan disimpan ulang ke database dalam format Title Case.
+            </div>
+
+            <form id="formNormalizeNama" method="POST" action="{{ route('siswa.normalize-nama') }}" class="mt-5" data-disable-auto-loading="true" onsubmit="return submitNormalizeNama(this)">
+                @csrf
+                <input id="normalizeNamaKelasId" type="hidden" name="kelas_id" value="">
+
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button id="normalizeNamaCancelBtn" type="button" onclick="closeNormalizeNamaModal()" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                        Batal
+                    </button>
+                    <button id="normalizeNamaSubmitBtn" type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Ya, Normalisasi</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+
+function openNormalizeNamaModal(payload)
+{
+    const modal = document.getElementById('modalNormalizeNama');
+    const title = document.getElementById('normalizeNamaTitle');
+    const scope = document.getElementById('normalizeNamaScope');
+    const count = document.getElementById('normalizeNamaCount');
+    const kelasIdInput = document.getElementById('normalizeNamaKelasId');
+
+    if (!modal || !title || !scope || !count || !kelasIdInput) {
+        return;
+    }
+
+    title.textContent = payload?.title || 'Normalisasi Nama Siswa';
+    scope.textContent = payload?.scopeLabel || '-';
+    count.textContent = `${Number(payload?.scopeCount || 0)} siswa`;
+    kelasIdInput.value = payload?.kelasId ?? '';
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+async function copyStudentName(button)
+{
+    const name = button?.dataset?.copyName || '';
+
+    await copyTextToClipboard(
+        name,
+        `Nama "${name}" berhasil disalin.`,
+        'Nama siswa tidak tersedia untuk disalin.'
+    );
+}
+
+async function copyIbuPhone(noHp)
+{
+    const phone = String(noHp || '').trim();
+
+    await copyTextToClipboard(
+        phone,
+        `Nomor HP ibu "${phone}".`,
+        'Nomor HP ibu tidak tersedia untuk disalin.'
+    );
+}
+
+async function copyTextToClipboard(value, successMessage, emptyMessage)
+{
+    const text = String(value || '').trim();
+
+    if (!text) {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('warning', emptyMessage, { title: 'Gagal Menyalin' });
+        }
+        return;
+    }
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            tempInput.setAttribute('readonly', '');
+            tempInput.style.position = 'absolute';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        }
+
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('success', successMessage, { title: 'Berhasil Menyalin' });
+        }
+    } catch (error) {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('danger', 'Data gagal disalin ke clipboard.', { title: 'Gagal Menyalin' });
+        }
+    }
+}
+
+function closeNormalizeNamaModal()
+{
+    const modal = document.getElementById('modalNormalizeNama');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+function submitNormalizeNama(form)
+{
+    const submitBtn = document.getElementById('normalizeNamaSubmitBtn');
+    const cancelBtn = document.getElementById('normalizeNamaCancelBtn');
+
+    if (!form || !submitBtn) {
+        return true;
+    }
+
+    if (submitBtn.dataset.submitting === '1') {
+        return false;
+    }
+
+    submitBtn.dataset.submitting = '1';
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    submitBtn.innerHTML = `
+        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>Memproses...</span>
+    `;
+
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    }
+
+    return true;
+}
 
 function openAssignKelasModal(payload)
 {

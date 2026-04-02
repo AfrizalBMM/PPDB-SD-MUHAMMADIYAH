@@ -103,6 +103,9 @@ Route::prefix('admin')
             Route::get('/siswa/export/pdf-keuangan', [SiswaController::class, 'exportPdfKeuangan'])
                 ->name('siswa.export.pdf-keuangan');
 
+            Route::post('/siswa/normalisasi-nama', [SiswaController::class, 'normalizeNama'])
+                ->name('siswa.normalize-nama');
+
             Route::post('/siswa/kelas', [SiswaController::class, 'storeKelas'])
                 ->name('siswa.kelas.store');
 

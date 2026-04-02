@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Exports\SiswaAktifExport;
 use App\Exports\SiswaKeuanganExport;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,6 +18,104 @@ use Illuminate\Validation\Rule;
 
 class SiswaController extends Controller
 {
+    public function normalizeNama(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas_id' => ['nullable', 'string'],
+        ]);
+
+        $tahunAktif = TahunAjaran::where('aktif', true)->first();
+
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tidak ada Tahun Ajaran aktif.');
+        }
+
+        $kelasIdRaw = $validated['kelas_id'] ?? null;
+        $scopeLabel = 'semua peserta didik aktif';
+
+        $query = Siswa::query()
+            ->whereHas('registration', function ($q) use ($tahunAktif) {
+                $q->where('status', Registration::STATUS_PESERTA_DIDIK)
+                    ->where('tahun_ajaran_id', $tahunAktif->id);
+            });
+
+        if ($kelasIdRaw === 'belum') {
+            $query->whereNull('kelas_siswa_id');
+            $scopeLabel = 'peserta didik belum kelas';
+        } elseif (is_numeric($kelasIdRaw) && (int) $kelasIdRaw > 0) {
+            $kelasId = (int) $kelasIdRaw;
+            $query->where('kelas_siswa_id', $kelasId);
+
+            $kelas = KelasSiswa::query()->find($kelasId);
+            $scopeLabel = 'kelas ' . ($kelas?->nama_kelas ?? ('ID ' . $kelasId));
+        }
+
+        $total = (clone $query)->count();
+
+        if ($total === 0) {
+            return back()->with('info', 'Tidak ada data yang cocok untuk dinormalisasi.');
+        }
+
+        $updated = 0;
+
+        DB::transaction(function () use ($query, &$updated) {
+            $query->chunkById(100, function ($rows) use (&$updated) {
+                foreach ($rows as $row) {
+                    $namaLama = $row->nama;
+                    $namaBaru = ui_title_case_name($namaLama, $namaLama ?? '');
+
+                    if ($namaBaru !== '' && $namaBaru !== $namaLama) {
+                        $row->nama = $namaBaru;
+                        $row->save();
+                        $updated++;
+                    }
+                }
+            });
+        });
+
+        logAktivitas(
+            'Admin - Normalisasi Nama Siswa',
+            'Scope: ' . $scopeLabel . ' | Total diperiksa: ' . $total . ' | Berubah: ' . $updated . '.'
+        );
+
+        if ($updated === 0) {
+            return back()->with('warning', 'Data sudah di normalisasi sesuai Tittle case.');
+        }
+
+        return back()->with('success', 'berahasil normalisasi');
+    }
+
+    private function countNamaPerluNormalisasi(TahunAjaran $tahunAktif, ?int $kelasId = null, bool $belumKelas = false): int
+    {
+        $query = Siswa::query()
+            ->select(['id', 'nama'])
+            ->whereHas('registration', function ($q) use ($tahunAktif) {
+                $q->where('status', Registration::STATUS_PESERTA_DIDIK)
+                    ->where('tahun_ajaran_id', $tahunAktif->id);
+            });
+
+        if ($belumKelas) {
+            $query->whereNull('kelas_siswa_id');
+        } elseif (!empty($kelasId)) {
+            $query->where('kelas_siswa_id', $kelasId);
+        }
+
+        $count = 0;
+
+        $query->chunkById(200, function ($rows) use (&$count) {
+            foreach ($rows as $row) {
+                $namaLama = $row->nama;
+                $namaBaru = ui_title_case_name($namaLama, $namaLama ?? '');
+
+                if ($namaBaru !== '' && $namaBaru !== $namaLama) {
+                    $count++;
+                }
+            }
+        });
+
+        return $count;
+    }
+
     public function exportExcelKeuangan(Request $request)
     {
         $this->cleanupOldExportFiles(7);
@@ -460,6 +559,11 @@ class SiswaController extends Controller
         }
 
         $scopeCount = $siswa->total();
+        $scopeNormalizeCount = $this->countNamaPerluNormalisasi(
+            $tahunAktif,
+            !empty($kelasId) ? (int) $kelasId : null,
+            (bool) $filterBelumKelas
+        );
 
         $kelasList = KelasSiswa::query()
             ->withCount([
@@ -520,6 +624,7 @@ class SiswaController extends Controller
             'siswaBelumKelas',
             'scopeLabel',
             'scopeCount',
+            'scopeNormalizeCount',
             'isScopedKelas',
             'filterAktif',
             'resetQuery'
