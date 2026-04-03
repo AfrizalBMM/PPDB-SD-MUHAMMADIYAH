@@ -35,17 +35,16 @@
         </div>
 
         <!-- TOOLBAR -->
-        <div class="p-4 bg-slate-50">
-            <form id="filterForm" method="GET" class="flex flex-col gap-3 md:flex-row md:items-end md:justify-end">
-                <div class="w-full md:ml-auto md:w-auto md:flex md:items-end md:justify-end md:gap-3">
-                    <div class="relative w-full md:w-[320px] lg:w-[380px]">
-                        <input id="searchInput" type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari nama, no registrasi, atau data ibu"
-                            class="w-full rounded-lg border border-slate-300 pl-3 pr-9 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
+        <div class="p-4 pb-2 bg-slate-50">
+            <form id="filterForm" method="GET" class="flex flex-row flex-wrap items-end gap-2">
+                <div class="relative w-[220px] shrink-0">
+                    <input id="searchInput" type="text" name="search" value="{{ request('search') }}"
+                        placeholder="Cari nama, no registrasi, atau data ibu"
+                        class="w-full rounded-lg border border-slate-300 pl-3 pr-9 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
 
                 @php
                     $selectedPaymentStatuses = $paymentStatuses ?? (array) request('payment_statuses', []);
@@ -86,8 +85,8 @@
                     ];
 
                     $statusPpdbLabelMap = [
-                        1 => 'Calon Peserta Didik',
-                        2 => 'Peserta Didik',
+                        1 => 'Bakal Calon',
+                        2 => 'Calon Peserta Didik',
                         3 => 'Peserta Didik',
                     ];
 
@@ -98,7 +97,7 @@
                     $currentQuery = request()->query();
                 @endphp
 
-                <div class="flex gap-2 w-full md:w-auto md:shrink-0">
+                <div class="flex shrink-0 items-end gap-2">
                     <button
                         type="button"
                         onclick="location.reload()"
@@ -182,7 +181,7 @@
                     </div>
                 </div>
 
-                <div class="w-full flex flex-col gap-2 sm:flex-row sm:items-end md:w-auto md:justify-end md:shrink-0">
+                <div class="flex shrink-0 items-end gap-2">
                     <div class="flex flex-col">
                         <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Dari</label>
                         <input type="date" id="dateFromInput" name="date_from" value="{{ $selectedDateFrom }}" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
@@ -202,17 +201,17 @@
                         <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Status Peserta Didik</label>
                         <select id="statusPpdbSelect" name="status_ppdb" class="rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-400">
                             <option value="">Semua Status</option>
+                            <option value="1" {{ $selectedStatusPpdb === 1 ? 'selected' : '' }}>Bakal Calon</option>
                             <option value="2" {{ $selectedStatusPpdb === 2 ? 'selected' : '' }}>Calon Peserta Didik</option>
                             <option value="3" {{ $selectedStatusPpdb === 3 ? 'selected' : '' }}>Peserta Didik</option>
                         </select>
                     </div>
                 </div>
-                </div>
 
             </form>
 
             @if($activeFilterCount > 0)
-                <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                <div class="mt-1 flex flex-wrap items-center gap-1.5">
                     <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Filter Aktif:</span>
 
                     @foreach($selectedPaymentMap as $statusValue => $label)
@@ -623,7 +622,6 @@
                                                 url: @js(route('pendaftaran.terima-peserta', $item->id)),
                                                 nama: @js($item->nama),
                                                 nomorRegistrasi: @js(optional($item->registration)->nomor_registrasi ?? '-'),
-                                                canTerimaPendaftaran: @js($pendaftaranStatus === 'lunas'),
                                                 isSudahSiswa: @js($isSudahSiswa)
                                             })"
                                             class="flex w-full items-center gap-2.5 px-4 py-2 text-[11px] text-textPrimary transition-colors border-t border-gray-50 {{ $isSudahSiswa ? 'hover:bg-slate-50 hover:text-slate-700' : 'hover:bg-emerald-50 hover:text-emerald-700' }}"
@@ -1064,13 +1062,6 @@ function openTerimaPesertaModal(payload)
     if (payload?.isSudahSiswa === true) {
         if (typeof window.showGlobalToast === 'function') {
             window.showGlobalToast('info', 'Peserta ini sudah menjadi peserta didik.');
-        }
-        return;
-    }
-
-    if (payload?.canTerimaPendaftaran === false) {
-        if (typeof window.showGlobalToast === 'function') {
-            window.showGlobalToast('warning', 'Lunasi biaya jenis pendaftaran = pendaftaran');
         }
         return;
     }

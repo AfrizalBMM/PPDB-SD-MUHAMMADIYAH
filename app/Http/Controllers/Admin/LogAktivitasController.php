@@ -62,9 +62,9 @@ class LogAktivitasController extends Controller
     {
         $allowedRoles = ['superadmin', 'admin', 'keuangan', 'public'];
         $allowedKategori = ['pendaftaran', 'pembayaran', 'verifikasi', 'manajemen-log', 'lainnya'];
-        $perPage = (int) $request->input('per_page', 50);
+        $perPage = (int) $request->input('per_page', 10);
         if (!in_array($perPage, [10, 20, 50, 100], true)) {
-            $perPage = 50;
+            $perPage = 10;
         }
         $query = LogAktivitas::with('user');
 

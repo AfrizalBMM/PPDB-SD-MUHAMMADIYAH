@@ -130,12 +130,14 @@ function openEditPetugasModal(actionUrl, nama) {
     const modal = document.getElementById('modalEditPetugas');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeEditPetugasModal() {
     const modal = document.getElementById('modalEditPetugas');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    document.body.style.overflow = '';
 }
 </script>
 @endsection

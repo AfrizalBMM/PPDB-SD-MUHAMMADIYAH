@@ -18,11 +18,6 @@ class StatusPpdbService
             return;
         }
 
-        // Status Peserta Didik adalah status final dan tidak diturunkan otomatis.
-        if ((int) $siswa->registration->status === Registration::STATUS_PESERTA_DIDIK) {
-            return;
-        }
-
         $hasAcuan = Biaya::query()
             ->where('is_acuan_status_ppdb', true)
             ->exists();
@@ -53,6 +48,7 @@ class StatusPpdbService
             })
             ->exists();
 
+        // Status ditentukan ulang dari bukti pembayaran acuan yang masih tersisa.
         if ($hasRelevantTagihan && !$hasBelumLunas) {
             $targetStatus = Registration::STATUS_PESERTA_DIDIK;
         } elseif ($hasAnyPayment) {

@@ -33,6 +33,11 @@ class BiayaController extends Controller
 
     public function store(Request $request)
     {
+        $nominalDigits = preg_replace('/\D/', '', (string) $request->input('nominal'));
+        $request->merge([
+            'nominal' => $nominalDigits === '' ? null : (int) $nominalDigits,
+        ]);
+
         $request->validate([
             'jenis_biaya'   => 'required|in:pendaftaran,daftar_ulang,udp',
             'kategori'      => 'required|string|max:100',
@@ -69,6 +74,11 @@ class BiayaController extends Controller
 
     public function update(Request $request, Biaya $biaya)
     {
+        $nominalDigits = preg_replace('/\D/', '', (string) $request->input('nominal'));
+        $request->merge([
+            'nominal' => $nominalDigits === '' ? null : (int) $nominalDigits,
+        ]);
+
         $request->validate([
             'jenis_biaya'   => 'required|in:pendaftaran,daftar_ulang,udp',
             'kategori'      => 'required|string|max:100',

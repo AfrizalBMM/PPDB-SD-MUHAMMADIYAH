@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\PendaftarExport;
 use App\Http\Controllers\Controller;
+use App\Models\Biaya;
 use App\Models\LogAktivitas;
+use App\Models\Pembayaran;
 use App\Models\Registration;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
@@ -15,6 +17,37 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PendaftarController extends Controller
 {
+    private function validateAcuanPaymentForPromotion(Siswa $siswa): ?string
+    {
+        $registration = $this->ensureRegistration($siswa);
+        $tahunAjaranId = (int) ($registration->tahun_ajaran_id ?? 0);
+
+        $acuanBiayaIds = Biaya::query()
+            ->where('is_acuan_status_ppdb', true)
+            ->when($tahunAjaranId > 0, function ($q) use ($tahunAjaranId) {
+                $q->where('tahun_ajaran_id', $tahunAjaranId);
+            })
+            ->pluck('id');
+
+        if ($acuanBiayaIds->isEmpty()) {
+            return 'Belum ada biaya acuan status PPDB untuk tahun ajaran siswa ini.';
+        }
+
+        $hasRiwayatBayarAcuan = Pembayaran::query()
+            ->whereHas('tagihan', function ($q) use ($siswa, $acuanBiayaIds) {
+                $q->where('siswa_id', $siswa->id)
+                    ->where('total', '>', 0)
+                    ->whereIn('biaya_id', $acuanBiayaIds);
+            })
+            ->exists();
+
+        if (!$hasRiwayatBayarAcuan) {
+            return 'Siswa belum memiliki riwayat pembayaran pada biaya acuan status PPDB.';
+        }
+
+        return null;
+    }
+
     private function ensureRegistration(Siswa $siswa)
     {
         if (!$siswa->registration) {
@@ -31,6 +64,11 @@ class PendaftarController extends Controller
 
     private function resolveFilterContext(Request $request): array
     {
+        $validatedDateRange = validator($request->only(['date_from', 'date_to']), [
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ])->validate();
+
         $validStatuses = [
             Registration::STATUS_BAKAL_CALON,
             Registration::STATUS_CALON,
@@ -88,6 +126,16 @@ class PendaftarController extends Controller
             });
         }
 
+        $dateFrom = $validatedDateRange['date_from'] ?? null;
+        $dateTo = $validatedDateRange['date_to'] ?? null;
+
+        if ($dateFrom || $dateTo) {
+            $query->whereHas('registration', function ($q) use ($dateFrom, $dateTo) {
+                $q->when($dateFrom, fn ($q2) => $q2->whereDate('tanggal_daftar', '>=', $dateFrom))
+                    ->when($dateTo, fn ($q2) => $q2->whereDate('tanggal_daftar', '<=', $dateTo));
+            });
+        }
+
         if ($paymentStatus === 'lunas') {
             $query->whereHas('tagihan', function ($q) {
                 $q->where('total', '>', 0);
@@ -120,6 +168,8 @@ class PendaftarController extends Controller
                 'jenis_kelamin' => $jenisKelamin,
                 'payment_status' => $paymentStatus,
                 'tahun_ajaran_id' => $tahunAjaranId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
                 'order' => $order,
             ],
             'tahunAjaranOptions' => TahunAjaran::query()
@@ -319,6 +369,11 @@ class PendaftarController extends Controller
 
         if ($beforeStatus === Registration::STATUS_PESERTA_DIDIK) {
             return back()->with('success', 'Data sudah berstatus Peserta Didik.');
+        }
+
+        $validationError = $this->validateAcuanPaymentForPromotion($siswa);
+        if (!is_null($validationError)) {
+            return back()->with('error', $validationError);
         }
 
         $registration->status = Registration::STATUS_PESERTA_DIDIK;

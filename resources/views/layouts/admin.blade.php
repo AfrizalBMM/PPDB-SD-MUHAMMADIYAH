@@ -12,6 +12,14 @@
 
     <style>
         [x-cloak] { display: none !important; }
+            body.sidebar-collapsed #sidebar {
+                display: none !important;
+            }
+
+            body.sidebar-collapsed #adminContent {
+                margin-left: 0 !important;
+            }
+
     </style>
 </head>
 
@@ -36,20 +44,35 @@
     </aside>
 
     {{-- CONTENT --}}
-    <div class="flex-1 flex flex-col md:ml-64">
+    <div id="adminContent" class="flex-1 flex flex-col md:ml-64 transition-[margin] duration-200">
 
         {{-- HEADER --}}
         <header class="bg-white shadow-sm border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-            <!-- Tombol sidebar -->
-            <button onclick="toggleSidebar()" class="md:hidden text-xl text-textSecondary hover:text-primary transition-colors">☰</button>
+            <div class="flex items-center gap-3 min-w-0">
+                <button
+                    type="button"
+                    id="sidebarCollapseBtn"
+                    onclick="toggleSidebarCollapse()"
+                    class="hidden md:inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white p-2 text-slate-700 hover:bg-slate-100 transition-colors"
+                    aria-label="Minimize sidebar"
+                    title="Minimize sidebar"
+                >
+                    <svg id="sidebarCollapseBtnIcon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
 
-            <!-- Judul halaman -->
-            <h1 class="font-heading font-bold text-2xl text-textPrimary">
-                @yield('page-title','Dashboard')
-            </h1>
+                <!-- Tombol sidebar mobile -->
+                <button onclick="toggleSidebar()" class="md:hidden text-xl text-textSecondary hover:text-primary transition-colors">☰</button>
+
+                <!-- Judul halaman -->
+                <h1 class="font-heading font-bold text-2xl text-textPrimary truncate">
+                    @yield('page-title','Dashboard')
+                </h1>
+            </div>
 
             <!-- Waktu & user -->
-            <div class="flex items-center space-x-6 text-sm text-slate-600">
+            <div class="flex items-center space-x-3 text-sm text-slate-600">
                 <!-- Label + tanggal & waktu live dengan badge -->
                 <span class="hidden lg:flex items-center space-x-1">
                     <span id="live-clock" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium border border-slate-200"></span>
@@ -156,7 +179,7 @@
 </div>
 
 {{-- MODAL LOGOUT --}}
-<div id="logoutModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm">
+<div id="logoutModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-[270] p-4 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-in fade-in zoom-in duration-200">
         <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -212,6 +235,35 @@ function closeDeleteModal(){
     document.getElementById('deleteModal').classList.add('hidden');
 }
 
+function updateSidebarCollapseButton(isCollapsed) {
+    const btn = document.getElementById('sidebarCollapseBtn');
+    const icon = document.getElementById('sidebarCollapseBtnIcon');
+
+    if (!btn || !icon) {
+        return;
+    }
+
+    if (isCollapsed) {
+        btn.setAttribute('aria-label', 'Expand sidebar');
+        btn.setAttribute('title', 'Expand sidebar');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />';
+    } else {
+        btn.setAttribute('aria-label', 'Minimize sidebar');
+        btn.setAttribute('title', 'Minimize sidebar');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />';
+    }
+}
+
+function setSidebarCollapsed(collapsed) {
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0');
+    updateSidebarCollapseButton(collapsed);
+}
+
+function toggleSidebarCollapse() {
+    setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+}
+
 document.querySelectorAll('input[name="nominal"]').forEach(el => {
     el.addEventListener('input', function(){
         this.value = this.value.replace(/\D/g,'');
@@ -223,6 +275,7 @@ function openModal(id) {
     if(modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 }
@@ -232,11 +285,15 @@ function closeModal(id) {
     if(modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        modal.style.display = '';
         document.body.style.overflow = '';
     }
 }
 
 document.addEventListener("DOMContentLoaded", function(){
+
+    const savedSidebarState = localStorage.getItem('adminSidebarCollapsed');
+    setSidebarCollapsed(savedSidebarState === '1');
 
     // ===== ALERT SUKSES OTOMATIS HILANG =====
     document.querySelectorAll('.alert-success').forEach(alert => {

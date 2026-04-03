@@ -10,56 +10,65 @@
     role: '{{ request('role') }}',
     kategori: '{{ request('kategori') }}',
     date: '{{ request('tanggal') }}'
-}" class="space-y-6">
+}" class="mx-auto max-w-7xl space-y-6">
 
-    {{-- Header & Stats (Optional) --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h2 class="text-xl font-bold text-textPrimary text-center md:text-left">Aktivitas Sistem</h2>
-            <p class="text-textSecondary text-sm">Pantau jejak aktivitas panitia public dan user internal secara real-time.</p>
+    <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-cyan-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-800">Log Aktivitas Sistem</h2>
+                <p class="mt-1 text-sm text-slate-600">Pantau jejak aktivitas user internal dan public secara terpusat.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">Total: {{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</span>
+                <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Hari Ini: {{ number_format($stats['today'] ?? 0, 0, ',', '.') }}</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Public: {{ number_format($stats['public'] ?? 0, 0, ',', '.') }}</span>
+                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Internal: {{ number_format($stats['staff'] ?? 0, 0, ',', '.') }}</span>
+            </div>
         </div>
+
         @if(auth()->user()->role === 'superadmin')
-        <button @click="showDeleteAll = true" class="btn-danger flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Bersihkan Log
-        </button>
+        <div class="mt-4 flex justify-end">
+            <button @click="showDeleteAll = true" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">
+                Bersihkan Log
+            </button>
+        </div>
         @endif
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="card !p-4">
-            <p class="text-xs text-textSecondary">Total Log</p>
-            <p class="mt-1 text-2xl font-extrabold text-textPrimary">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs text-slate-500">Total Log</p>
+            <p class="mt-1 text-2xl font-extrabold text-slate-800">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
         </div>
-        <div class="card !p-4">
-            <p class="text-xs text-textSecondary">Log Hari Ini</p>
-            <p class="mt-1 text-2xl font-extrabold text-primary">{{ number_format($stats['today'] ?? 0, 0, ',', '.') }}</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs text-slate-500">Log Hari Ini</p>
+            <p class="mt-1 text-2xl font-extrabold text-blue-700">{{ number_format($stats['today'] ?? 0, 0, ',', '.') }}</p>
         </div>
-        <div class="card !p-4">
-            <p class="text-xs text-textSecondary">Aktivitas Public</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs text-slate-500">Aktivitas Public</p>
             <p class="mt-1 text-2xl font-extrabold text-slate-700">{{ number_format($stats['public'] ?? 0, 0, ',', '.') }}</p>
         </div>
-        <div class="card !p-4">
-            <p class="text-xs text-textSecondary">Aktivitas Internal</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs text-slate-500">Aktivitas Internal</p>
             <p class="mt-1 text-2xl font-extrabold text-amber-700">{{ number_format($stats['staff'] ?? 0, 0, ',', '.') }}</p>
         </div>
     </div>
 
     {{-- Filters --}}
-    <div class="card p-4">
-        <form action="{{ route('log.aktivitas') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
-            <div class="flex-1 w-full space-y-1.5">
+    <div class="card">
+        <form action="{{ route('log.aktivitas') }}" method="GET" class="grid gap-4 md:grid-cols-12 md:items-end">
+            <div class="space-y-1.5 md:col-span-4">
                 <label class="label">Pencarian</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-muted">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </span>
                     <input type="text" name="search" x-model="search" placeholder="Cari user, aksi, atau keterangan..." class="input pl-10" value="{{ request('search') }}">
                 </div>
             </div>
-            <div class="w-full md:w-48 space-y-1.5">
+
+            <div class="space-y-1.5 md:col-span-2">
                 <label class="label">Role</label>
                 <select name="role" x-model="role" class="input">
                     <option value="">Semua Role</option>
@@ -69,7 +78,8 @@
                     <option value="public">Public</option>
                 </select>
             </div>
-            <div class="w-full md:w-56 space-y-1.5">
+
+            <div class="space-y-1.5 md:col-span-3">
                 <label class="label">Kategori Aksi</label>
                 <select name="kategori" x-model="kategori" class="input">
                     <option value="">Semua Kategori</option>
@@ -80,14 +90,16 @@
                     <option value="lainnya">Lainnya</option>
                 </select>
             </div>
-            <div class="w-full md:w-48 space-y-1.5">
+
+            <div class="space-y-1.5 md:col-span-2">
                 <label class="label">Tanggal</label>
                 <input type="date" name="tanggal" x-model="date" class="input" value="{{ request('tanggal') }}">
             </div>
-            <div class="flex gap-2">
-                <button type="submit" class="btn-primary px-6">Filter</button>
-                <a href="{{ route('log.aktivitas') }}" class="btn-secondary px-4" title="Reset">
-                    <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+
+            <div class="flex gap-2 md:col-span-1 md:justify-end">
+                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">Filter</button>
+                <a href="{{ route('log.aktivitas') }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" title="Reset">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </a>
             </div>
         </form>
@@ -95,35 +107,40 @@
 
     {{-- Table --}}
     <div class="card overflow-hidden !p-0">
+        <div class="border-b border-slate-200 px-5 py-4">
+            <h3 class="text-base font-semibold text-slate-800">Daftar Log Aktivitas</h3>
+            <p class="mt-1 text-xs text-slate-500">Riwayat aktivitas user berdasarkan waktu, kategori aksi, dan keterangan.</p>
+        </div>
+
         <div class="overflow-x-auto w-full">
-            <table class="table w-full">
-                <thead>
+            <table class="w-full text-sm">
+                <thead class="bg-slate-100 text-left text-sm font-semibold text-slate-700">
                     <tr>
-                        <th class="w-32">Waktu</th>
-                        <th class="w-48">Pengguna</th>
-                        <th class="w-48">Aksi</th>
-                        <th>Keterangan</th>
-                        <th class="w-32 text-right">IP</th>
+                        <th class="w-32 px-4 py-3">Waktu</th>
+                        <th class="w-48 px-4 py-3">Pengguna</th>
+                        <th class="w-52 px-4 py-3">Aksi</th>
+                        <th class="px-4 py-3">Keterangan</th>
+                        <th class="w-36 px-4 py-3 text-right">IP</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-border">
+                <tbody class="divide-y">
                     @forelse($logs as $log)
-                    <tr>
-                        <td>
-                            <div class="text-textSecondary text-[13px] whitespace-nowrap">
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3">
+                            <div class="whitespace-nowrap text-[13px] text-slate-600">
                                 {{ $log->created_at->timezone('Asia/Jakarta')->format('d M Y') }}
                                 <div class="text-[11px] opacity-60">{{ $log->created_at->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
                             </div>
                         </td>
-                        <td>
+                        <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold uppercase text-blue-700">
                                     {{ substr(optional($log->user)->name ?? 'P', 0, 1) }}
                                 </div>
-                                <span class="font-medium text-textPrimary truncate">{{ optional($log->user)->name ?? 'Public / Guest' }}</span>
+                                <span class="truncate font-medium text-slate-800">{{ optional($log->user)->name ?? 'Public / Guest' }}</span>
                             </div>
                         </td>
-                        <td>
+                        <td class="px-4 py-3">
                             @php
                                 $aksi = (string) $log->aksi;
                                 $aksiLower = strtolower($aksi);
@@ -150,10 +167,10 @@
                                 <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border {{ $kategoriClass }}">
                                     {{ $kategoriLabel }}
                                 </span>
-                                <div class="font-bold text-primary leading-snug">{{ $aksi }}</div>
+                                <div class="font-bold leading-snug text-blue-700">{{ $aksi }}</div>
                             </div>
                         </td>
-                        <td class="max-w-xs md:max-w-md lg:max-w-lg">
+                        <td class="max-w-xs px-4 py-3 md:max-w-md lg:max-w-lg">
                             @php
                                 $keterangan = trim((string) $log->keterangan);
                                 $keterangan = $keterangan !== '' ? $keterangan : '-';
@@ -161,7 +178,7 @@
                             @endphp
 
                             @if(count($keteranganRows) > 1)
-                                <ul class="text-textSecondary text-xs leading-relaxed space-y-1">
+                                <ul class="space-y-1 text-xs leading-relaxed text-slate-600">
                                     @foreach($keteranganRows as $row)
                                         @if(trim($row) !== '')
                                             <li>• {{ trim($row) }}</li>
@@ -169,12 +186,12 @@
                                     @endforeach
                                 </ul>
                             @else
-                                <p class="text-textSecondary text-sm leading-relaxed" title="{{ $keterangan }}">
+                                <p class="text-sm leading-relaxed text-slate-600" title="{{ $keterangan }}">
                                     {{ $keterangan }}
                                 </p>
                             @endif
                         </td>
-                        <td class="text-right text-textSecondary text-xs font-mono tracking-tighter">
+                        <td class="px-4 py-3 text-right text-xs font-mono tracking-tighter text-slate-500">
                             {{ $log->ip_address }}
                         </td>
                     </tr>
@@ -193,8 +210,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if($logs->hasPages())
-        <div class="p-6 border-t border-border bg-background/30">
+        <div class="border-t border-slate-200 px-4 py-3">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
                     @foreach(request()->except(['page', 'per_page']) as $key => $value)
@@ -203,15 +219,16 @@
                     <label for="perPageLogs">Tampilkan</label>
                     <select id="perPageLogs" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
                         @foreach([10,20,50,100] as $size)
-                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 50) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                            <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 10) === $size ? 'selected' : '' }}>{{ $size }}</option>
                         @endforeach
                     </select>
                     <span>data</span>
                 </form>
-                {{ $logs->links() }}
+                <div>
+                    {{ $logs->links() }}
+                </div>
             </div>
         </div>
-        @endif
     </div>
 
     {{-- Modal Delete All --}}

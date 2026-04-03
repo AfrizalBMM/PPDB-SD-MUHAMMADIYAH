@@ -22,6 +22,11 @@ class VoucherController extends Controller
 
     public function store(Request $request)
     {
+        $diskonDigits = preg_replace('/\D/', '', (string) $request->input('diskon_nominal'));
+        $request->merge([
+            'diskon_nominal' => $diskonDigits === '' ? null : (int) $diskonDigits,
+        ]);
+
         $request->validate([
             'nama'            => 'required|string|max:150',
             'jenis_biaya'     => 'required|in:pendaftaran,daftar_ulang,udp',

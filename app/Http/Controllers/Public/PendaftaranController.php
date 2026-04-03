@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Biaya;
 use App\Models\PasswordPanitia;
+use App\Models\Pembayaran;
 use App\Models\Registration;
 use App\Models\Siswa;
-use App\Models\TagihanSiswa;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +15,42 @@ use Illuminate\Support\Facades\Hash;
 
 class PendaftaranController extends Controller
 {
+    private function validasiRiwayatPembayaranAcuan(Siswa $siswa): array
+    {
+        $siswa->loadMissing('registration');
+
+        if (!$siswa->registration) {
+            return [false, 'Data registrasi siswa tidak ditemukan.'];
+        }
+
+        $tahunAjaranId = (int) ($siswa->registration->tahun_ajaran_id ?? 0);
+
+        $acuanBiayaIds = Biaya::query()
+            ->where('is_acuan_status_ppdb', true)
+            ->when($tahunAjaranId > 0, function ($q) use ($tahunAjaranId) {
+                $q->where('tahun_ajaran_id', $tahunAjaranId);
+            })
+            ->pluck('id');
+
+        if ($acuanBiayaIds->isEmpty()) {
+            return [false, 'Belum ada biaya acuan status PPDB untuk tahun ajaran siswa ini.'];
+        }
+
+        $hasRiwayatBayarAcuan = Pembayaran::query()
+            ->whereHas('tagihan', function ($q) use ($siswa, $acuanBiayaIds) {
+                $q->where('siswa_id', $siswa->id)
+                    ->where('total', '>', 0)
+                    ->whereIn('biaya_id', $acuanBiayaIds);
+            })
+            ->exists();
+
+        if (!$hasRiwayatBayarAcuan) {
+            return [false, 'Siswa belum memiliki riwayat pembayaran pada biaya acuan status PPDB.'];
+        }
+
+        return [true, 'ok'];
+    }
+
     private function formatFilterList(array $values): string
     {
         return empty($values) ? '-' : implode(', ', $values);
@@ -419,23 +455,23 @@ class PendaftaranController extends Controller
             ], 422);
         }
 
-        $pendaftaranBelumLunas = TagihanSiswa::query()
-            ->where('siswa_id', $siswa->id)
-            ->where('total', '>', 0)
-            ->where('status', '!=', 'lunas')
-            ->whereHas('biaya', function ($q) {
-                $q->where('jenis_biaya', 'pendaftaran');
-            })
-            ->exists();
-
-        if ($pendaftaranBelumLunas) {
+        $statusSebelumnya = (int) ($siswa->registration->status ?? Registration::STATUS_BAKAL_CALON);
+        if ($statusSebelumnya === Registration::STATUS_PESERTA_DIDIK) {
             return response()->json([
-                'success' => false,
-                'message' => 'Lunasi biaya jenis pendaftaran = pendaftaran',
-            ], 422);
+                'success' => true,
+                'message' => 'Data sudah berstatus Peserta Didik.',
+                'status' => Registration::STATUS_PESERTA_DIDIK,
+            ]);
         }
 
-        $statusSebelumnya = (int) ($siswa->registration->status ?? Registration::STATUS_BAKAL_CALON);
+        [$bolehJadikanPesertaDidik, $pesanValidasi] = $this->validasiRiwayatPembayaranAcuan($siswa);
+
+        if (!$bolehJadikanPesertaDidik) {
+            return response()->json([
+                'success' => false,
+                'message' => $pesanValidasi,
+            ], 422);
+        }
 
         if ($statusSebelumnya !== Registration::STATUS_PESERTA_DIDIK) {
             $siswa->registration->status = Registration::STATUS_PESERTA_DIDIK;

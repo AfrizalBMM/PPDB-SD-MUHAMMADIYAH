@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
+use App\Services\StatusPpdbService;
 use Illuminate\Validation\ValidationException;
 
 class PembayaranController extends Controller
 {
+    public function __construct(private readonly StatusPpdbService $statusPpdbService)
+    {
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -46,6 +51,7 @@ class PembayaranController extends Controller
 
             // update status via helper model
             $tagihan->refreshStatus();
+            $this->statusPpdbService->syncBySiswa($tagihan->siswa);
 
             logAktivitas(
                 'Pembayaran',

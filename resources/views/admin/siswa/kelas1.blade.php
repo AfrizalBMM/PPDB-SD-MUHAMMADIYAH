@@ -240,11 +240,49 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <div x-data="{ open: false }" class="relative inline-block text-left">
+                                <div
+                                    x-data="{
+                                        open: false,
+                                        menuTop: 0,
+                                        menuLeft: 0,
+                                        openUp: false,
+                                        toggleMenu(event) {
+                                            if (this.open) {
+                                                this.open = false;
+                                                return;
+                                            }
+
+                                            const rect = event.currentTarget.getBoundingClientRect();
+                                            this.open = true;
+
+                                            this.$nextTick(() => {
+                                                const menuWidth = this.$refs.actionMenu ? this.$refs.actionMenu.offsetWidth : 192;
+                                                const menuHeight = this.$refs.actionMenu ? this.$refs.actionMenu.offsetHeight : 260;
+                                                let left = rect.left;
+
+                                                if (left + menuWidth > window.innerWidth - 12) {
+                                                    left = window.innerWidth - menuWidth - 12;
+                                                }
+
+                                                if (left < 12) {
+                                                    left = 12;
+                                                }
+
+                                                this.menuLeft = left;
+                                                this.openUp = (window.innerHeight - rect.bottom) < (menuHeight + 12);
+                                                this.menuTop = this.openUp
+                                                    ? Math.max(12, rect.top - menuHeight - 8)
+                                                    : rect.bottom + 8;
+                                            });
+                                        }
+                                    }"
+                                    @scroll.window="open = false"
+                                    @resize.window="open = false"
+                                    class="inline-block text-left"
+                                >
                                     <button
                                         type="button"
-                                        @click="open = !open"
-                                        @click.outside="open = false"
+                                        @click="toggleMenu($event)"
                                         class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-blue-600 focus:outline-none"
                                     >
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,57 +290,64 @@
                                         </svg>
                                     </button>
 
-                                    <div
-                                        x-show="open"
-                                        x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="transform opacity-0 scale-95"
-                                        x-transition:enter-end="transform opacity-100 scale-100"
-                                        class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                    >
-                                        <div class="p-1.5">
-                                            <a href="{{ route('pendaftar.show', optional($item->registration)->id ?? 1) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600">
-                                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                Detail
-                                            </a>
-                                            <a href="{{ route('keuangan.index', ['q' => optional($item->registration)->nomor_registrasi]) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600">
-                                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                                Keuangan
-                                            </a>
-                                            <button
-                                                type="button"
-                                                @click="open = false; openAssignKelasModal({
-                                                    actionUrl: @js(route('siswa.assign-kelas', $item->id)),
-                                                    namaSiswa: @js($item->nama),
-                                                    nomorRegistrasi: @js(optional($item->registration)->nomor_registrasi ?? '-'),
-                                                    currentKelasId: @js((int) ($item->kelas_siswa_id ?? 0))
-                                                })"
-                                                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-                                            >
-                                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                                </svg>
-                                                Ubah Kelas
-                                            </button>
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="open"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="transform opacity-0 scale-95"
+                                            x-transition:enter-end="transform opacity-100 scale-100"
+                                            @click.away="open = false"
+                                            @keydown.escape.window="open = false"
+                                            x-ref="actionMenu"
+                                            class="fixed z-[200] w-48 origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                            :style="`top: ${menuTop}px; left: ${menuLeft}px;`"
+                                            x-cloak
+                                        >
+                                            <div class="p-1.5">
+                                                <a href="{{ route('pendaftar.show', optional($item->registration)->id ?? 1) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600">
+                                                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    Detail
+                                                </a>
+                                                <a href="{{ route('keuangan.index', ['q' => optional($item->registration)->nomor_registrasi]) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600">
+                                                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                    Keuangan
+                                                </a>
+                                                <button
+                                                    type="button"
+                                                    @click="open = false; openAssignKelasModal({
+                                                        actionUrl: @js(route('siswa.assign-kelas', $item->id)),
+                                                        namaSiswa: @js($item->nama),
+                                                        nomorRegistrasi: @js(optional($item->registration)->nomor_registrasi ?? '-'),
+                                                        currentKelasId: @js((int) ($item->kelas_siswa_id ?? 0))
+                                                    })"
+                                                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600"
+                                                >
+                                                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                    </svg>
+                                                    Ubah Kelas
+                                                </button>
 
-                                            @if($item->kelasSiswa)
-                                                <div class="my-1 border-t border-slate-100"></div>
-                                                <form method="POST" action="{{ route('siswa.remove-kelas', $item->id) }}" onsubmit="return window.globalConfirmSubmit(this, 'Keluarkan peserta didik ini dari kelas?', { title: 'Konfirmasi Keluarkan Peserta Didik' })">
-                                                    @csrf
-                                                    <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50">
-                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                        </svg>
-                                                        Keluarkan
-                                                    </button>
-                                                </form>
-                                            @endif
+                                                @if($item->kelasSiswa)
+                                                    <div class="my-1 border-t border-slate-100"></div>
+                                                    <form method="POST" action="{{ route('siswa.remove-kelas', $item->id) }}" onsubmit="return window.globalConfirmSubmit(this, 'Keluarkan peserta didik ini dari kelas?', { title: 'Konfirmasi Keluarkan Peserta Didik' })">
+                                                        @csrf
+                                                        <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50">
+                                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                            </svg>
+                                                            Keluarkan
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </div>
+                                    </template>
                                 </div>
                             </td>
                         </tr>

@@ -3,6 +3,17 @@
 @section('page-title', 'Pendaftar')
 
 @section('content')
+
+@php
+    $totalPendaftar = $siswa->total();
+    $totalLaki = $siswa->getCollection()->where('jenis_kelamin', 'laki-laki')->count();
+    $totalPerempuan = $siswa->getCollection()->where('jenis_kelamin', 'perempuan')->count();
+    $totalLunas = $siswa->getCollection()->filter(function($s) {
+        $tagihanAktif = $s->tagihan->filter(fn($t) => (float) $t->total > 0);
+        return $tagihanAktif->isNotEmpty() && $tagihanAktif->every(fn($t) => $t->status === 'lunas');
+    })->count();
+@endphp
+
 <div x-data="{
         openFilter: false,
         openExport: false,
@@ -18,179 +29,187 @@
             this.quickEditNik = data.nik || '';
             this.quickEditNoKk = data.noKk || '';
             this.quickEditJenisKelamin = data.jenisKelamin || 'laki-laki';
+            this.openFilter = false;
+            this.openExport = false;
             this.openQuickEdit = true;
-        },
-        async copyPhone(value) {
-            if (!value) {
-                return;
-            }
-
-            const text = String(value).trim();
-            if (!text) {
-                return;
-            }
-
-            try {
-                if (navigator.clipboard && window.isSecureContext) {
-                    await navigator.clipboard.writeText(text);
-                } else {
-                    const textarea = document.createElement('textarea');
-                    textarea.value = text;
-                    textarea.style.position = 'fixed';
-                    textarea.style.left = '-9999px';
-                    document.body.appendChild(textarea);
-                    textarea.focus();
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                }
-
-                if (typeof window.showGlobalToast === 'function') {
-                    window.showGlobalToast('success', 'Nomor HP berhasil disalin');
-                }
-            } catch (error) {
-                if (typeof window.showGlobalToast === 'function') {
-                    window.showGlobalToast('danger', 'Gagal menyalin nomor HP');
-                }
-            }
         }
-    }" class="space-y-6">
+    }" class="mx-auto max-w-7xl space-y-6">
 
-    <div class="card relative z-30 overflow-visible">
+    <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-blue-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-800">Daftar Pendaftar</h2>
+                <p class="mt-1 text-sm text-slate-600">Pantau seluruh pendaftar, filter data, dan lakukan aksi cepat.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">Total: {{ number_format($totalPendaftar) }}</span>
+                <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Laki-laki: {{ number_format($totalLaki) }}</span>
+                <span class="inline-flex items-center rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700">Perempuan: {{ number_format($totalPerempuan) }}</span>
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Lunas: {{ number_format($totalLunas) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-0 overflow-visible">
         @php
             $activeFilterCount = (!empty($filters['status']) ? 1 : 0)
                 + (!empty($filters['payment_status']) ? 1 : 0)
                 + (!empty($filters['tahun_ajaran_id']) ? 1 : 0)
                 + (!empty($filters['jenis_kelamin']) ? 1 : 0)
+                + (!empty($filters['date_from']) ? 1 : 0)
+                + (!empty($filters['date_to']) ? 1 : 0)
                 + (($filters['order'] ?? 'terbaru') === 'terlama' ? 1 : 0);
         @endphp
-
-        <form method="GET" class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div class="w-full md:max-w-xl">
-                <input
-                    name="q"
-                    value="{{ $filters['q'] ?? '' }}"
-                    class="input"
-                    placeholder="Cari nama, NIK, atau no registrasi">
-            </div>
-
-            <div class="flex items-stretch gap-2 w-full md:w-auto md:shrink-0">
-                <div class="relative w-full md:w-auto">
-                    <button
-                        type="button"
-                        @click="openFilter = !openFilter; if (openFilter) openExport = false"
-                        class="w-full md:w-auto inline-flex items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                        <span>Filter</span>
-                        @if($activeFilterCount > 0)
-                            <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
-                        @endif
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openFilter ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        <form method="GET" class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between px-5 py-4 border-b border-slate-200">
+            <div class="flex flex-col gap-2 md:flex-row md:items-end md:gap-3 w-full">
+                <div class="relative w-full md:w-72">
+                    <input
+                        name="q"
+                        value="{{ $filters['q'] ?? '' }}"
+                        class="input w-full pl-10"
+                        placeholder="Cari nama, NIK, atau no registrasi">
+                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                    </button>
-
-                    <div
-                        x-show="openFilter"
-                        x-transition
-                        @click.away="openFilter = false"
-                        class="absolute right-0 mt-2 w-full md:w-[360px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl z-40"
-                    >
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status PPDB</label>
-                                <select name="status" class="input mt-1">
-                                    <option value="">Semua</option>
-                                    <option value="1" {{ (int) ($filters['status'] ?? 0) === 1 ? 'selected' : '' }}>Calon Peserta Didik</option>
-                                    <option value="2" {{ (int) ($filters['status'] ?? 0) === 2 ? 'selected' : '' }}>Peserta Didik</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status Pembayaran</label>
-                                <select name="payment_status" class="input mt-1">
-                                    <option value="">Semua</option>
-                                    <option value="lunas" {{ ($filters['payment_status'] ?? '') === 'lunas' ? 'selected' : '' }}>Lunas</option>
-                                    <option value="belum_lunas" {{ ($filters['payment_status'] ?? '') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
-                                    <option value="belum_ada_tagihan" {{ ($filters['payment_status'] ?? '') === 'belum_ada_tagihan' ? 'selected' : '' }}>Belum Ada Tagihan</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Tahun Ajaran</label>
-                                <select name="tahun_ajaran_id" class="input mt-1">
-                                    <option value="">Semua</option>
-                                    @foreach($tahunAjaranOptions as $tahun)
-                                        <option value="{{ $tahun->id }}" {{ (int) ($filters['tahun_ajaran_id'] ?? 0) === (int) $tahun->id ? 'selected' : '' }}>
-                                            {{ $tahun->nama }}{{ $tahun->aktif ? ' (Aktif)' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Jenis Kelamin</label>
-                                <select name="jenis_kelamin" class="input mt-1">
-                                    <option value="">Semua</option>
-                                    <option value="laki-laki" {{ ($filters['jenis_kelamin'] ?? '') === 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                    <option value="perempuan" {{ ($filters['jenis_kelamin'] ?? '') === 'perempuan' ? 'selected' : '' }}>Perempuan</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Urutan</label>
-                                <select name="order" class="input mt-1">
-                                    <option value="terbaru" {{ ($filters['order'] ?? 'terbaru') === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                                    <option value="terlama" {{ ($filters['order'] ?? '') === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                                </select>
-                            </div>
-
-                            <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
-                                <a href="{{ route('pendaftar.index') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100">Reset</a>
-                                <button type="submit" class="w-1/2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Terapkan</button>
+                    </span>
+                </div>
+                <div class="flex items-end gap-2">
+                    <div class="relative">
+                        <button
+                            type="button"
+                            @click="openFilter = !openFilter; if (openFilter) openExport = false"
+                            class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                            <span>Filter</span>
+                            @if($activeFilterCount > 0)
+                                <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
+                            @endif
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openFilter ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div
+                            x-show="openFilter"
+                            x-cloak
+                            x-transition
+                            @click.away="openFilter = false"
+                            class="absolute right-0 mt-2 w-[340px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl z-40"
+                        >
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status PPDB</label>
+                                    <select name="status" class="input mt-1">
+                                        <option value="">Semua</option>
+                                        <option value="1" {{ (int) ($filters['status'] ?? 0) === 1 ? 'selected' : '' }}>Bakal Calon</option>
+                                        <option value="2" {{ (int) ($filters['status'] ?? 0) === 2 ? 'selected' : '' }}>Calon Peserta Didik</option>
+                                        <option value="3" {{ (int) ($filters['status'] ?? 0) === 3 ? 'selected' : '' }}>Peserta Didik</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status Pembayaran</label>
+                                    <select name="payment_status" class="input mt-1">
+                                        <option value="">Semua</option>
+                                        <option value="lunas" {{ ($filters['payment_status'] ?? '') === 'lunas' ? 'selected' : '' }}>Lunas</option>
+                                        <option value="belum_lunas" {{ ($filters['payment_status'] ?? '') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                                        <option value="belum_ada_tagihan" {{ ($filters['payment_status'] ?? '') === 'belum_ada_tagihan' ? 'selected' : '' }}>Belum Ada Tagihan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Tahun Ajaran</label>
+                                    <select name="tahun_ajaran_id" class="input mt-1">
+                                        <option value="">Semua</option>
+                                        @foreach($tahunAjaranOptions as $tahun)
+                                            <option value="{{ $tahun->id }}" {{ (int) ($filters['tahun_ajaran_id'] ?? 0) === (int) $tahun->id ? 'selected' : '' }}>
+                                                {{ $tahun->nama }}{{ $tahun->aktif ? ' (Aktif)' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Jenis Kelamin</label>
+                                    <select name="jenis_kelamin" class="input mt-1">
+                                        <option value="">Semua</option>
+                                        <option value="laki-laki" {{ ($filters['jenis_kelamin'] ?? '') === 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                        <option value="perempuan" {{ ($filters['jenis_kelamin'] ?? '') === 'perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Urutan</label>
+                                    <select name="order" class="input mt-1">
+                                        <option value="terbaru" {{ ($filters['order'] ?? 'terbaru') === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                        <option value="terlama" {{ ($filters['order'] ?? '') === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
+                                    <a href="{{ route('pendaftar.index') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">Reset</a>
+                                    <button type="submit" class="w-1/2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Terapkan</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="relative w-full md:w-auto">
-                    <button
-                        type="button"
-                        @click="openExport = !openExport; if (openExport) openFilter = false"
-                        class="w-full md:w-auto inline-flex items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                        <span>Export</span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openExport ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div
-                        x-show="openExport"
-                        x-transition
-                        @click.away="openExport = false"
-                        class="absolute right-0 mt-2 w-full md:w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-40"
-                    >
-                        <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'excel'])) }}" class="block rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">Export Excel</a>
-                        <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'pdf'])) }}" class="mt-1 block rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">Export PDF</a>
+                    <div class="w-32">
+                        <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Mulai Dari</label>
+                        <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" class="input w-full">
                     </div>
+                    <div class="w-32">
+                        <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Sampai</label>
+                        <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" class="input w-full">
+                    </div>
+                </div>
+            </div>
+            <div class="relative mt-2 md:mt-0">
+                <button
+                    type="button"
+                    @click="openExport = !openExport; if (openExport) openFilter = false"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                    <span>Export</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openExport ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    x-show="openExport"
+                    x-cloak
+                    x-transition
+                    @click.away="openExport = false"
+                    class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-40"
+                >
+                    <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'excel'])) }}" class="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-8m0 8l-3-3m3 3l3-3M4 6h16M7 4h10a1 1 0 011 1v14a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z" />
+                            </svg>
+                        </span>
+                        <span class="flex-1">Export Excel</span>
+                    </a>
+                    <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'pdf'])) }}" class="mt-1 flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/15 text-rose-600">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h6l4 4v14a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 3v5h5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 13h8M8 17h6" />
+                            </svg>
+                        </span>
+                        <span class="flex-1">Export PDF</span>
+                    </a>
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="card relative z-[60] p-0 overflow-visible">
-        <div class="overflow-x-auto overflow-y-visible">
-            <table class="table min-w-full overflow-visible">
+        <div class="card p-0 overflow-hidden">
+            <div class="overflow-x-auto overflow-y-visible">
+            <table class="table min-w-full overflow-visible text-xs">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>No Registrasi</th>
-                        <th>Nama</th>
-                        <th>Data Ibu</th>
-                        <th>Tanggal Daftar</th>
-                        <th>Status Pembayaran</th>
-                        <th>Aksi</th>
+                        <th class="text-[11px]">No</th>
+                        <th class="text-[11px]">Tanggal Daftar</th>
+                        <th class="text-[11px]">Nama</th>
+                        <th class="text-[11px]">Jenis Kelamin</th>
+                        <th class="text-[11px]">Data Ibu</th>
+                        <th class="text-[11px]">Aksi</th>
                     </tr>
                 </thead>
 
@@ -222,16 +241,28 @@
                         <tr>
                             <td>{{ $siswa->firstItem() + $i }}</td>
 
-                            <td>
-                                <span class="badge-info font-mono">{{ $s->registration->nomor_registrasi ?? '-' }}</span>
+                            <td class="text-textSecondary whitespace-nowrap">
+                                {{ optional($s->registration?->tanggal_daftar)->format('d M Y') ?? '-' }}
                             </td>
 
-                            <td class="font-medium text-textPrimary">
-                                <div>{{ $s->nama }}</div>
-                                <div class="text-xs font-normal text-textSecondary mt-0.5">{{ ui_label($s->jenis_kelamin ?? '-') }}</div>
-                                <div class="mt-1">
-                                    <span class="{{ $statusBadge }} text-[10px]">{{ $statusLabel }}</span>
+                            <td class="font-medium text-textPrimary whitespace-nowrap align-middle">
+                                <div class="text-[10px] text-slate-500 font-mono whitespace-nowrap">{{ $s->registration->nomor_registrasi ?? '-' }}</div>
+                                <div class="whitespace-nowrap">{{ $s->nama }}</div>
+                                <div class="mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-[9px] leading-none">
+                                    <span class="{{ $statusBadge }} inline-flex items-center px-1.5 py-0.5">
+                                        {{ $statusLabel }}
+                                    </span>
+                                    <span class="text-slate-400">-</span>
+                                    <span class="{{ $paymentClass }} inline-flex items-center px-1.5 py-0.5">
+                                        {{ $paymentLabel }}
+                                    </span>
                                 </div>
+                            </td>
+
+                            <td class="text-textSecondary whitespace-nowrap align-middle">
+                                <span class="text-sm font-medium text-slate-700 whitespace-nowrap">
+                                    {{ ui_label($s->jenis_kelamin ?? '-') }}
+                                </span>
                             </td>
 
                             <td class="text-textSecondary">
@@ -239,7 +270,7 @@
                                 @if(!empty($ibuWaRaw))
                                     <button
                                         type="button"
-                                        @click="copyPhone(@js($ibuWaRaw))"
+                                        onclick="copyIbuPhone(@js($ibuWaRaw))"
                                         class="mt-0.5 text-xs text-emerald-700 hover:text-emerald-800 hover:underline cursor-pointer"
                                         title="Klik untuk salin nomor"
                                     >
@@ -248,14 +279,6 @@
                                 @else
                                     <div class="text-xs text-slate-400">-</div>
                                 @endif
-                            </td>
-
-                            <td class="text-textSecondary">
-                                {{ optional($s->registration?->tanggal_daftar)->format('d M Y') ?? '-' }}
-                            </td>
-
-                            <td>
-                                <span class="{{ $paymentClass }}">{{ $paymentLabel }}</span>
                             </td>
 
                             <td>
@@ -302,11 +325,10 @@
                                     <button
                                         type="button"
                                         @click="toggleMenu($event)"
-                                        class="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1"
+                                        class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-blue-600 focus:outline-none"
                                     >
-                                        Aksi
-                                        <svg class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                         </svg>
                                     </button>
 
@@ -375,7 +397,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-10 text-center text-slate-500">
+                            <td colspan="6" class="px-4 py-10 text-center text-slate-500">
                                 Data pendaftar belum tersedia untuk filter saat ini.
                             </td>
                         </tr>
@@ -384,9 +406,9 @@
             </table>
         </div>
 
-        <div class="p-4 border-t border-border bg-background/40">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
+        @if($siswa->hasPages())
+            <div class="sticky bottom-0 left-0 z-20 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm">
+                <form method="GET" class="flex items-center gap-2">
                     @foreach(request()->except(['page', 'per_page']) as $key => $value)
                         @if(is_array($value))
                             @foreach($value as $item)
@@ -404,16 +426,75 @@
                     </select>
                     <span>data</span>
                 </form>
-                {{ $siswa->links() }}
+                <span class="text-slate-500">
+                    Menampilkan {{ number_format($siswa->firstItem()) }} - {{ number_format($siswa->lastItem()) }} dari {{ number_format($siswa->total()) }} data
+                </span>
+                <span>
+                    {{ $siswa->links() }}
+                </span>
             </div>
-        </div>
+        @endif
+
     </div>
+    </div>
+
+    <script>
+    async function copyIbuPhone(noHp)
+    {
+        const phone = String(noHp || '').trim();
+
+        await copyTextToClipboard(
+            phone,
+            `Nomor HP ibu "${phone}" berhasil disalin.`,
+            'Nomor HP ibu tidak tersedia untuk disalin.'
+        );
+    }
+
+    async function copyTextToClipboard(value, successMessage, emptyMessage)
+    {
+        const text = String(value || '').trim();
+
+        if (!text) {
+            if (typeof window.showGlobalToast === 'function') {
+                window.showGlobalToast('warning', emptyMessage, { title: 'Gagal Menyalin' });
+            }
+            return;
+        }
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                tempInput.setAttribute('readonly', '');
+                tempInput.style.position = 'absolute';
+                tempInput.style.left = '-9999px';
+                tempInput.style.top = '0';
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+            }
+
+            if (typeof window.showGlobalToast === 'function') {
+                window.showGlobalToast('success', successMessage, { title: 'Berhasil Menyalin' });
+            }
+        } catch (error) {
+            if (typeof window.showGlobalToast === 'function') {
+                window.showGlobalToast('danger', 'Data gagal disalin ke clipboard.', { title: 'Gagal Menyalin' });
+            }
+        }
+    }
+    </script>
 
     <div
         x-show="openQuickEdit"
         x-transition
-        class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4"
-        style="display: none;"
+        x-cloak
+        @click.self="openQuickEdit = false"
+        @keydown.escape.window="openQuickEdit = false"
+        class="fixed inset-0 z-[230] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
     >
         <div class="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl">
             <div class="mb-4 flex items-center justify-between">

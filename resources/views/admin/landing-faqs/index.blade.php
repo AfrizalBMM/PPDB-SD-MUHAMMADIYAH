@@ -8,14 +8,36 @@
     showCreate: false, 
     showEdit: false,
     editData: { id: '', question: '', answer: '', order: 0 }
-}">
-    <div class="card">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+}" class="mx-auto max-w-7xl space-y-6">
+    @php
+        $totalFaq = $faqs->total();
+        $shortAnswer = $faqs->getCollection()->filter(fn($item) => strlen((string) $item->answer) <= 120)->count();
+        $longAnswer = $faqs->getCollection()->filter(fn($item) => strlen((string) $item->answer) > 120)->count();
+    @endphp
+
+    <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-cyan-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-textPrimary">Frequently Asked Questions</h2>
-                <p class="text-textSecondary text-sm">Kelola pertanyaan yang sering diajukan oleh calon wali murid.</p>
+                <h2 class="text-xl font-semibold text-slate-800">Frequently Asked Questions</h2>
+                <p class="mt-1 text-sm text-slate-600">Kelola pertanyaan umum agar calon wali murid lebih mudah memahami alur PPDB.</p>
             </div>
-            <button @click="showCreate = true" class="btn-primary flex items-center gap-2">
+
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">Total: {{ $totalFaq }}</span>
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Jawaban Singkat: {{ $shortAnswer }}</span>
+                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Jawaban Panjang: {{ $longAnswer }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-0 overflow-hidden">
+        <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h3 class="text-base font-semibold text-slate-800">Daftar FAQ</h3>
+                <p class="mt-1 text-xs text-slate-500">Susun pertanyaan berdasarkan prioritas agar mudah dipahami pengunjung.</p>
+            </div>
+
+            <button @click="showCreate = true" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -24,32 +46,32 @@
         </div>
 
         @if($faqs->isEmpty())
-            <div class="text-center py-20 bg-background rounded-2xl border-2 border-dashed border-border">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <svg class="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-20 text-center">
+                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-textPrimary">Belum Ada FAQ</h3>
-                <p class="text-textSecondary text-sm max-w-xs mx-auto mt-1">Tambahkan pertanyaan umum untuk membantu calon pendaftar.</p>
+                <h3 class="text-lg font-semibold text-slate-800">Belum Ada FAQ</h3>
+                <p class="mx-auto mt-1 max-w-xs text-sm text-slate-600">Tambahkan pertanyaan umum untuk membantu calon pendaftar.</p>
             </div>
         @else
-            <div class="space-y-4">
+            <div class="space-y-4 p-5">
                 @foreach($faqs as $faq)
-                <div class="p-5 bg-white border border-border rounded-2xl hover:shadow-hover transition-all group">
+                <div class="group rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:shadow-md">
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-3 mb-2">
-                                <span class="flex items-center justify-center w-6 h-6 bg-primary/10 text-primary text-[10px] font-bold rounded-full shrink-0">
+                                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
                                     {{ $faq->order ?: '0' }}
                                 </span>
-                                <h4 class="font-bold text-textPrimary text-base">{{ $faq->question }}</h4>
+                                <h4 class="text-base font-semibold text-slate-800">{{ $faq->question }}</h4>
                             </div>
                             <div class="pl-9">
-                                <p class="text-sm text-textSecondary leading-relaxed">{{ $faq->answer }}</p>
+                                <p class="text-sm leading-relaxed text-slate-600">{{ $faq->answer }}</p>
                             </div>
                         </div>
-                        <div class="flex gap-2 shrink-0 self-center">
+                        <div class="flex shrink-0 gap-2 self-center">
                             <button @click="
                                 editData = { 
                                     id: '{{ $faq->id }}', 
@@ -58,14 +80,14 @@
                                     order: '{{ $faq->order }}' 
                                 };
                                 showEdit = true;
-                            " class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Edit">
+                            " class="rounded-lg border border-blue-200 bg-blue-50 p-2 text-blue-700 hover:bg-blue-100" title="Edit">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
                             <form action="{{ route('landing-faqs.destroy', $faq->id) }}" method="POST" onsubmit="return window.globalConfirmSubmit(this, 'Yakin hapus FAQ ini?', { title: 'Konfirmasi Hapus' });" class="inline">
                                 @csrf @method('DELETE')
-                                <button class="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors" title="Hapus">
+                                <button class="rounded-lg border border-red-200 bg-red-50 p-2 text-red-700 hover:bg-red-100" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -77,10 +99,10 @@
                 @endforeach
             </div>
 
-            <div class="mt-6 flex flex-col gap-3 border-t border-border pt-3 md:flex-row md:items-center md:justify-between">
-                <form method="GET" class="flex items-center gap-2 text-xs text-textSecondary">
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                <form method="GET" class="flex items-center gap-2 text-xs text-slate-600">
                     <label for="perPageFaqs">Tampilkan</label>
-                    <select id="perPageFaqs" name="per_page" onchange="this.form.submit()" class="rounded border border-border px-2 py-1 text-xs">
+                    <select id="perPageFaqs" name="per_page" onchange="this.form.submit()" class="rounded border border-slate-300 px-2 py-1 text-xs">
                         @foreach([10,20,50,100] as $size)
                             <option value="{{ $size }}" {{ (int) request('per_page', $perPage ?? 20) === $size ? 'selected' : '' }}>{{ $size }}</option>
                         @endforeach
@@ -98,13 +120,13 @@
     <!-- Modal Create -->
     <div x-show="showCreate" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div x-show="showCreate" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 transition-opacity bg-black/50" @click="showCreate = false"></div>
+            <div x-show="showCreate" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 transition-opacity" @click="showCreate = false"></div>
 
-            <div x-show="showCreate" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block w-full max-w-xl p-8 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+            <div x-show="showCreate" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block w-full max-w-xl my-8 overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all transform">
                 
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-textPrimary">Tambah Pertanyaan (FAQ)</h3>
-                    <button @click="showCreate = false" class="text-muted hover:text-textPrimary">
+                    <h3 class="text-xl font-bold text-slate-800">Tambah Pertanyaan (FAQ)</h3>
+                    <button @click="showCreate = false" class="text-slate-500 hover:text-slate-800">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -125,8 +147,8 @@
                     </div>
 
                     <div class="flex justify-end gap-3 mt-8">
-                        <button type="button" @click="showCreate = false" class="btn-secondary">Batal</button>
-                        <button type="submit" class="btn-primary">Simpan FAQ</button>
+                        <button type="button" @click="showCreate = false" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Simpan FAQ</button>
                     </div>
                 </form>
             </div>
@@ -136,13 +158,13 @@
     <!-- Modal Edit -->
     <div x-show="showEdit" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div x-show="showEdit" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 transition-opacity bg-black/50" @click="showEdit = false"></div>
+            <div x-show="showEdit" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 transition-opacity" @click="showEdit = false"></div>
 
-            <div x-show="showEdit" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block w-full max-w-xl p-8 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+            <div x-show="showEdit" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block w-full max-w-xl my-8 overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all transform">
                 
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-textPrimary">Edit FAQ</h3>
-                    <button @click="showEdit = false" class="text-muted hover:text-textPrimary">
+                    <h3 class="text-xl font-bold text-slate-800">Edit FAQ</h3>
+                    <button @click="showEdit = false" class="text-slate-500 hover:text-slate-800">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -163,8 +185,8 @@
                     </div>
 
                     <div class="flex justify-end gap-3 mt-8">
-                        <button type="button" @click="showEdit = false" class="btn-secondary">Batal</button>
-                        <button type="submit" class="btn-primary">Perbarui FAQ</button>
+                        <button type="button" @click="showEdit = false" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Perbarui FAQ</button>
                     </div>
                 </form>
             </div>
