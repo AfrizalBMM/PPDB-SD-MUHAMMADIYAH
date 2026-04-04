@@ -64,11 +64,7 @@
 
                 <!-- Tombol sidebar mobile -->
                 <button onclick="toggleSidebar()" class="md:hidden text-xl text-textSecondary hover:text-primary transition-colors">☰</button>
-
-                <!-- Judul halaman -->
-                <h1 class="font-heading font-bold text-2xl text-textPrimary truncate">
-                    @yield('page-title','Dashboard')
-                </h1>
+                <!-- Judul halaman dihapus sesuai permintaan -->
             </div>
 
             <!-- Waktu & user -->

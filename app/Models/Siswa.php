@@ -44,6 +44,20 @@ class Siswa extends Model
         return $this->belongsTo(Registration::class);
     }
 
+
+        // Pembayaran diakses melalui tagihan
+        public function semuaPembayaran()
+        {
+            return $this->hasManyThrough(
+                \App\Models\Pembayaran::class,
+                \App\Models\TagihanSiswa::class,
+                'siswa_id', // Foreign key di tagihan_siswa
+                'tagihan_siswa_id', // Foreign key di pembayaran
+                'id', // Local key di siswa
+                'id' // Local key di tagihan_siswa
+            );
+        }
+
     public function kelasSiswa()
     {
         return $this->belongsTo(KelasSiswa::class, 'kelas_siswa_id');

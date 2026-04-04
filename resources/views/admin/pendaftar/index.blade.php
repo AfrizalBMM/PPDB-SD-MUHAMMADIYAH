@@ -50,154 +50,57 @@
         </div>
     </div>
 
-    <div class="card p-0 overflow-visible">
-        @php
-            $activeFilterCount = (!empty($filters['status']) ? 1 : 0)
-                + (!empty($filters['payment_status']) ? 1 : 0)
-                + (!empty($filters['tahun_ajaran_id']) ? 1 : 0)
-                + (!empty($filters['jenis_kelamin']) ? 1 : 0)
-                + (!empty($filters['date_from']) ? 1 : 0)
-                + (!empty($filters['date_to']) ? 1 : 0)
-                + (($filters['order'] ?? 'terbaru') === 'terlama' ? 1 : 0);
-        @endphp
-        <form method="GET" class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between px-5 py-4 border-b border-slate-200">
-            <div class="flex flex-col gap-2 md:flex-row md:items-end md:gap-3 w-full">
-                <div class="relative w-full md:w-72">
-                    <input
-                        name="q"
-                        value="{{ $filters['q'] ?? '' }}"
-                        class="input w-full pl-10"
-                        placeholder="Cari nama, NIK, atau no registrasi">
-                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="flex items-end gap-2">
-                    <div class="relative">
-                        <button
-                            type="button"
-                            @click="openFilter = !openFilter; if (openFilter) openExport = false"
-                            class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                        >
-                            <span>Filter</span>
-                            @if($activeFilterCount > 0)
-                                <span class="inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">{{ $activeFilterCount }}</span>
-                            @endif
-                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openFilter ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        <div
-                            x-show="openFilter"
-                            x-cloak
-                            x-transition
-                            @click.away="openFilter = false"
-                            class="absolute right-0 mt-2 w-[340px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl z-40"
-                        >
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status PPDB</label>
-                                    <select name="status" class="input mt-1">
-                                        <option value="">Semua</option>
-                                        <option value="1" {{ (int) ($filters['status'] ?? 0) === 1 ? 'selected' : '' }}>Bakal Calon</option>
-                                        <option value="2" {{ (int) ($filters['status'] ?? 0) === 2 ? 'selected' : '' }}>Calon Peserta Didik</option>
-                                        <option value="3" {{ (int) ($filters['status'] ?? 0) === 3 ? 'selected' : '' }}>Peserta Didik</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Status Pembayaran</label>
-                                    <select name="payment_status" class="input mt-1">
-                                        <option value="">Semua</option>
-                                        <option value="lunas" {{ ($filters['payment_status'] ?? '') === 'lunas' ? 'selected' : '' }}>Lunas</option>
-                                        <option value="belum_lunas" {{ ($filters['payment_status'] ?? '') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
-                                        <option value="belum_ada_tagihan" {{ ($filters['payment_status'] ?? '') === 'belum_ada_tagihan' ? 'selected' : '' }}>Belum Ada Tagihan</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Tahun Ajaran</label>
-                                    <select name="tahun_ajaran_id" class="input mt-1">
-                                        <option value="">Semua</option>
-                                        @foreach($tahunAjaranOptions as $tahun)
-                                            <option value="{{ $tahun->id }}" {{ (int) ($filters['tahun_ajaran_id'] ?? 0) === (int) $tahun->id ? 'selected' : '' }}>
-                                                {{ $tahun->nama }}{{ $tahun->aktif ? ' (Aktif)' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Jenis Kelamin</label>
-                                    <select name="jenis_kelamin" class="input mt-1">
-                                        <option value="">Semua</option>
-                                        <option value="laki-laki" {{ ($filters['jenis_kelamin'] ?? '') === 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="perempuan" {{ ($filters['jenis_kelamin'] ?? '') === 'perempuan' ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Urutan</label>
-                                    <select name="order" class="input mt-1">
-                                        <option value="terbaru" {{ ($filters['order'] ?? 'terbaru') === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                                        <option value="terlama" {{ ($filters['order'] ?? '') === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                                    </select>
-                                </div>
-                                <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
-                                    <a href="{{ route('pendaftar.index') }}" class="w-1/2 text-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">Reset</a>
-                                    <button type="submit" class="w-1/2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Terapkan</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w-32">
-                        <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Mulai Dari</label>
-                        <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" class="input w-full">
-                    </div>
-                    <div class="w-32">
-                        <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Sampai</label>
-                        <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" class="input w-full">
-                    </div>
-                </div>
-            </div>
-            <div class="relative mt-2 md:mt-0">
-                <button
-                    type="button"
-                    @click="openExport = !openExport; if (openExport) openFilter = false"
-                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                >
-                    <span>Export</span>
-                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="openExport ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    <div class="card p-0 overflow-hidden">
+        <form method="GET" class="flex flex-wrap gap-2 border-b border-slate-200 px-5 py-4 md:items-end justify-end" id="filterForm">
+            <!-- Search -->
+            <div class="relative w-full md:w-64">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                </button>
-                <div
-                    x-show="openExport"
-                    x-cloak
-                    x-transition
-                    @click.away="openExport = false"
-                    class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-40"
+                </span>
+                <input
+                    name="q"
+                    value="{{ request('q') }}"
+                    class="input pl-10"
+                    placeholder="Cari nama, NIK, atau no registrasi..."
+                    oninput="document.getElementById('filterForm').submit()"
                 >
-                    <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'excel'])) }}" class="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-8m0 8l-3-3m3 3l3-3M4 6h16M7 4h10a1 1 0 011 1v14a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z" />
-                            </svg>
-                        </span>
-                        <span class="flex-1">Export Excel</span>
+            </div>
+            
+            <!-- Status Pembayaran -->
+            <div class="w-full md:w-40">
+                <select name="payment_status" class="input" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Status Pembayaran</option>
+                    <option value="lunas" {{ request('payment_status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                    <option value="belum_lunas" {{ request('payment_status') == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                    <option value="belum_ada_tagihan" {{ request('payment_status') == 'belum_ada_tagihan' ? 'selected' : '' }}>Belum Ada Tagihan</option>
+                </select>
+            </div>
+
+            <!-- Jenis Kelamin -->
+            <div class="w-full md:w-32">
+                <select name="jenis_kelamin" class="input" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Jenis Kelamin</option>
+                    <option value="laki-laki" {{ request('jenis_kelamin') == 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                    <option value="perempuan" {{ request('jenis_kelamin') == 'perempuan' ? 'selected' : '' }}>Perempuan</option>
+                </select>
+            </div>
+
+            <!-- Filter Tanggal Tunggal -->
+            <div class="w-full md:w-40">
+                <input type="date" name="tanggal_daftar" value="{{ request('tanggal_daftar') }}" class="input w-full" placeholder="Tanggal Daftar" onchange="document.getElementById('filterForm').submit()">
+            </div>
+
+            <!-- Reset -->
+            <div class="flex items-center gap-2">
+                @if(request()->hasAny(['q','status','tanggal_daftar','jenis_kelamin','payment_status']))
+                    <a href="{{ route('pendaftar.index') }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                        Reset
                     </a>
-                    <a href="{{ route('pendaftar.export', array_merge(request()->query(), ['format' => 'pdf'])) }}" class="mt-1 flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100">
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/15 text-rose-600">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h6l4 4v14a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 3v5h5" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 13h8M8 17h6" />
-                            </svg>
-                        </span>
-                        <span class="flex-1">Export PDF</span>
-                    </a>
-                </div>
+                @endif
             </div>
         </form>
-    </div>
 
         <div class="card p-0 overflow-hidden">
             <div class="overflow-x-auto overflow-y-visible">
@@ -350,7 +253,7 @@
                                             </svg>
                                             <span>Detail Pendaftar</span>
                                         </a>
-                                        <a href="{{ route('keuangan.index',['siswa'=>$s->id]) }}" class="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                                        <a href="{{ route('keuangan.detail', $s->id) }}" class="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2m-2 0h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
                                             </svg>

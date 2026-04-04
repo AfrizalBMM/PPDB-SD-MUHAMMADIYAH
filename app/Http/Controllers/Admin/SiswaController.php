@@ -165,12 +165,12 @@ class SiswaController extends Controller
 
         $tableRows = $rows->values()->map(function ($item) {
             $registration = $item->registration;
-
             $tagihan = $item->tagihan ?? collect();
             $totalBiaya = (int) $tagihan->sum('total');
             $totalTerbayar = (int) $tagihan->sum('total_dibayar');
             $totalKekurangan = (int) $tagihan->sum('sisa');
 
+            // Sertakan tagihan dan pembayaran lengkap untuk kebutuhan PDF
             return [
                 'nama' => $item->nama ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin === 'laki-laki' ? 'Laki-laki' : ($item->jenis_kelamin === 'perempuan' ? 'Perempuan' : ($item->jenis_kelamin ?? '-')),
@@ -178,6 +178,7 @@ class SiswaController extends Controller
                 'total_biaya' => $totalBiaya,
                 'total_terbayar' => $totalTerbayar,
                 'total_kekurangan' => $totalKekurangan,
+                'tagihan' => $tagihan,
             ];
         });
 
@@ -200,7 +201,8 @@ class SiswaController extends Controller
         $pdf = Pdf::loadView('pdf.siswa_keuangan', [
             'rows' => $tableRows,
             'tahunAktif' => $tahunAktif,
-            'title' => 'Export Keuangan Peserta Didik'
+            'title' => 'Export Keuangan Peserta Didik',
+            'namaKelas' => $namaKelas,
         ]);
 
         $fileName = 'keuangan peserta didik kelas (' . $namaKelasForFile . ') ' . $tanggal . '.pdf';

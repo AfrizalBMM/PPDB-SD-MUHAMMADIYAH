@@ -5,8 +5,11 @@
     <title>{{ $title ?? 'Export Keuangan' }}</title>
     <style>
         body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #111827; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { border: 1px solid #d1d5db; padding: 6px 6px; vertical-align: top; }
+        .row-white { background: #fff; }
+        .row-gray { background: #f3f4f6; }
+        .bold { font-weight: bold; }
         th { background: #f3f4f6; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; text-align: left; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
@@ -14,31 +17,89 @@
     </style>
 </head>
 <body>
+    <div style="text-align:center; margin-bottom: 8px;">
+        <div style="font-size:18px; font-weight:bold;">
+            Laporan Rekapitulasi Keuangan Peserta Didik - Kelas {{ $namaKelas ?? '-' }}
+        </div>
+        <div style="font-size:12px; margin-top:2px; margin-bottom:2px; display:flex; justify-content:center; align-items:center; gap:16px;">
+            <span>Dicetak: {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y H:i') }},</span>
+            <span>Dibuat otomatis melalui website www.ppdb.sdmuhwonorejo.com</span>
+        </div>
+    </div>
     <table>
         <thead>
             <tr>
                 <th style="width: 4%;" class="text-center">No</th>
-                <th style="width: 16%;">Nama</th>
+                <th style="width: 18%;">Nama</th>
                 <th style="width: 8%;">JK</th>
-                <th style="width: 14%;">No Registrasi</th>
-                <th style="width: 12%;" class="text-right">Total Biaya</th>
-                <th style="width: 12%;" class="text-right">Total Terbayar</th>
-                <th style="width: 12%;" class="text-right">Total Kekurangan</th>
+                <th style="width: 16%;">No Registrasi</th>
+                <th style="width: 10%;" class="text-right">Total Biaya</th>
+                <th style="width: 10%;" class="text-right">Total Bayar</th>
+                <th style="width: 7%;" class="text-center">P</th>
+                <th style="width: 7%;" class="text-center">DU</th>
+                <th style="width: 7%;" class="text-center">UDP</th>
+                <th style="width: 10%;" class="text-right">Kekurangan</th>
             </tr>
         </thead>
         <tbody>
+            @php 
+                $grandTotalKekurangan = 0; 
+                $grandKekuranganP = 0;
+                $grandKekuranganDU = 0;
+                $grandKekuranganUDP = 0;
+            @endphp
             @foreach($rows as $index => $row)
-                <tr>
+                @php
+                    $kekuranganP = 0;
+                    $kekuranganDU = 0;
+                    $kekuranganUDP = 0;
+                    if (isset($row['tagihan']) && is_iterable($row['tagihan'])) {
+                        foreach ($row['tagihan'] as $t) {
+                            $jenis = strtolower(str_replace(' ', '_', optional($t->biaya)->jenis_biaya ?? ''));
+                            $sisa = isset($t->sisa) ? (int) $t->sisa : 0;
+                            if ($jenis === 'pendaftaran') {
+                                $kekuranganP += $sisa;
+                            } elseif ($jenis === 'daftar_ulang') {
+                                $kekuranganDU += $sisa;
+                            } elseif ($jenis === 'udp') {
+                                $kekuranganUDP += $sisa;
+                            }
+                        }
+                    }
+                    $rowClass = $index % 2 === 0 ? 'row-white' : 'row-gray';
+                    $grandTotalKekurangan += $row['total_kekurangan'];
+                    $grandKekuranganP += $kekuranganP;
+                    $grandKekuranganDU += $kekuranganDU;
+                    $grandKekuranganUDP += $kekuranganUDP;
+                @endphp
+                <tr class="{{ $rowClass }}">
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="wrap">{{ $row['nama'] }}</td>
                     <td>{{ $row['jenis_kelamin'] ?? '-' }}</td>
                     <td>{{ $row['no_registrasi'] }}</td>
                     <td class="text-right">{{ number_format($row['total_biaya'], 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($row['total_terbayar'], 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($row['total_kekurangan'], 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($kekuranganP, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($kekuranganDU, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($kekuranganUDP, 0, ',', '.') }}</td>
+
+                    <td class="text-right bold">{{ number_format($row['total_kekurangan'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" class="text-right bold">Total Kekurangan semua peserta didik</td>
+                <td class="text-right bold">{{ number_format($grandKekuranganP, 0, ',', '.') }}</td>
+                <td class="text-right bold">{{ number_format($grandKekuranganDU, 0, ',', '.') }}</td>
+                <td class="text-right bold">{{ number_format($grandKekuranganUDP, 0, ',', '.') }}</td>
+                <td class="text-right bold">{{ number_format($grandTotalKekurangan, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
     </table>
+</body>
+</html>
+</body>
+</html>
 </body>
 </html>

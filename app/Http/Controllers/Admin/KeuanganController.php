@@ -4,10 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Models\TagihanSiswa;
 use Illuminate\Http\Request;
 
-class KeuanganController extends Controller
-{
+class KeuanganController extends Controller{
+
+    public function detail(Siswa $siswa)
+    {
+        $siswa->load([
+            'tagihan.biaya',
+            'tagihan.pembayaran',
+            'kelasSiswa',
+        ]);
+        $semuaPembayaran = $siswa->semuaPembayaran()->with('tagihan.biaya')->orderByDesc('tanggal_bayar')->get();
+        return view('admin.keuangan.detail', compact('siswa', 'semuaPembayaran'));
+    }
+
     public function index(Request $request)
     {
         $perPage = (int) $request->input('per_page', 30);

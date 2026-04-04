@@ -128,6 +128,10 @@ Route::prefix('admin')
             Route::get('/keuangan', [KeuanganController::class, 'index'])
                 ->name('keuangan.index');
 
+            // Detail keuangan per siswa
+            Route::get('/keuangan/siswa/{siswa}', [KeuanganController::class, 'detail'])
+                ->name('keuangan.detail');
+
             Route::post('/pembayaran', [PembayaranController::class, 'store'])
                 ->name('pembayaran.store');
 

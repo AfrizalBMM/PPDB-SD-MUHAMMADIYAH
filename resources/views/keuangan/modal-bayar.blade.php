@@ -43,9 +43,17 @@
                 <label class="label text-sm text-slate-600 mb-1 block">Nominal Bayar</label>
                 <div class="flex">
                     <span class="inline-flex items-center px-3 border border-r-0 border-slate-300 bg-slate-100 rounded-l-lg text-sm">Rp.</span>
-                    <input type="text" id="nominal_display" class="w-full border border-slate-300 rounded-r-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="0" onkeyup="formatRupiah(this)" required>
+                    <input type="text" id="nominal_display" class="w-full border border-slate-300 rounded-r-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="0" oninput="validateNominal()" required autocomplete="off">
                 </div>
                 <input type="hidden" name="nominal_bayar" id="nominal_bayar">
+                <div id="nominal_error" class="text-xs text-red-600 mt-1 hidden">Nominal bayar tidak boleh lebih besar dari sisa tagihan.</div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="cursor-pointer bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-emerald-200" onclick="setNominal(50000)">50.000</span>
+                    <span class="cursor-pointer bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-emerald-200" onclick="setNominal(100000)">100.000</span>
+                    <span class="cursor-pointer bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-emerald-200" onclick="setNominal(150000)">150.000</span>
+                    <span class="cursor-pointer bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-emerald-200" onclick="setNominal(200000)">200.000</span>
+                    <span class="cursor-pointer bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-emerald-200" onclick="setNominal(500000)">500.000</span>
+                </div>
             </div>
 
             <div>
@@ -82,6 +90,8 @@
 </div>
 
 <script>
+
+let sisaTagihanGlobal = 0;
 function openBayar(id, siswa, biaya, sisa) {
     const modal = document.getElementById('modalBayar');
     modal.classList.remove('hidden');
@@ -90,18 +100,47 @@ function openBayar(id, siswa, biaya, sisa) {
     document.getElementById('nama_siswa').value = siswa;
     document.getElementById('nama_biaya').value = biaya;
     document.getElementById('sisa_tagihan').value = 'Rp ' + new Intl.NumberFormat('id-ID').format(sisa);
+    sisaTagihanGlobal = parseInt(sisa);
+    document.getElementById('nominal_display').value = '';
+    document.getElementById('nominal_bayar').value = '';
+    document.getElementById('nominal_error').classList.add('hidden');
 }
 
 function closeBayar() {
     document.getElementById('modalBayar').classList.add('hidden');
     document.getElementById('nominal_display').value = '';
     document.getElementById('nominal_bayar').value = '';
+    document.getElementById('nominal_error').classList.add('hidden');
 }
+
 
 function formatRupiah(input) {
     let angka = input.value.replace(/\D/g,'');
     document.getElementById('nominal_bayar').value = angka;
     let formatted = new Intl.NumberFormat('id-ID').format(angka);
     input.value = formatted;
+}
+
+function validateNominal() {
+    let input = document.getElementById('nominal_display');
+    let angka = input.value.replace(/\D/g,'');
+    document.getElementById('nominal_bayar').value = angka;
+    let formatted = new Intl.NumberFormat('id-ID').format(angka);
+    input.value = formatted;
+    if (angka === '') {
+        document.getElementById('nominal_error').classList.add('hidden');
+        return;
+    }
+    if (parseInt(angka) > sisaTagihanGlobal) {
+        document.getElementById('nominal_error').classList.remove('hidden');
+    } else {
+        document.getElementById('nominal_error').classList.add('hidden');
+    }
+}
+
+function setNominal(nominal) {
+    document.getElementById('nominal_display').value = new Intl.NumberFormat('id-ID').format(nominal);
+    document.getElementById('nominal_bayar').value = nominal;
+    validateNominal();
 }
 </script>

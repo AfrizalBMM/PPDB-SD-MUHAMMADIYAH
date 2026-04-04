@@ -11,7 +11,18 @@ Dibangun menggunakan **Laravel 10**
 4. php artisan key:generate
 5. php artisan migrate
 
-## Catatan Perubahan Terbaru (2026)
+## Catatan Perubahan Terbaru (04 April 2026)
+
+- Export PDF & Excel keuangan siswa:
+    - Layout tabel modern, zebra striping, dan font besar.
+    - Header berisi judul, kelas, waktu cetak, dan sumber sistem.
+    - Footer PDF dihapus, info sumber sistem kini di header.
+    - Kolom breakdown kekurangan P, DU, UDP, dan total kekurangan per siswa.
+    - Baris total semua kekurangan (P, DU, UDP, total) di bawah tabel.
+    - Data Excel kini selaras dengan PDF (kolom breakdown kekurangan, urutan, dan format).
+    - Nama kelas pada judul otomatis sesuai filter export.
+    - Penamaan jenis biaya sudah konsisten dengan enum migrasi.
+    - Perhitungan kekurangan diambil dari sisa tagihan per jenis biaya.
 
 - Redesign total halaman admin/pendaftar agar lebih modern dan konsisten.
 - Dropdown filter dan export kini tetap berada di atas tabel/card, tidak terpotong konten.
